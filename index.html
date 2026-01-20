@@ -3,103 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interface Client - Suivi</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Mwaka Pizza - Commande & Suivi</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #2c3e50; color: white; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #000; color: #fff; padding-bottom: 40px; }
         
-        /* Système d'onglets */
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tab-link { padding: 10px 20px; background: #34495e; border: none; color: white; cursor: pointer; border-radius: 5px 5px 0 0; }
-        .tab-link.active { background: #e67e22; }
-        .tab-content { display: none; background: white; color: #333; padding: 20px; border-radius: 0 5px 5px 5px; }
-        .tab-content.active { display: block; }
+        /* Navigation Onglets */
+        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; }
+        .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .nav-btn.active { color: #fff; background: #2d5f3f; }
 
-        /* Style des lignes de suivi */
-        .suivi-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .badge-delai {
-            background: #fdf2e9;
-            color: #e67e22;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.85rem;
-        }
-        .status-text { color: #27ae60; font-weight: bold; }
+        .header { background: #1a1a1a; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #222; color: #888; cursor: pointer; font-weight: bold; }
+        .type-btn.selected { background: #e74c3c; color: white; border-color: #e74c3c; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #2d5f3f; font-weight: bold; font-size: 0.9em; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; font-size: 16px; }
+
+        .restaurant-choice { display: flex; gap: 10px; }
+        .res-btn { flex: 1; padding: 10px; border: 1px solid #2d5f3f; background: #1a1a1a; color: #2d5f3f; border-radius: 8px; cursor: pointer; }
+        .res-btn.active { background: #2d5f3f; color: white; }
+
+        .order-item { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 6px solid #2d5f3f; }
+        .dessert-item { border-left-color: #9b59b6; }
+        .drink-item { border-left-color: #3498db; }
+
+        .supp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .supp-label { display: flex; align-items: center; gap: 8px; font-size: 11px; background: #222; padding: 8px; border-radius: 6px; cursor: pointer; }
+        .supp-label input { width: auto; }
+
+        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px 0; font-weight: bold; }
+        .btn-pizza { background: #2d5f3f; }
+        .btn-dessert { background: #9b59b6; }
+        .btn-drink { background: #3498db; }
+
+        .btn-submit { width: 100%; padding: 18px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
+        
+        .total-box { background: #1a1a1a; border: 2px solid #2d5f3f; padding: 15px; border-radius: 15px; text-align: center; margin-top: 20px; }
+        .total-amount { font-size: 24px; font-weight: 700; color: #2ecc71; }
+        
+        .autocomplete-list { background: #222; border: 1px solid #444; max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 10; }
+        .autocomplete-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; background: #222; }
+        .delete-btn { color: #e74c3c; background: none; border: none; font-size: 11px; font-weight: bold; margin-top: 10px; width: 100%; text-align: right; cursor: pointer; }
+
+        /* Styles Suivi */
+        .suivi-card { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .status-attente { background: #555; color: #ccc; }
+        .status-termine { background: #2ecc71; color: #fff; }
+        .delay-text { color: #f39c12; font-weight: bold; font-size: 14px; margin-top: 4px; display: block;}
     </style>
 </head>
 <body>
 
-    <div class="tabs">
-        <button class="tab-link" onclick="openTab(event, 'COMMANDES')">MES COMMANDES</button>
-        <button class="tab-link active" onclick="openTab(event, 'SUIVI')">📋 SUIVI</button>
+    <div class="nav-tabs">
+        <button class="nav-btn active" onclick="showSection('orderSection', this)">Commander</button>
+        <button class="nav-btn" onclick="showSection('suiviSection', this)">Suivi</button>
     </div>
 
-    <div id="COMMANDES" class="tab-content">
-        <h3>Vos commandes passées s'affichent ici.</h3>
-    </div>
+    <div class="header"><h1>🍕 Mwaka Pizza</h1></div>
 
-    <div id="SUIVI" class="tab-content active">
-        <h3>État des préparations (Aujourd'hui - Martinique)</h3>
-        <div id="container-suivi">
+    <div class="container">
+        <div id="orderSection" class="section active">
+            <div class="type-selector">
+                <button type="button" class="type-btn" id="btnEmporter" onclick="setType('Emporter')">🏠 Emporter</button>
+                <button type="button" class="type-btn selected" id="btnLivraison" onclick="setType('Livraison')">🚗 Livraison</button>
             </div>
+
+            <form id="orderForm">
+                <div id="resGroup" class="form-group" style="display:none;">
+                    <label>Restaurant</label>
+                    <div class="restaurant-choice">
+                        <button type="button" id="btnValm" class="res-btn active" onclick="setRes('Valmenière')">Valmenière</button>
+                        <button type="button" id="btnCentre" class="res-btn" onclick="setRes('Centre-ville')">Centre-ville</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nom du Client / Prénom</label>
+                    <input type="text" id="clientName" required placeholder="Prénom">
+                </div>
+
+                <div id="livraisonInfo">
+                    <div class="form-group"><label>Téléphone</label><input type="tel" id="phone" placeholder="0696..."></div>
+                    <div class="form-group"><label>Adresse</label><textarea id="address" rows="2" placeholder="Adresse complète..."></textarea></div>
+                    <div class="form-group">
+                        <label>Mode de règlement</label>
+                        <select id="payment">
+                            <option value="Espèces">Espèces</option>
+                            <option value="Carte">Carte bancaire</option>
+                            <option value="Chèque">Chèque</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label>Pizzas</label>
+                <div id="pizzasList"></div>
+                <button type="button" class="btn-add btn-pizza" onclick="addPizza()">➕ PIZZA</button>
+
+                <label>Desserts</label>
+                <div id="dessertsList"></div>
+                <button type="button" class="btn-add btn-dessert" onclick="addDessert()">🍰 DESSERT</button>
+
+                <label>Boissons</label>
+                <div id="drinksList"></div>
+                <button type="button" class="btn-add btn-drink" onclick="addDrink()">🥤 BOISSON</button>
+
+                <div class="total-box">
+                    <div style="font-size: 0.8em; opacity: 0.7; margin-bottom: 5px;">TOTAL À RÉGLER</div>
+                    <div class="total-amount" id="totalDisplay">0.00 €</div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">ENVOYER EN CUISINE 🚀</button>
+            </form>
+        </div>
+
+        <div id="suiviSection" class="section">
+            <h2 style="margin-bottom: 20px; color: #2ecc71;">Suivi des commandes du jour</h2>
+            <div id="suiviList">
+                <p style="color: #666; text-align: center;">Chargement du suivi...</p>
+            </div>
+        </div>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <script>
-        const TZ_MARTINIQUE = 'America/Martinique';
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0",
+            authDomain: "mwakaphone-e8c5b.firebaseapp.com",
+            projectId: "mwakaphone-e8c5b",
+            storageBucket: "mwakaphone-e8c5b.firebasestorage.app",
+            messagingSenderId: "258049374795",
+            appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        function openTab(evt, tabName) {
-            let i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
-            tablinks = document.getElementsByClassName("tab-link");
-            for (i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-            if(tabName === 'SUIVI') chargerDonneesSuivi();
+        let currentType = 'Livraison';
+        let currentRes = 'Valmenière';
+
+        // --- NAVIGATION ---
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            if(id === 'suiviSection') listenSuivi();
         }
 
-        function chargerDonneesSuivi() {
-            const container = document.getElementById('container-suivi');
-            const aujourdhuiMQ = new Date().toLocaleDateString('fr-FR', { timeZone: TZ_MARTINIQUE });
-            
-            const historique = JSON.parse(localStorage.getItem('suivi_commandes')) || [];
-            
-            // Nettoyage et filtrage : uniquement aujourd'hui (Martinique)
-            container.innerHTML = "";
-            const commandesDuJour = historique.filter(item => item.date === aujourdhuiMQ);
+        // --- FILTRE MARTINIQUE ---
+        function isTodayMQ(timestamp) {
+            if(!timestamp) return false;
+            const date = timestamp.toDate();
+            const mqDate = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+            const todayMQ = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            return mqDate === todayMQ;
+        }
 
-            if (commandesDuJour.length === 0) {
-                container.innerHTML = "<p>Aucune commande enregistrée pour aujourd'hui.</p>";
-                return;
-            }
+        function listenSuivi() {
+            db.collection("commandes")
+              .onSnapshot((snapshot) => {
+                const list = document.getElementById('suiviList');
+                list.innerHTML = "";
+                let hasOrders = false;
 
-            commandesDuJour.reverse().forEach(cmd => {
-                container.innerHTML += `
-                    <div class="suivi-row">
-                        <div>
-                            <strong>#${cmd.id}</strong> <br>
-                            <small style="color: #888;">Acceptée à ${cmd.heure}</small>
-                        </div>
-                        <div class="badge-delai">
-                            <i class="fas fa-clock"></i> ${cmd.delai}
-                        </div>
-                        <div class="status-text">${cmd.statut}</div>
-                    </div>
-                `;
+                snapshot.docs
+                  .map(doc => ({id: doc.id, ...doc.data()}))
+                  .sort((a,b) => b.createdAt - a.createdAt)
+                  .forEach(o => {
+                    if(isTodayMQ(o.createdAt)) {
+                        hasOrders = true;
+                        const div = document.createElement('div');
+                        div.className = 'suivi-card';
+                        const statusLabel = o.status === 'en_attente' ? 'Reçu' : 'Prêt';
+                        const statusClass = o.status === 'en_attente' ? 'status-attente' : 'status-termine';
+                        
+                        div.innerHTML = `
+                            <div>
+                                <strong style="font-size: 18px;">${o.clientName}</strong>
+                                ${o.delay ? `<span class="delay-text">⏱️ Délai : ${o.delay}</span>` : ''}
+                            </div>
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
+                        `;
+                        list.appendChild(div);
+                    }
+                });
+                if(!hasOrders) list.innerHTML = "<p style='text-align:center;color:#444;'>Aucune commande aujourd'hui.</p>";
             });
         }
 
-        // Rafraîchir automatiquement toutes les 10 secondes
-        setInterval(chargerDonneesSuivi, 10000);
-        // Charger au démarrage
-        window.onload = chargerDonneesSuivi;
+        const menuPizzas = [
+            {n:'Maria', p:11}, {n:'Mama', p:13}, {n:'Ochan', p:14}, {n:'Salam', p:14}, {n:'Diamond', p:14},
+            {n:'4 Croisées', p:16}, {n:'Jah', p:15}, {n:'Nossa', p:16}, {n:'Gwo Model', p:16},
+            {n:'Taken', p:14}, {n:'Bad Gyal', p:15}, {n:'Poudrière', p:16}, {n:'Danjé', p:17.9},
+            {n:'Sirène', p:17.9}, {n:'Mwaka Moon', p:15}, {n:'Ya Koi Ici', p:16}, {n:'Ou La', p:17}, {n:'Tombolo', p:17}
+        ];
+
+        const supplements = [ 
+            {n:'ANANAS', p:1}, {n:'OEUF', p:1}, {n:'CREVETTES', p:4}, {n:'CREME FRAICHE', p:1},
+            {n:'MERGUEZ', p:2.5}, {n:'BACON', p:2.5}, {n:'MARLIN FUME', p:4}, {n:'SAUMON FUME', p:4},
+            {n:'SAUCE TOMATE', p:1}, {n:'SAUCE BBQ', p:1}, {n:'MIEL', p:1}, {n:'JAMBON', p:1.5}
+        ];
+
+        const menuDesserts = [
+            {n:'Glace B&J Vanila Pecan', p:8.9}, {n:'Glace B&J Caramel Brownie', p:8.9},
+            {n:'Beignet Choco Noisette', p:2.9}, {n:'Beignet Pomme', p:2.9},
+            {n:'Tiramisu Speculos', p:3.9}, {n:'Muffin Chocolat', p:3.9},
+            {n:'Bom\'Bom Nutella', p:4.9}, {n:'Bom\'Bom Cannelle', p:4.9}, {n:'Sweet Pizza', p:9.9}
+        ];
+
+        const menuDrinks = [
+            {n:'Coca 50cl', p:2.5}, {n:'Coca 2L', p:5}, {n:'Fanta 50cl', p:2.5}, {n:'Fanta 2L', p:5},
+            {n:'Orangina 50cl', p:2.5}, {n:'Orangina 2L', p:5}, {n:'Didier Normal 50cl', p:2.5},
+            {n:'Didier Citron 50cl', p:2.5}, {n:'Chanflor 50cl', p:2}, {n:'Jus Local 50cl', p:3.2},
+            {n:'Heineken 25cl', p:3}, {n:'Lorraine 33cl', p:3}, {n:'Desperados Orig. 33cl', p:4},
+            {n:'Desperados Red 33cl', p:4}, {n:'Champagne 75cl', p:45}
+        ];
+
+        function setType(t) {
+            currentType = t;
+            document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter');
+            document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison');
+            document.getElementById('livraisonInfo').style.display = t==='Livraison' ? 'block' : 'none';
+            document.getElementById('resGroup').style.display = t==='Emporter' ? 'block' : 'none';
+        }
+
+        function setRes(r) {
+            currentRes = r;
+            document.getElementById('btnValm').classList.toggle('active', r==='Valmenière');
+            document.getElementById('btnCentre').classList.toggle('active', r==='Centre-ville');
+        }
+
+        function addPizza() {
+            const list = document.getElementById('pizzasList');
+            const div = document.createElement('div');
+            div.className = 'order-item';
+            div.innerHTML = `
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <select class="p-qty" style="width:65px" onchange="calcTotal()">
+                        ${[1,2,3,4,5,6,7,8,9,10].map(v => `<option value="${v}">${v}</option>`).join('')}
+                    </select>
+                    <div style="flex:1; position:relative;">
+                        <input type="text" class="p-name" placeholder="Pizza..." required oninput="search(this)">
+                        <div class="autocomplete-list"></div>
+                    </div>
+                </div>
+                <textarea class="p-notes" placeholder="Notes..."></textarea>
+                <div class="supp-grid">
+                    ${supplements.map(s => `
+                        <label class="supp-label">
+                            <input type="checkbox" class="p-supp" data-price="${s.p}" data-name="${s.n}" onchange="calcTotal()"> 
+                            ${s.n} (+${s.p}€)
+                        </label>
+                    `).join('')}
+                </div>
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">🗑️ SUPPRIMER</button>
+            `;
+            list.appendChild(div);
+        }
+
+        function addDessert() {
+            const list = document.getElementById('dessertsList');
+            const div = document.createElement('div');
+            div.className = 'order-item dessert-item';
+            div.innerHTML = `
+                <div style="display:flex; gap:10px;">
+                    <select class="d-qty" style="width:65px" onchange="calcTotal()">
+                        ${[1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join('')}
+                    </select>
+                    <select class="d-name" style="flex:1" onchange="calcTotal()" required>
+                        <option value="" data-price="0">-- Choisir Dessert --</option>
+                        ${menuDesserts.map(d => `<option value="${d.n}" data-price="${d.p}">${d.n} (${d.p}€)</option>`).join('')}
+                    </select>
+                </div>
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">🗑️ SUPPRIMER</button>
+            `;
+            list.appendChild(div);
+        }
+
+        function addDrink() {
+            const list = document.getElementById('drinksList');
+            const div = document.createElement('div');
+            div.className = 'order-item drink-item';
+            div.innerHTML = `
+                <div style="display:flex; gap:10px;">
+                    <select class="dr-qty" style="width:65px" onchange="calcTotal()">
+                        ${[1,2,3,4,5,6,7,8,9,10].map(v => `<option value="${v}">${v}</option>`).join('')}
+                    </select>
+                    <select class="dr-name" style="flex:1" onchange="calcTotal()" required>
+                        <option value="" data-price="0">-- Choisir Boisson --</option>
+                        ${menuDrinks.map(dr => `<option value="${dr.n}" data-price="${dr.p}">${dr.n} (${dr.p}€)</option>`).join('')}
+                    </select>
+                </div>
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">🗑️ SUPPRIMER</button>
+            `;
+            list.appendChild(div);
+        }
+
+        function search(input) {
+            const list = input.nextElementSibling; list.innerHTML = '';
+            const val = input.value.toLowerCase(); if(!val) return;
+            menuPizzas.filter(m => m.n.toLowerCase().includes(val)).forEach(m => {
+                const d = document.createElement('div'); d.className = 'autocomplete-item';
+                d.innerText = `${m.n} (${m.p}€)`;
+                d.onclick = () => { input.value = m.n; input.dataset.price = m.p; list.innerHTML = ''; calcTotal(); };
+                list.appendChild(d);
+            });
+        }
+
+        function calcTotal() {
+            let total = 0;
+            document.querySelectorAll('.order-item:not(.dessert-item):not(.drink-item)').forEach(p => {
+                const qty = parseInt(p.querySelector('.p-qty').value);
+                const price = parseFloat(p.querySelector('.p-name').dataset.price || 0);
+                let sPrice = 0;
+                p.querySelectorAll('.p-supp:checked').forEach(s => sPrice += parseFloat(s.dataset.price));
+                total += qty * (price + sPrice);
+            });
+            document.querySelectorAll('.dessert-item').forEach(d => {
+                const qty = parseInt(d.querySelector('.d-qty').value);
+                const sel = d.querySelector('.d-name');
+                const price = parseFloat(sel.options[sel.selectedIndex].dataset.price || 0);
+                total += qty * price;
+            });
+            document.querySelectorAll('.drink-item').forEach(dr => {
+                const qty = parseInt(dr.querySelector('.dr-qty').value);
+                const sel = dr.querySelector('.dr-name');
+                const price = parseFloat(sel.options[sel.selectedIndex].dataset.price || 0);
+                total += qty * price;
+            });
+            document.getElementById('totalDisplay').innerText = total.toFixed(2) + " €";
+            return total;
+        }
+
+        document.getElementById('orderForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "ENVOI EN COURS...";
+
+            const pizzas = Array.from(document.querySelectorAll('.order-item:not(.dessert-item):not(.drink-item)')).map(p => ({
+                qty: p.querySelector('.p-qty').value,
+                name: p.querySelector('.p-name').value,
+                notes: p.querySelector('.p-notes').value,
+                supps: Array.from(p.querySelectorAll('.p-supp:checked')).map(s => s.dataset.name)
+            }));
+
+            const desserts = Array.from(document.querySelectorAll('.dessert-item')).map(d => ({
+                qty: d.querySelector('.d-qty').value,
+                name: d.querySelector('.d-name').value
+            })).filter(x => x.name !== "");
+
+            const drinks = Array.from(document.querySelectorAll('.drink-item')).map(dr => ({
+                qty: dr.querySelector('.dr-qty').value,
+                name: dr.querySelector('.dr-name').value
+            })).filter(x => x.name !== "");
+
+            const order = {
+                clientName: document.getElementById('clientName').value,
+                type: currentType,
+                restaurant: currentType === 'Emporter' ? currentRes : 'Livraison',
+                phone: document.getElementById('phone').value || '',
+                address: document.getElementById('address').value || '',
+                payment: document.getElementById('payment').value || 'N/A',
+                items: pizzas,
+                desserts: desserts,
+                drinks: drinks,
+                total: calcTotal(),
+                status: 'en_attente',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection("commandes").add(order);
+                alert("✅ Envoyé en cuisine !");
+                location.reload();
+            } catch(err) {
+                alert("Erreur Cloud : " + err.message);
+                btn.disabled = false; btn.innerText = "RÉESSAYER";
+            }
+        };
+
+        window.onload = () => { addPizza(); listenSuivi(); };
     </script>
 </body>
 </html>
