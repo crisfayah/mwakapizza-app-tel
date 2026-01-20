@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Mwaka Pizza - CUISINE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest-cuisine.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; overflow-x: hidden; }
@@ -199,7 +200,7 @@
                         <div id="delay-${o.id}" class="delay-menu">
                             <button class="btn-delay bg-rapide" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
                             <button class="btn-delay bg-15min" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
-                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'C&#39;est CHAUD !')">C'est CHAUD !</button>
+                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -215,33 +216,15 @@
         }
 
         function updateStatus(id, newStatus, delay = null) {
-            stopAlert(); // Arrêt du son immédiat
+            stopAlert(); // Arrêt immédiat du son
             
             const updateData = { status: newStatus };
             if(delay) updateData.delay = delay;
             
+            // On met à jour Firestore
             db.collection("commandes").doc(id).update(updateData).then(() => {
-                // Bascule automatique sur l'onglet TERMINE si on vient de valider
+                // Pour que ça sorte "plus vite", si on est en train de valider une commande
+                // on force la bascule sur l'onglet TERMINE
                 if(newStatus === 'termine') {
                     switchTab('termine');
                 }
-            });
-        }
-
-        function printToBluetooth(orderId) {
-            const o = allOrders[orderId];
-            let t = "--------------------------------\n   MWAKA PIZZA - CUISINE\n--------------------------------\n";
-            t += "CLIENT: " + o.clientName + " (" + o.type + ")\n";
-            t += "--------------------------------\n";
-            if(o.items) o.items.forEach(p => { t += p.qty + "x " + p.name.toUpperCase() + "\n"; });
-            if(o.desserts) o.desserts.forEach(d => { t += d.qty + "x " + d.name + "\n"; });
-            if(o.drinks) o.drinks.forEach(dr => { t += dr.qty + "x " + dr.name + "\n"; });
-            t += "\n\n\n\n";
-            const b64 = btoa(unescape(encodeURIComponent(t)));
-            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + b64 + ";end;";
-        }
-
-        window.onload = () => { loadOrders(); checkConnection(); };
-    </script>
-</body>
-</html>
