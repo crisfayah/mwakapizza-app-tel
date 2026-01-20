@@ -131,7 +131,7 @@
             // Utilisation du tri puisque l'index est activé
             db.collection("commandes")
               .where("status", "==", currentView)
-              .orderBy("createdAt", "desc")
+    
               .onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
                 container.innerHTML = "";
@@ -175,3 +175,4 @@
                             ${o.drinks && o.drinks.length > 0 ? `
                                 <div style="color:#3498db; padding-top:5px;">
                                     BOISSONS : ${o.drinks.map(dr => `${dr.qty}x
+
