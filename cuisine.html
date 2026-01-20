@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Mwaka Pizza - CUISINE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest-cuisine.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; overflow-x: hidden; }
@@ -57,7 +56,6 @@
     <div id="offlineOverlay">
         <h1 style="font-size:70px; margin-bottom:20px;">⚠️ CONNEXION PERDUE ⚠️</h1>
         <p style="font-size:30px;">LA CUISINE NE REÇOIT PLUS RIEN !</p>
-        <p style="font-size:20px; margin-top:30px; opacity:0.8;">Vérifiez le Wi-Fi de la pizzeria.</p>
     </div>
 
     <div class="tabs">
@@ -66,7 +64,7 @@
     </div>
 
     <div id="ordersContainer" class="orders-list">
-        <p style="text-align:center; color:#444; margin-top:100px;">Connexion au Cloud Mwaka...</p>
+        <p style="text-align:center; color:#666; margin-top:100px; font-size: 20px;">Connexion au Cloud Mwaka...</p>
     </div>
 
     <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3" preload="auto"></audio>
@@ -93,7 +91,7 @@
         function startAlert() {
             const sound = document.getElementById('notifSound');
             sound.loop = true;
-            sound.play().catch(e => console.log("Attente clic pour son"));
+            sound.play().catch(e => console.log("Attente clic"));
         }
 
         function stopAlert() {
@@ -101,28 +99,6 @@
             sound.pause();
             sound.currentTime = 0;
         }
-
-        function checkConnection() {
-            const overlay = document.getElementById('offlineOverlay');
-            if (!navigator.onLine) {
-                overlay.style.display = 'flex';
-                speakAlert("Attention ! Connexion perdue.");
-            } else {
-                overlay.style.display = 'none';
-                window.speechSynthesis.cancel();
-            }
-        }
-
-        function speakAlert(msg) {
-            if (!window.speechSynthesis.speaking && !navigator.onLine) {
-                const u = new SpeechSynthesisUtterance(msg);
-                u.lang = 'fr-FR';
-                window.speechSynthesis.speak(u);
-                setTimeout(() => speakAlert(msg), 10000);
-            }
-        }
-        window.addEventListener('offline', checkConnection);
-        window.addEventListener('online', checkConnection);
 
         function switchTab(status) {
             stopAlert();
@@ -132,8 +108,9 @@
             loadOrders();
         }
 
+        // --- FILTRE DATE MARTINIQUE ---
         function isTodayMQ(timestamp) {
-            if(!timestamp) return false;
+            if(!timestamp) return true; // On affiche si le timestamp n'est pas encore prêt (optimisme)
             const date = timestamp.toDate();
             const mqDate = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
             const todayMQ = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -145,23 +122,27 @@
               .where("status", "==", currentView)
               .onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
-                container.innerHTML = "";
-                let dailyOrders = [];
+                container.innerHTML = ""; // Vide le "Connexion au Cloud..."
 
+                let dailyOrders = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if(isTodayMQ(data.createdAt)) dailyOrders.push({id: doc.id, ...data});
                 });
 
+                // Sonnerie si nouvelle commande en attente
                 if (currentView === 'en_attente' && lastOrderCount !== -1 && dailyOrders.length > lastOrderCount) {
                     startAlert();
                 }
                 lastOrderCount = dailyOrders.length;
 
                 if (dailyOrders.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; margin-top:100px; color:#444;">Aucune commande pour aujourd'hui.</p>`;
+                    container.innerHTML = `<p style="text-align:center; margin-top:100px; color:#444; font-size:20px;">Aucune commande ici.</p>`;
                     return;
                 }
+
+                // Tri : plus récentes en haut
+                dailyOrders.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 dailyOrders.forEach((o) => {
                     allOrders[o.id] = o;
@@ -185,8 +166,8 @@
 
                         ${o.type === 'Livraison' ? `
                             <div class="delivery-box">
-                                🏠 <strong>ADR :</strong> ${o.address} | 📞 <strong>TEL :</strong> ${o.phone}<br>
-                                💳 <strong>Paiement :</strong> ${o.payment}
+                                ADR : ${o.address} | TEL : ${o.phone}<br>
+                                PAIEMENT : ${o.payment}
                             </div>
                         ` : ''}
 
@@ -205,6 +186,8 @@
                     `;
                     container.appendChild(card);
                 });
+            }, (err) => {
+                document.getElementById('ordersContainer').innerHTML = `<p style="color:red; text-align:center;">Erreur Cloud : ${err.message}</p>`;
             });
         }
 
@@ -216,15 +199,30 @@
         }
 
         function updateStatus(id, newStatus, delay = null) {
-            stopAlert(); // Arrêt immédiat du son
-            
+            stopAlert(); // Arrêt du son immédiat
             const updateData = { status: newStatus };
             if(delay) updateData.delay = delay;
             
-            // On met à jour Firestore
+            // Mise à jour immédiate
             db.collection("commandes").doc(id).update(updateData).then(() => {
-                // Pour que ça sorte "plus vite", si on est en train de valider une commande
-                // on force la bascule sur l'onglet TERMINE
-                if(newStatus === 'termine') {
-                    switchTab('termine');
-                }
+                if(newStatus === 'termine') switchTab('termine');
+            });
+        }
+
+        function printToBluetooth(orderId) {
+            const o = allOrders[orderId];
+            let t = "--------------------------------\n   MWAKA PIZZA - CUISINE\n--------------------------------\n";
+            t += "CLIENT: " + o.clientName + " (" + o.type + ")\n";
+            t += "--------------------------------\n";
+            if(o.items) o.items.forEach(p => { t += p.qty + "x " + p.name.toUpperCase() + "\n"; });
+            if(o.desserts) o.desserts.forEach(d => { t += d.qty + "x " + d.name + "\n"; });
+            if(o.drinks) o.drinks.forEach(dr => { t += dr.qty + "x " + dr.name + "\n"; });
+            t += "\n\n\n\n";
+            const b64 = btoa(unescape(encodeURIComponent(t)));
+            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + b64 + ";end;";
+        }
+
+        window.onload = loadOrders;
+    </script>
+</body>
+</html>
