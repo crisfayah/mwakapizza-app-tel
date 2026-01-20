@@ -42,7 +42,7 @@
         .btn-restore { background: #555; color: white; }
 
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-delay { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; }
+        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; text-transform: uppercase; }
         .bg-rapide { background: #2ecc71; }
         .bg-15min { background: #f39c12; }
         .bg-chaud { background: #e74c3c; }
@@ -93,7 +93,7 @@
         function startAlert() {
             const sound = document.getElementById('notifSound');
             sound.loop = true;
-            sound.play().catch(e => console.log("Attente clic pour son"));
+            sound.play().catch(e => console.log("Attente interaction pour son"));
         }
 
         function stopAlert() {
@@ -132,7 +132,6 @@
             loadOrders();
         }
 
-        // --- FILTRE MARTINIQUE ---
         function isTodayMQ(timestamp) {
             if(!timestamp) return false;
             const date = timestamp.toDate();
@@ -147,8 +146,8 @@
               .onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
                 container.innerHTML = "";
-
                 let dailyOrders = [];
+
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     if(isTodayMQ(data.createdAt)) dailyOrders.push({id: doc.id, ...data});
@@ -194,7 +193,7 @@
                         <div class="actions">
                             <button class="btn btn-print" onclick="printToBluetooth('${o.id}')">🖨️</button>
                             ${currentView === 'en_attente' 
-                                ? `<button class="btn btn-done" onclick="showDelayMenu('${o.id}')"><i class="fas fa-clock"></i> ACCEPTER</button>`
+                                ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')"><i class="fas fa-clock"></i> ACCEPTER</button>`
                                 : `<button class="btn btn-restore" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`
                             }
                         </div>
@@ -209,16 +208,23 @@
             });
         }
 
-        function showDelayMenu(id) {
+        function toggleDelayMenu(id) {
             const menu = document.getElementById(`delay-${id}`);
-            menu.style.display = menu.style.display === 'grid' ? 'none' : 'grid';
+            const isVisible = menu.style.display === 'grid';
+            document.querySelectorAll('.delay-menu').forEach(m => m.style.display = 'none'); // Ferme les autres
+            menu.style.display = isVisible ? 'none' : 'grid';
         }
 
         function updateStatus(id, newStatus, delay = null) {
-            stopAlert();
+            // Arrêt du son dès qu'on valide un statut ou un délai
+            stopAlert(); 
+            
             const updateData = { status: newStatus };
             if(delay) updateData.delay = delay;
-            db.collection("commandes").doc(id).update(updateData);
+            
+            db.collection("commandes").doc(id).update(updateData)
+              .then(() => console.log("Statut mis à jour"))
+              .catch(err => alert("Erreur : " + err.message));
         }
 
         function printToBluetooth(orderId) {
