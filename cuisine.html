@@ -2,109 +2,103 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cuisine - Préparation</title>
+    <title>Menu Principal - Suivi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
-        .card { background: white; border-radius: 10px; padding: 20px; width: 300px; shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { color: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; padding: 20px; }
         
-        /* Menu Dropdown */
-        .dropdown { position: relative; display: inline-block; }
-        .btn-accepter {
-            background-color: #27ae60;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
+        .tabs-header { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 12px 25px; border: none; border-radius: 8px 8px 0 0; cursor: pointer; background: #34495e; color: white; font-weight: bold; }
+        .tab-btn.active { background: #e67e22; }
+        
+        .tab-content { display: none; background: white; color: #333; padding: 20px; border-radius: 0 8px 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .tab-content.active { display: block; }
+
+        /* Style des lignes SUIVI */
+        .suivi-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            font-size: 1rem;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            z-index: 1;
-            background: white;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 5px;
-        }
-        .dropdown-content div {
-            padding: 12px 16px;
-            cursor: pointer;
+            padding: 15px 10px;
             border-bottom: 1px solid #eee;
-            transition: 0.3s;
         }
-        .dropdown-content div:hover { background-color: #f1f1f1; color: #e67e22; }
-        .show { display: block; }
+        .suivi-item:last-child { border-bottom: none; }
+        
+        .id-heure { font-weight: bold; color: #2c3e50; }
+        .badge-delai { background: #fff3e0; color: #e67e22; padding: 4px 10px; border-radius: 5px; font-size: 0.9rem; font-weight: 600; border: 1px solid #ffe0b2; }
+        .status-label { color: #27ae60; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <h2>👨‍🍳 Commandes en Cuisine</h2>
+    <div class="tabs-header">
+        <button class="tab-btn" onclick="switchTab(event, 'MENU')">MENU</button>
+        <button class="tab-btn active" onclick="switchTab(event, 'SUIVI_TAB')">📋 SUIVI</button>
+    </div>
 
-    <div class="card">
-        <h3>Commande #452</h3>
-        <p>2x Bokit Poulet</p>
-        
-        <div class="dropdown">
-            <button onclick="toggleMenu()" class="btn-accepter">
-                <i class="fas fa-clock"></i> ACCEPTER
-            </button>
-            <div id="menu-delais" class="dropdown-content">
-                <div onclick="enregistrerDelai(452, 'RAPIDE')">⚡ RAPIDE</div>
-                <div onclick="enregistrerDelai(452, '15min')">🕒 15 min</div>
-                <div onclick="enregistrerDelai(452, 'C\'est CHAUD !')">🔥 C'est CHAUD !</div>
+    <div id="MENU" class="tab-content">
+        <h3>Votre Menu s'affiche ici.</h3>
+    </div>
+
+    <div id="SUIVI_TAB" class="tab-content active">
+        <h3 style="margin-top:0;">État des commandes (Martinique)</h3>
+        <div id="liste-suivi">
             </div>
-        </div>
     </div>
 
     <script>
-        const TZ_MARTINIQUE = 'America/Martinique';
+        const FUSEAU_MQ = 'America/Martinique';
 
-        function toggleMenu() {
-            document.getElementById("menu-delais").classList.toggle("show");
+        function switchTab(evt, tabId) {
+            let contents = document.getElementsByClassName("tab-content");
+            for (let c of contents) c.classList.remove("active");
+            let btns = document.getElementsByClassName("tab-btn");
+            for (let b of btns) b.classList.remove("active");
+            
+            document.getElementById(tabId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+
+            if(tabId === 'SUIVI_TAB') majAfficheSuivi();
         }
 
-        function enregistrerDelai(id, delai) {
+        function majAfficheSuivi() {
+            const container = document.getElementById('liste-suivi');
             const maintenant = new Date();
+            const aujourdhuiMQ = maintenant.toLocaleDateString('fr-FR', { timeZone: FUSEAU_MQ });
+
+            const historique = JSON.parse(localStorage.getItem('commandes_du_jour')) || [];
             
-            // Formatage spécifique Martinique
-            const dateMQ = maintenant.toLocaleDateString('fr-FR', { timeZone: TZ_MARTINIQUE });
-            const heureMQ = maintenant.toLocaleTimeString('fr-FR', { timeZone: TZ_MARTINIQUE, hour: '2-digit', minute: '2-digit' });
+            // On filtre pour ne garder que les commandes de la date du jour Martinique
+            const commandesToday = historique.filter(cmd => cmd.date === aujourdhuiMQ);
 
-            const nouvelleInfo = {
-                id: id,
-                delai: delai,
-                heure: heureMQ,
-                date: dateMQ,
-                statut: "En préparation"
-            };
+            container.innerHTML = "";
 
-            // Récupérer l'historique existant
-            let historique = JSON.parse(localStorage.getItem('suivi_commandes')) || [];
-            historique.push(nouvelleInfo);
-            
-            // Sauvegarder
-            localStorage.setItem('suivi_commandes', JSON.stringify(historique));
-
-            alert("Délai validé : " + delai);
-            document.getElementById("menu-delais").classList.remove("show");
-        }
-
-        // Fermer le menu si on clique ailleurs
-        window.onclick = function(event) {
-            if (!event.target.matches('.btn-accepter') && !event.target.matches('.fa-clock')) {
-                document.getElementById("menu-delais").classList.remove("show");
+            if (commandesToday.length === 0) {
+                container.innerHTML = "<p style='color:#888;'>Aucune commande en préparation aujourd'hui.</p>";
+                return;
             }
+
+            // On affiche en commençant par la plus récente
+            commandesToday.reverse().forEach(cmd => {
+                container.innerHTML += `
+                    <div class="suivi-item">
+                        <div class="id-heure">
+                            #${cmd.id} <span style="font-weight:normal; color:#888; margin-left:10px;">${cmd.heure}</span>
+                        </div>
+                        <div class="badge-delai">
+                            <i class="fas fa-clock"></i> ${cmd.delai}
+                        </div>
+                        <div class="status-label">En préparation</div>
+                    </div>
+                `;
+            });
         }
+
+        // Rafraîchir l'affichage toutes les 15 secondes automatiquement
+        setInterval(majAfficheSuivi, 15000);
+        
+        // Charger au lancement
+        window.onload = majAfficheSuivi;
     </script>
 </body>
 </html>
