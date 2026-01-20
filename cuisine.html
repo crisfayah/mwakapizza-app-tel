@@ -20,7 +20,6 @@
         .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; animation: slideIn 0.3s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .order-card.livraison { border-left-color: #e74c3c; }
         
-        .time { position: absolute; top: 20px; right: 20px; color: #888; font-weight: bold; font-size: 1.1em; }
         .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
         .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #fff; }
         
@@ -93,7 +92,7 @@
         function startAlert() {
             const sound = document.getElementById('notifSound');
             sound.loop = true;
-            sound.play().catch(e => console.log("Attente interaction pour son"));
+            sound.play().catch(e => console.log("Attente clic pour son"));
         }
 
         function stopAlert() {
@@ -199,8 +198,8 @@
                         </div>
                         <div id="delay-${o.id}" class="delay-menu">
                             <button class="btn-delay bg-rapide" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
-                            <button class="btn-delay bg-15min" onclick="updateStatus('${o.id}', 'termine', '15min')">15 min</button>
-                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'C\'est CHAUD !')">C'est CHAUD !</button>
+                            <button class="btn-delay bg-15min" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
+                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'C&apos;est CHAUD !')">C'est CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -211,20 +210,15 @@
         function toggleDelayMenu(id) {
             const menu = document.getElementById(`delay-${id}`);
             const isVisible = menu.style.display === 'grid';
-            document.querySelectorAll('.delay-menu').forEach(m => m.style.display = 'none'); // Ferme les autres
+            document.querySelectorAll('.delay-menu').forEach(m => m.style.display = 'none');
             menu.style.display = isVisible ? 'none' : 'grid';
         }
 
         function updateStatus(id, newStatus, delay = null) {
-            // Arrêt du son dès qu'on valide un statut ou un délai
-            stopAlert(); 
-            
+            stopAlert(); // Arrêt du son immédiat
             const updateData = { status: newStatus };
             if(delay) updateData.delay = delay;
-            
-            db.collection("commandes").doc(id).update(updateData)
-              .then(() => console.log("Statut mis à jour"))
-              .catch(err => alert("Erreur : " + err.message));
+            db.collection("commandes").doc(id).update(updateData);
         }
 
         function printToBluetooth(orderId) {
