@@ -1,0 +1,15 @@
+{
+  "name": "MP Orders",
+  "short_name": "MPOrders",
+  "start_url": "pizza-orders v1.2.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#e74c3c",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
