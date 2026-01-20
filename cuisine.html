@@ -199,7 +199,7 @@
                         <div id="delay-${o.id}" class="delay-menu">
                             <button class="btn-delay bg-rapide" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
                             <button class="btn-delay bg-15min" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
-                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'C&apos;est CHAUD !')">C'est CHAUD !</button>
+                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'C&#39;est CHAUD !')">C'est CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -216,9 +216,16 @@
 
         function updateStatus(id, newStatus, delay = null) {
             stopAlert(); // Arrêt du son immédiat
+            
             const updateData = { status: newStatus };
             if(delay) updateData.delay = delay;
-            db.collection("commandes").doc(id).update(updateData);
+            
+            db.collection("commandes").doc(id).update(updateData).then(() => {
+                // Bascule automatique sur l'onglet TERMINE si on vient de valider
+                if(newStatus === 'termine') {
+                    switchTab('termine');
+                }
+            });
         }
 
         function printToBluetooth(orderId) {
