@@ -6,32 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; }
+        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; overflow-x: hidden; }
         .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 18px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
         .tab-btn.active { color: #2ecc71; border-bottom-color: #2ecc71; background: #111; }
         .tab-btn.active.tab-encours { color: #e74c3c; border-bottom-color: #e74c3c; }
+        
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; animation: slideIn 0.3s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
-        /* CARTES */
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
+        /* Couleur Bleue pour les commandes WEB */
+        .order-card.is-web { border-left-color: #3498db !important; }
+        .order-card.livraison { border-left-color: #e74c3c; } /* Rouge si c'est une livraison manuelle */
+
+        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #fff; }
         
-        /* COULEUR BLEUE POUR LE WEB */
-        .order-card.is-web { border-left-color: #3498db ! deprivation; }
-        
-        .client-header { font-size: 26px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .type-tag { font-size: 14px; background: #333; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; }
-        
-        /* BLOC LIVRAISON */
-        .delivery-info { background: #2c3e50; padding: 12px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid #3498db; font-size: 1.2em; line-height: 1.4; }
-        
-        .items-area { background: #252525; padding: 15px; border-radius: 10px; font-size: 1.6em; border: 1px solid #333; margin-bottom: 15px; }
-        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
-        
-        .actions { display: flex; gap: 12px; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .delivery-box { background: #1e272e; padding: 15px; border-radius: 10px; border-left: 4px solid #3498db; margin-bottom: 15px; font-size: 1.2em; line-height: 1.4; }
+
+        .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.6em; border: 1px solid #333; }
+        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 12px 0; }
+        .pizza-line:last-child { border: none; }
+
+        .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-done { background: #27ae60; color: white; }
+        .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
+        
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; }
+        .bg-rapide { background: #2ecc71; }
+        .bg-15min { background: #f39c12; }
+        .bg-chaud { background: #e74c3c; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -49,11 +57,19 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let currentView = 'en_attente';
+        let lastOrderCount = -1;
+        let allOrders = {};
 
         function startAlert() { const s = document.getElementById('notifSound'); s.loop = true; s.play().catch(e => {}); }
         function stopAlert() { const s = document.getElementById('notifSound'); s.pause(); s.currentTime = 0; }
 
-        function switchTab(status) { currentView = status; loadOrders(); }
+        function switchTab(status) {
+            stopAlert();
+            currentView = status;
+            document.getElementById('tabEncours').classList.toggle('active', status === 'en_attente');
+            document.getElementById('tabTermine').classList.toggle('active', status === 'termine');
+            loadOrders();
+        }
 
         function isTodayMQ(timestamp) {
             if(!timestamp) return true;
@@ -69,13 +85,17 @@
                 container.innerHTML = "";
                 let dailyOrders = [];
                 snapshot.forEach(doc => { if(isTodayMQ(doc.data().createdAt)) dailyOrders.push({id: doc.id, ...doc.data()}); });
+                
+                if (currentView === 'en_attente' && lastOrderCount !== -1 && dailyOrders.length > lastOrderCount) startAlert();
+                lastOrderCount = dailyOrders.length;
                 dailyOrders.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 dailyOrders.forEach((o) => {
+                    allOrders[o.id] = o;
                     const isWeb = o.source === "PRESTASHOP";
-                    const isDelivery = o.type === "LIVRAISON";
+                    const isLivraison = o.type === "LIVRAISON";
                     const card = document.createElement('div');
-                    card.className = `order-card ${isWeb ? 'is-web' : ''}`;
+                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isLivraison && !isWeb ? 'livraison' : ''}`;
                     
                     card.innerHTML = `
                         <div class="client-header">
@@ -83,10 +103,10 @@
                             <span class="type-tag">${o.type}</span>
                         </div>
                         
-                        ${isDelivery ? `
-                            <div class="delivery-info">
-                                📍 ${o.address}<br>
-                                📞 <b>${o.phone}</b>
+                        ${isLivraison ? `
+                            <div class="delivery-box">
+                                📍 ${o.address || 'Adresse non renseignée'}<br>
+                                📞 <b>${o.phone || 'Pas de numéro'}</b>
                             </div>
                         ` : ''}
 
@@ -95,12 +115,14 @@
                         </div>
 
                         <div class="actions">
-                            ${currentView === 'en_attente' ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')">ACCEPTER</button>` : `<button class="btn" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`}
+                            <button class="btn btn-print" onclick="printToBluetooth('${o.id}')">🖨️</button>
+                            ${currentView === 'en_attente' ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')"><i class="fas fa-clock"></i> ACCEPTER</button>` : `<button class="btn btn-restore" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`}
                         </div>
+                        
                         <div id="delay-${o.id}" class="delay-menu">
-                            <button style="background:#2ecc71; color:white; border:none; padding:15px; border-radius:8px;" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
-                            <button style="background:#f39c12; color:white; border:none; padding:15px; border-radius:8px;" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
-                            <button style="background:#e74c3c; color:white; border:none; padding:15px; border-radius:8px;" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
+                            <button class="btn-delay bg-rapide" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
+                            <button class="btn-delay bg-15min" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
+                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -109,15 +131,28 @@
         }
 
         function toggleDelayMenu(id) {
-            const m = document.getElementById(`delay-${id}`);
-            m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
+            const menu = document.getElementById(`delay-${id}`);
+            const isVisible = menu.style.display === 'grid';
+            document.querySelectorAll('.delay-menu').forEach(m => m.style.display = 'none');
+            menu.style.display = isVisible ? 'none' : 'grid';
         }
 
-        function updateStatus(id, s, d = null) {
+        function updateStatus(id, newStatus, delay = null) {
             stopAlert();
-            const up = { status: s }; if(d) up.delay = d;
-            db.collection("commandes").doc(id).update(up).then(() => { if(s === 'termine') switchTab('termine'); });
+            const data = { status: newStatus };
+            if(delay) data.delay = delay;
+            db.collection("commandes").doc(id).update(data).then(() => { if(newStatus === 'termine') switchTab('termine'); });
         }
+
+        function printToBluetooth(orderId) {
+            const o = allOrders[orderId];
+            let text = "MWAKA PIZZA\n" + o.clientName + "\n----------------\n";
+            if(o.items) o.items.forEach(p => { text += p.qty + "x " + p.name + "\n"; });
+            if(o.type === "LIVRAISON") text += "----------------\nADR: " + o.address + "\nTEL: " + o.phone + "\n";
+            const b64 = btoa(unescape(encodeURIComponent(text)));
+            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + b64 + ";end;";
+        }
+
         window.onload = loadOrders;
     </script>
 </body>
