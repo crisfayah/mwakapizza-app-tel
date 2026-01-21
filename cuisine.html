@@ -6,222 +6,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; overflow-x: hidden; }
-        
-        /* Onglets */
-        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; }
+        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; }
         .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 18px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
-        .tab-btn.active { color: #2ecc71; border-bottom-color: #2ecc71; background: #111; }
-        .tab-btn.active.tab-encours { color: #e74c3c; border-bottom-color: #e74c3c; }
-
-        /* Liste des commandes */
+        .tab-btn.active { color: #2ecc71; border-bottom-color: #2ecc71; }
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
         
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; animation: slideIn 0.3s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .order-card.livraison { border-left-color: #e74c3c; }
+        /* Couleur par défaut (Saisie Manuelle) */
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
-        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-        .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #fff; }
+        /* COULEUR BLEUE POUR LE WEB */
+        .order-card.is-web { border-left-color: #3498db; }
         
-        /* Zone Produits */
-        .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.4em; border: 1px solid #333; }
-        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 12px 0; }
-        .pizza-line:last-child { border: none; }
-        .notes { color: #ff9800; font-size: 0.85em; font-style: italic; margin-top: 5px; }
-        .supps { color: #2ecc71; font-size: 0.75em; font-weight: bold; display: block; margin-top: 3px; }
+        /* COULEUR ROUGE POUR LIVRAISON (si besoin de priorité) */
+        .order-card.is-delivery { border-left-color: #e74c3c; }
 
-        /* Infos Livraison */
-        .delivery-box { background: #3a1616; padding: 15px; border-radius: 10px; border: 2px dashed #e74c3c; margin-top: 15px; font-size: 1.2em; line-height: 1.4; }
-        
-        /* Boutons et Menu Délai */
-        .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .client-header { font-size: 24px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .contact-info { background: #2c3e50; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 1.1em; color: #ecf0f1; border-left: 4px solid #3498db; }
+        .items-area { background: #252525; padding: 15px; border-radius: 10px; font-size: 1.5em; border: 1px solid #333; }
+        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 8px 0; }
+        .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; }
+        .actions { display: flex; gap: 12px; margin-top: 15px; }
+        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-done { background: #27ae60; color: white; }
-        .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
-        .btn-restore { background: #555; color: white; }
-
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; text-transform: uppercase; }
-        .bg-rapide { background: #2ecc71; }
-        .bg-15min { background: #f39c12; }
-        .bg-chaud { background: #e74c3c; }
-
-        #offlineOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(231, 76, 60, 0.98); z-index:10000; flex-direction:column; justify-content:center; align-items:center; color:white; text-align:center; padding: 20px; }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-
-    <div id="offlineOverlay">
-        <h1 style="font-size:70px; margin-bottom:20px;">⚠️ CONNEXION PERDUE ⚠️</h1>
-        <p style="font-size:30px;">LA CUISINE NE REÇOIT PLUS RIEN !</p>
-    </div>
-
     <div class="tabs">
-        <button class="tab-btn active tab-encours" id="tabEncours" onclick="switchTab('en_attente')">EN COURS ⏳</button>
+        <button class="tab-btn active" id="tabEncours" onclick="switchTab('en_attente')">EN COURS ⏳</button>
         <button class="tab-btn" id="tabTermine" onclick="switchTab('termine')">TERMINE ✅</button>
     </div>
-
-    <div id="ordersContainer" class="orders-list">
-        <p style="text-align:center; color:#666; margin-top:100px; font-size: 20px;">Connexion au Cloud Mwaka...</p>
-    </div>
-
+    <div id="ordersContainer" class="orders-list"></div>
     <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3" preload="auto"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0",
-            authDomain: "mwakaphone-e8c5b.firebaseapp.com",
-            projectId: "mwakaphone-e8c5b",
-            storageBucket: "mwakaphone-e8c5b.firebasestorage.app",
-            messagingSenderId: "258049374795",
-            appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
         let currentView = 'en_attente';
-        let lastOrderCount = -1;
-        let allOrders = {};
 
-        function startAlert() {
-            const sound = document.getElementById('notifSound');
-            sound.loop = true;
-            sound.play().catch(e => console.log("Attente clic"));
-        }
+        function startAlert() { const s = document.getElementById('notifSound'); s.loop = true; s.play().catch(e => {}); }
+        function stopAlert() { const s = document.getElementById('notifSound'); s.pause(); s.currentTime = 0; }
 
-        function stopAlert() {
-            const sound = document.getElementById('notifSound');
-            sound.pause();
-            sound.currentTime = 0;
-        }
-
-        function switchTab(status) {
-            stopAlert();
-            currentView = status;
-            document.getElementById('tabEncours').classList.toggle('active', status === 'en_attente');
-            document.getElementById('tabTermine').classList.toggle('active', status === 'termine');
-            loadOrders();
-        }
-
-        // --- FILTRE DATE MARTINIQUE ---
-        function isTodayMQ(timestamp) {
-            if(!timestamp) return true; // On affiche si le timestamp n'est pas encore prêt (optimisme)
-            const date = timestamp.toDate();
-            const mqDate = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
-            const todayMQ = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-            return mqDate === todayMQ;
-        }
+        function switchTab(status) { currentView = status; loadOrders(); }
 
         function loadOrders() {
-            db.collection("commandes")
-              .where("status", "==", currentView)
-              .onSnapshot((snapshot) => {
+            db.collection("commandes").where("status", "==", currentView).onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
-                container.innerHTML = ""; // Vide le "Connexion au Cloud..."
-
-                let dailyOrders = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if(isTodayMQ(data.createdAt)) dailyOrders.push({id: doc.id, ...data});
-                });
-
-                // Sonnerie si nouvelle commande en attente
-                if (currentView === 'en_attente' && lastOrderCount !== -1 && dailyOrders.length > lastOrderCount) {
-                    startAlert();
-                }
-                lastOrderCount = dailyOrders.length;
-
-                if (dailyOrders.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; margin-top:100px; color:#444; font-size:20px;">Aucune commande ici.</p>`;
-                    return;
-                }
-
-                // Tri : plus récentes en haut
+                container.innerHTML = "";
+                let dailyOrders = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                
                 dailyOrders.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 dailyOrders.forEach((o) => {
-                    allOrders[o.id] = o;
+                    const isWeb = o.source === "PRESTASHOP" || o.clientName.includes("- WEB");
+                    const isDelivery = o.type === "LIVRAISON";
+                    
                     const card = document.createElement('div');
-                    card.className = `order-card ${o.type === 'Livraison' ? 'livraison' : ''}`;
+                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isDelivery ? 'is-delivery' : ''}`;
                     
                     card.innerHTML = `
-                        <div class="client-header">${o.clientName} <span class="type-tag">${o.type}</span></div>
-                        
-                        <div class="items-area">
-                            ${o.items ? o.items.map(p => `
-                                <div class="pizza-line">
-                                    <strong>${p.qty}x ${p.name.toUpperCase()}</strong>
-                                    ${p.supps && p.supps.length > 0 ? `<span class="supps">+ ${p.supps.join(', ')}</span>` : ''}
-                                    ${p.notes ? `<div class="notes">${p.notes}</div>` : ''}
-                                </div>
-                            `).join('') : ''}
-                            ${o.desserts && o.desserts.length > 0 ? `<div style="color:#9b59b6; margin-top:10px;">DESSERTS : ${o.desserts.map(d => `${d.qty}x ${d.name}`).join(' | ')}</div>` : ''}
-                            ${o.drinks && o.drinks.length > 0 ? `<div style="color:#3498db;">BOISSONS : ${o.drinks.map(dr => `${dr.qty}x ${dr.name}`).join(' | ')}</div>` : ''}
+                        <div class="client-header">
+                            <span>${o.clientName}</span>
+                            <span class="type-tag">${o.type}</span>
                         </div>
-
-                        ${o.type === 'Livraison' ? `
-                            <div class="delivery-box">
-                                ADR : ${o.address} | TEL : ${o.phone}<br>
-                                PAIEMENT : ${o.payment}
+                        
+                        ${isDelivery ? `
+                            <div class="contact-info">
+                                📍 ${o.address || 'Adresse manquante'}<br>
+                                📞 ${o.phone || 'Tel manquant'}
                             </div>
                         ` : ''}
 
+                        <div class="items-area">
+                            ${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}
+                        </div>
+
                         <div class="actions">
-                            <button class="btn btn-print" onclick="printToBluetooth('${o.id}')">🖨️</button>
-                            ${currentView === 'en_attente' 
-                                ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')"><i class="fas fa-clock"></i> ACCEPTER</button>`
-                                : `<button class="btn btn-restore" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`
-                            }
+                            ${currentView === 'en_attente' ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')">ACCEPTER</button>` : `<button class="btn" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`}
                         </div>
                         <div id="delay-${o.id}" class="delay-menu">
-                            <button class="btn-delay bg-rapide" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
-                            <button class="btn-delay bg-15min" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
-                            <button class="btn-delay bg-chaud" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
+                            <button style="background:#2ecc71" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
+                            <button style="background:#f39c12" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
+                            <button style="background:#e74c3c" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
                 });
-            }, (err) => {
-                document.getElementById('ordersContainer').innerHTML = `<p style="color:red; text-align:center;">Erreur Cloud : ${err.message}</p>`;
             });
         }
 
         function toggleDelayMenu(id) {
-            const menu = document.getElementById(`delay-${id}`);
-            const isVisible = menu.style.display === 'grid';
-            document.querySelectorAll('.delay-menu').forEach(m => m.style.display = 'none');
-            menu.style.display = isVisible ? 'none' : 'grid';
+            const m = document.getElementById(`delay-${id}`);
+            m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
         }
 
-        function updateStatus(id, newStatus, delay = null) {
-            stopAlert(); // Arrêt du son immédiat
-            const updateData = { status: newStatus };
-            if(delay) updateData.delay = delay;
-            
-            // Mise à jour immédiate
-            db.collection("commandes").doc(id).update(updateData).then(() => {
-                if(newStatus === 'termine') switchTab('termine');
-            });
+        function updateStatus(id, s, d = null) {
+            stopAlert();
+            const up = { status: s }; if(d) up.delay = d;
+            db.collection("commandes").doc(id).update(up);
         }
-
-        function printToBluetooth(orderId) {
-            const o = allOrders[orderId];
-            let t = "--------------------------------\n   MWAKA PIZZA - CUISINE\n--------------------------------\n";
-            t += "CLIENT: " + o.clientName + " (" + o.type + ")\n";
-            t += "--------------------------------\n";
-            if(o.items) o.items.forEach(p => { t += p.qty + "x " + p.name.toUpperCase() + "\n"; });
-            if(o.desserts) o.desserts.forEach(d => { t += d.qty + "x " + d.name + "\n"; });
-            if(o.drinks) o.drinks.forEach(dr => { t += dr.qty + "x " + dr.name + "\n"; });
-            t += "\n\n\n\n";
-            const b64 = btoa(unescape(encodeURIComponent(t)));
-            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + b64 + ";end;";
-        }
-
         window.onload = loadOrders;
     </script>
 </body>
