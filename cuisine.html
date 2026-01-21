@@ -9,17 +9,19 @@
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; overflow-x: hidden; }
         .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 18px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
+        /* Couleurs d'origine des onglets */
         .tab-btn.active.tab-encours { color: #e74c3c; border-bottom-color: #e74c3c; background: #111; }
         .tab-btn.active#tabTermine { color: #2ecc71; border-bottom-color: #2ecc71; background: #111; }
         
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
         
-        /* DESIGN DES CARTES */
+        /* CARTES ET BORDURES */
         .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; animation: slideIn 0.3s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
-        /* COULEUR BLEUE POUR LE WEB */
+        /* Bordure Bleue si Source = PRESTASHOP */
         .order-card.is-web { border-left-color: #3498db !important; }
-        .order-card.livraison { border-left-color: #e74c3c; }
+        /* Bordure Rouge si Livraison Manuelle */
+        .order-card.livraison-manuelle { border-left-color: #e74c3c; }
 
         .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #fff; }
@@ -31,8 +33,9 @@
         .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 12px 0; }
         .pizza-line:last-child { border: none; }
 
+        /* BOUTONS D'ORIGINE */
         .actions { display: flex; gap: 12px; margin-top: 20px; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-done { background: #27ae60; color: white; }
         .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
         
@@ -95,10 +98,13 @@
 
                 dailyOrders.forEach((o) => {
                     allOrders[o.id] = o;
+                    // Détection Web ou Livraison
                     const isWeb = o.source === "PRESTASHOP";
                     const isLivraison = o.type === "LIVRAISON";
+                    
                     const card = document.createElement('div');
-                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isLivraison && !isWeb ? 'livraison' : ''}`;
+                    // On applique la classe 'is-web' pour le bleu ou 'livraison-manuelle' pour le rouge
+                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isLivraison && !isWeb ? 'livraison-manuelle' : ''}`;
                     
                     card.innerHTML = `
                         <div class="client-header">
@@ -108,8 +114,8 @@
                         
                         ${isLivraison && isWeb ? `
                             <div class="delivery-box">
-                                📍 ${o.address}<br>
-                                📞 <b>${o.phone}</b>
+                                📍 ${o.address || 'Adresse manquante'}<br>
+                                📞 <b>${o.phone || 'Pas de numéro'}</b>
                             </div>
                         ` : ''}
 
@@ -155,7 +161,6 @@
             const b64 = btoa(unescape(encodeURIComponent(text)));
             window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + b64 + ";end;";
         }
-
         window.onload = loadOrders;
     </script>
 </body>
