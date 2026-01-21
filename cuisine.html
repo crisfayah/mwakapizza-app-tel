@@ -7,26 +7,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; }
-        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; }
+        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 18px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
-        .tab-btn.active { color: #2ecc71; border-bottom-color: #2ecc71; }
+        .tab-btn.active { color: #2ecc71; border-bottom-color: #2ecc71; background: #111; }
+        .tab-btn.active.tab-encours { color: #e74c3c; border-bottom-color: #e74c3c; }
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
         
-        /* Couleur par défaut (Saisie Manuelle) */
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        /* CARTES */
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; }
         
         /* COULEUR BLEUE POUR LE WEB */
-        .order-card.is-web { border-left-color: #3498db; }
+        .order-card.is-web { border-left-color: #3498db ! deprivation; }
         
-        /* COULEUR ROUGE POUR LIVRAISON (si besoin de priorité) */
-        .order-card.is-delivery { border-left-color: #e74c3c; }
-
-        .client-header { font-size: 24px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .contact-info { background: #2c3e50; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 1.1em; color: #ecf0f1; border-left: 4px solid #3498db; }
-        .items-area { background: #252525; padding: 15px; border-radius: 10px; font-size: 1.5em; border: 1px solid #333; }
-        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 8px 0; }
-        .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; }
-        .actions { display: flex; gap: 12px; margin-top: 15px; }
+        .client-header { font-size: 26px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .type-tag { font-size: 14px; background: #333; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; }
+        
+        /* BLOC LIVRAISON */
+        .delivery-info { background: #2c3e50; padding: 12px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid #3498db; font-size: 1.2em; line-height: 1.4; }
+        
+        .items-area { background: #252525; padding: 15px; border-radius: 10px; font-size: 1.6em; border: 1px solid #333; margin-bottom: 15px; }
+        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
+        
+        .actions { display: flex; gap: 12px; }
         .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-done { background: #27ae60; color: white; }
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
@@ -34,7 +36,7 @@
 </head>
 <body>
     <div class="tabs">
-        <button class="tab-btn active" id="tabEncours" onclick="switchTab('en_attente')">EN COURS ⏳</button>
+        <button class="tab-btn active tab-encours" id="tabEncours" onclick="switchTab('en_attente')">EN COURS ⏳</button>
         <button class="tab-btn" id="tabTermine" onclick="switchTab('termine')">TERMINE ✅</button>
     </div>
     <div id="ordersContainer" class="orders-list"></div>
@@ -53,20 +55,27 @@
 
         function switchTab(status) { currentView = status; loadOrders(); }
 
+        function isTodayMQ(timestamp) {
+            if(!timestamp) return true;
+            const date = timestamp.toDate();
+            const mqDate = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+            const todayMQ = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            return mqDate === todayMQ;
+        }
+
         function loadOrders() {
             db.collection("commandes").where("status", "==", currentView).onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
                 container.innerHTML = "";
-                let dailyOrders = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                
+                let dailyOrders = [];
+                snapshot.forEach(doc => { if(isTodayMQ(doc.data().createdAt)) dailyOrders.push({id: doc.id, ...doc.data()}); });
                 dailyOrders.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
                 dailyOrders.forEach((o) => {
-                    const isWeb = o.source === "PRESTASHOP" || o.clientName.includes("- WEB");
+                    const isWeb = o.source === "PRESTASHOP";
                     const isDelivery = o.type === "LIVRAISON";
-                    
                     const card = document.createElement('div');
-                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isDelivery ? 'is-delivery' : ''}`;
+                    card.className = `order-card ${isWeb ? 'is-web' : ''}`;
                     
                     card.innerHTML = `
                         <div class="client-header">
@@ -75,9 +84,9 @@
                         </div>
                         
                         ${isDelivery ? `
-                            <div class="contact-info">
-                                📍 ${o.address || 'Adresse manquante'}<br>
-                                📞 ${o.phone || 'Tel manquant'}
+                            <div class="delivery-info">
+                                📍 ${o.address}<br>
+                                📞 <b>${o.phone}</b>
                             </div>
                         ` : ''}
 
@@ -89,9 +98,9 @@
                             ${currentView === 'en_attente' ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')">ACCEPTER</button>` : `<button class="btn" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`}
                         </div>
                         <div id="delay-${o.id}" class="delay-menu">
-                            <button style="background:#2ecc71" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
-                            <button style="background:#f39c12" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
-                            <button style="background:#e74c3c" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
+                            <button style="background:#2ecc71; color:white; border:none; padding:15px; border-radius:8px;" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
+                            <button style="background:#f39c12; color:white; border:none; padding:15px; border-radius:8px;" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
+                            <button style="background:#e74c3c; color:white; border:none; padding:15px; border-radius:8px;" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -107,7 +116,7 @@
         function updateStatus(id, s, d = null) {
             stopAlert();
             const up = { status: s }; if(d) up.delay = d;
-            db.collection("commandes").doc(id).update(up);
+            db.collection("commandes").doc(id).update(up).then(() => { if(s === 'termine') switchTab('termine'); });
         }
         window.onload = loadOrders;
     </script>
