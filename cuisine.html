@@ -7,34 +7,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; }
-        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; }
+        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 18px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
         .tab-btn.active.tab-encours { color: #e74c3c; border-bottom-color: #e74c3c; background: #111; }
         .tab-btn.active#tabTermine { color: #2ecc71; border-bottom-color: #2ecc71; background: #111; }
-        
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
-        /* BORDURE BLEUE SI SOURCE = PRESTASHOP */
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        /* COULEUR BLEUE POUR LE WEB */
         .order-card.is-web { border-left-color: #3498db !important; }
-        /* BORDURE ROUGE SI LIVRAISON MANUELLE */
         .order-card.livraison-manuelle { border-left-color: #e74c3c; }
 
         .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #fff; }
-        
         .delivery-box { background: #1e272e; padding: 15px; border-radius: 10px; border: 1px solid #3498db; margin-bottom: 15px; font-size: 1.3em; line-height: 1.4; color: #3498db; }
-
         .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.6em; border: 1px solid #333; }
         .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 12px 0; }
-
         .actions { display: flex; gap: 12px; margin-top: 20px; }
         .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-done { background: #27ae60; color: white; }
         .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
-        
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; text-transform: uppercase; }
+        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; }
     </style>
 </head>
 <body>
@@ -65,6 +59,14 @@
             loadOrders();
         }
 
+        function isTodayMQ(timestamp) {
+            if(!timestamp) return true;
+            const date = timestamp.toDate();
+            const mqDate = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+            const todayMQ = new Intl.DateTimeFormat('fr-CA', { timeZone: 'America/Martinique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            return mqDate === todayMQ;
+        }
+
         function loadOrders() {
             db.collection("commandes").where("status", "==", currentView).onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
@@ -75,18 +77,17 @@
                 dailyOrders.forEach((o) => {
                     allOrders[o.id] = o;
                     const isWeb = o.source === "PRESTASHOP";
-                    const isLivraison = o.type === "LIVRAISON" || o.type === "Livraison";
-                    
+                    const isLiv = o.type === "LIVRAISON" || o.type === "Livraison";
                     const card = document.createElement('div');
-                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isLivraison && !isWeb ? 'livraison-manuelle' : ''}`;
+                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isLiv && !isWeb ? 'livraison-manuelle' : ''}`;
                     
                     card.innerHTML = `
                         <div class="client-header"><span>${o.clientName}</span><span class="type-tag">${o.type}</span></div>
-                        ${isLivraison ? `<div class="delivery-box">📍 ${o.address}<br>📞 <b>${o.phone}</b></div>` : ''}
+                        ${isLiv ? `<div class="delivery-box">📍 ${o.address}<br>📞 <b>${o.phone}</b></div>` : ''}
                         <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
                         <div class="actions">
                             <button class="btn btn-print" onclick="printToBluetooth('${o.id}')">🖨️</button>
-                            ${currentView === 'en_attente' ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')"><i class="fas fa-clock"></i> ACCEPTER</button>` : `<button class="btn btn-restore" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>`}
+                            ${currentView === 'en_attente' ? `<button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')">ACCEPTER</button>` : `<button class="btn" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE</button>`}
                         </div>
                         <div id="delay-${o.id}" class="delay-menu">
                             <button class="btn-delay" style="background:#2ecc71" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
@@ -101,24 +102,21 @@
 
         function toggleDelayMenu(id) {
             const m = document.getElementById(`delay-${id}`);
-            const vis = m.style.display === 'grid';
-            document.querySelectorAll('.delay-menu').forEach(x => x.style.display = 'none');
-            m.style.display = vis ? 'none' : 'grid';
+            m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
         }
 
-        function updateStatus(id, newStatus, delay = null) {
+        function updateStatus(id, s, d = null) {
             stopAlert();
-            const data = { status: newStatus }; if(delay) data.delay = delay;
-            db.collection("commandes").doc(id).update(data);
+            const up = { status: s }; if(d) up.delay = d;
+            db.collection("commandes").doc(id).update(up);
         }
 
         function printToBluetooth(orderId) {
             const o = allOrders[orderId];
-            let text = "MWAKA PIZZA\n" + o.clientName + "\n----------------\n";
-            if(o.items) o.items.forEach(p => { text += p.qty + "x " + p.name + "\n"; });
-            if(o.type.toUpperCase() === "LIVRAISON") text += "----------------\nADR: " + o.address + "\nTEL: " + o.phone + "\n";
-            const b64 = btoa(unescape(encodeURIComponent(text)));
-            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + b64 + ";end;";
+            let t = "MWAKA PIZZA\n" + o.clientName + "\n----------------\n";
+            if(o.items) o.items.forEach(p => { t += p.qty + "x " + p.name + "\n"; });
+            if(o.type.toUpperCase() === "LIVRAISON") t += "----------------\nADR: " + o.address + "\nTEL: " + o.phone + "\n";
+            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + btoa(unescape(encodeURIComponent(t))) + ";end;";
         }
         window.onload = loadOrders;
     </script>
