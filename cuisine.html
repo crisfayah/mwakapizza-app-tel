@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Pizza - CONSOLE EXPERT</title>
+    <title>Mwaka Pizza - CONSOLE CUISINE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -18,42 +18,44 @@
         /* NAVIGATION */
         .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 100px; gap: 10px; padding: 10px; box-sizing: border-box; }
         .tab-btn { flex: 1; border: none; border-radius: 14px; font-size: 16px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s ease; opacity: 0.5; color: #fff; text-transform: uppercase; cursor: pointer; }
+        
         #tab-afaire { flex: 1.4; background: #5d1a1a; border: 1px solid var(--red-soft); }
         #tab-encours { flex: 1; background: #1a325d; border: 1px solid var(--blue-soft); }
         #tab-termine { flex: 1; background: #1a5d2e; border: 1px solid var(--green-soft); }
+        
         .tab-btn.active { opacity: 1; transform: scale(0.97); }
         #tab-afaire.active { background: var(--red-soft); }
         #tab-encours.active { background: var(--blue-soft); }
         #tab-termine.active { background: var(--green-soft); }
         .badge { background: rgba(0,0,0,0.5); color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 14px; margin-top: 5px; font-weight: 800; }
 
-        /* LISTE DES CARTES */
+        /* CARTES */
         .orders-list { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 900px; margin: 0 auto; }
         .order-card { background: #1a1a1a; border-radius: 18px; padding: 25px; border-left: 15px solid var(--green-soft); position: relative; }
         .order-card.is-web { border-left-color: var(--blue-soft) !important; }
         
-        /* BLOC LIVRAISON / INFOS CLIENT */
+        /* INFOS LIVRAISON */
         .delivery-info { background: #14263d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--blue-soft); font-size: 1.1em; }
         .delivery-info b { color: var(--blue-soft); }
-        .payment-tag { display: inline-block; background: #f39c12; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; margin-top: 5px; }
+        .payment-tag { display: inline-block; background: #f39c12; color: #000; padding: 4px 10px; border-radius: 6px; font-weight: 900; font-size: 0.9em; margin-top: 8px; border: 2px solid #fff; }
 
         .timer-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 8px; font-weight: bold; font-family: monospace; border: 1px solid #444; }
         
         .danger { background: #641e16 !important; border-right: 12px solid var(--red-soft) !important; animation: soft-pulse 2s infinite; }
         @keyframes soft-pulse { 0% { background: #641e16; } 50% { background: #7b241c; } 100% { background: #641e16; } }
 
-        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 12px; padding-right: 100px; }
-        .items-area { background: #222; padding: 20px; border-radius: 12px; margin: 15px 0; font-size: 2.1em; border: 1px solid #333; }
+        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 12px; padding-right: 100px; text-transform: uppercase; }
+        .items-area { background: #222; padding: 20px; border-radius: 12px; margin: 15px 0; font-size: 2.2em; border: 1px solid #333; }
         .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px 0; }
 
         .actions { display: flex; gap: 15px; margin-top: 25px; }
-        .btn { flex: 1; height: 80px; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+        .btn { flex: 1; height: 85px; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; }
         .btn-green { background: var(--green-soft); color: #fff; }
         .btn-blue { background: var(--blue-soft); color: #fff; }
-        .btn-grey { background: #333; color: white; width: 90px; flex: none; font-size: 30px; }
+        .btn-grey { background: #333; color: white; width: 100px; flex: none; font-size: 32px; }
         
         .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        .btn-d { height: 70px; border: none; border-radius: 10px; font-weight: 900; color: #fff; font-size: 18px; }
+        .btn-d { height: 75px; border: none; border-radius: 10px; font-weight: 900; color: #fff; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -82,10 +84,10 @@
         db.collection("commandes").onSnapshot((snapshot) => {
             allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
-            // GESTION DU SON : Si au moins une commande est en attente, on boucle
+            // SONNERIE : Boucle si une commande est en attente
             const hasPending = allOrders.some(o => o.status === "en_attente");
             if (hasPending) {
-                sound.play().catch(e => console.log("Interaction requise pour le son"));
+                sound.play().catch(e => {});
             } else {
                 sound.pause();
                 sound.currentTime = 0;
@@ -124,25 +126,29 @@
             filtered.forEach(o => {
                 let d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || Date.now());
                 const diff = Math.floor((new Date() - d) / 60000);
+                
                 const isLivr = (o.type === "LIVRAISON");
                 const isWeb = (o.source === "PRESTASHOP");
 
                 const card = document.createElement('div');
                 card.className = `order-card ${isWeb ? 'is-web' : ''} ${(diff >= 15 && o.status !== 'termine') ? 'danger' : ''}`;
                 
-                // Formatage du nom : Prénom Nom - WEB - LIVRAISON
-                let displayTitle = o.clientName || 'CLIENT';
-                if (isWeb && isLivr) displayTitle += " - LIVRAISON";
+                // TITRE : Nom + LIVRAISON (si c'en est une)
+                let title = o.clientName || 'CLIENT';
+                if (isLivr) title += " - LIVRAISON";
 
                 card.innerHTML = `
                     <div class="timer-tag">${diff} min</div>
-                    <div class="client-header">${displayTitle}</div>
+                    <div class="client-header">${title}</div>
                     
-                    ${(isLivr || o.address) ? `
+                    ${(isLivr || o.address || o.phone) ? `
                         <div class="delivery-info">
-                            <b>📍 Adresse :</b> ${o.address || 'Non renseignée'}<br>
-                            <b>📞 Tel :</b> ${o.phone || 'Non renseigné'}<br>
-                            ${o.paymentMethod ? `<span class="payment-tag">💳 ${o.paymentMethod}</span>` : ''}
+                            ${o.address ? `<b>📍 ADRESSE :</b> ${o.address}<br>` : ''}
+                            ${o.phone ? `<b>📞 TEL :</b> ${o.phone}<br>` : ''}
+                            
+                            ${(!isWeb && o.paymentMethod) ? `
+                                <div class="payment-tag">💰 À ENCAISSER : ${o.paymentMethod}</div>
+                            ` : ''}
                         </div>
                     ` : ''}
 
@@ -150,20 +156,20 @@
                     
                     <div class="actions">
                         <button class="btn btn-grey" onclick="printTicket('${o.id}')"><i class="fas fa-print"></i></button>
-                        ${getActionButton(o.id, o.status)}
+                        ${getBtn(o.id, o.status)}
                     </div>
 
                     <div id="m-${o.id}" class="delay-menu">
                         <button class="btn-d" style="background:#27ae60" onclick="upd('${o.id}', 'production')">RAPIDE</button>
-                        <button class="btn-d" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15 MIN</button>
-                        <button class="btn-d" style="background:#e74c3c" onclick="upd('${o.id}', 'production')">CHAUD !</button>
+                        <button class="btn-d" style="background:#f39c12" onclick="upd('${o.id}', '15 MIN')">15 MIN</button>
+                        <button class="btn-d" style="background:#e74c3c" onclick="upd('${o.id}', 'CHAUD !')">CHAUD !</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function getActionButton(id, status) {
+        function getBtn(id, status) {
             if (status === "en_attente") return `<button class="btn btn-green" onclick="document.getElementById('m-${id}').style.display='grid'">ACCEPTER</button>`;
             if (status === "production") return `<button class="btn btn-blue" onclick="upd('${id}', 'cuisson')">AU FOUR !</button>`;
             if (status === "cuisson") return `<button class="btn btn-green" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
@@ -172,16 +178,14 @@
 
         function upd(id, s) { 
             db.collection("commandes").doc(id).update({ status: s }); 
-            if (s !== 'en_attente') { // Arrêter le son si on accepte
-                 sound.pause();
-            }
         }
 
         function printTicket(id) {
             const o = allOrders.find(x => x.id === id);
-            let t = (o.clientName || 'CLIENT') + "\n";
+            let t = (o.clientName || 'CLIENT') + (o.type === 'LIVRAISON' ? ' - LIVRAISON' : '') + "\n";
             if(o.address) t += "ADR: " + o.address + "\n";
             if(o.phone) t += "TEL: " + o.phone + "\n";
+            if(o.paymentMethod && o.source !== 'PRESTASHOP') t += "PAYER: " + o.paymentMethod + "\n";
             t += "----------------\n";
             if(o.items) t += o.items.map(p => p.qty + "x " + p.name).join("\n");
             window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + btoa(unescape(encodeURIComponent(t))) + ";end;";
