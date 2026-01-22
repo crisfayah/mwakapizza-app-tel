@@ -3,43 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mwaka Pizza - Commande & Suivi</title>
+    <title>Mwaka Pizza - Commande</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: sans-serif; background: #000; color: #fff; padding-bottom: 40px; }
-        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top:0; z-index:1000; }
+        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top:0; z-index:100; }
         .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .nav-btn.active { color: #fff; background: #2d5f3f; }
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .section { display: none; }
         .section.active { display: block; }
         .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #222; color: #888; cursor: pointer; font-weight: bold; }
         .type-btn.selected { background: #e74c3c; color: white; border-color: #e74c3c; }
-        input, textarea, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; margin-top: 5px; font-size: 16px; }
-        label { display: block; margin-top: 15px; color: #2d5f3f; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
-        .order-item { background: #111; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 6px solid #2d5f3f; position: relative; }
-        .supp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #222; }
-        .supp-label { display: flex; align-items: center; gap: 8px; font-size: 11px; background: #1a1a1a; padding: 8px; border-radius: 6px; cursor: pointer; }
-        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 5px 0; font-weight: bold; }
-        .btn-submit { width: 100%; padding: 20px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        
-        /* DESIGN SUIVI ACTUALISÉ */
-        .suivi-card { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; position: relative; }
-        .s-time { font-size: 12px; color: #888; position: absolute; top: 15px; right: 15px; }
-        .s-name { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 5px; }
-        .s-status { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .st-attente { background: #444; color: #fff; }
-        .st-prepa { background: #2980b9; color: #fff; }
-        .st-four { background: #d35400; color: #fff; }
-        .st-pret { background: #27ae60; color: #fff; }
-        .s-delay { font-size: 13px; color: #f1c40f; font-weight: bold; margin-top: 5px; }
+        .order-item { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 6px solid #2d5f3f; }
+        .supp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .supp-label { display: flex; align-items: center; gap: 8px; font-size: 11px; background: #222; padding: 8px; border-radius: 6px; cursor: pointer; }
+        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px 0; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333; margin-top: 5px; }
+        .btn-submit { width: 100%; padding: 20px; background: #e74c3c; color: #fff; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; margin-top: 20px; }
+
+        /* DESIGN SUIVI SUR UNE LIGNE */
+        .suivi-card { 
+            background: #1a1a1a; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            border: 1px solid #333; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 10px;
+            font-size: 13px;
+        }
+        .s-time { color: #888; font-family: monospace; min-width: 40px; }
+        .s-name { flex: 1; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
+        .s-delay { color: #f1c40f; font-weight: bold; min-width: 50px; text-align: center; }
+        .s-status { 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            min-width: 75px; 
+            text-align: center; 
+        }
     </style>
 </head>
 <body>
     <div class="nav-tabs">
-        <button class="nav-btn active" id="b-com" onclick="showSection('orderSection', this)">Commander</button>
-        <button class="nav-btn" id="b-sui" onclick="showSection('suiviSection', this)">Suivi (20)</button>
+        <button class="nav-btn active" onclick="showSection('orderSection', this)">Commander</button>
+        <button class="nav-btn" onclick="showSection('suiviSection', this)">Suivi</button>
     </div>
     <div class="container">
         <div id="orderSection" class="section active">
@@ -48,20 +62,27 @@
                 <button type="button" class="type-btn selected" id="btnLivraison" onclick="setType('Livraison')">🚗 Livraison</button>
             </div>
             <form id="orderForm">
-                <input type="text" id="clientName" placeholder="NOM DU CLIENT" required>
-                <div id="livInfo">
-                    <input type="tel" id="phone" placeholder="TÉLÉPHONE">
-                    <textarea id="address" placeholder="ADRESSE COMPLÈTE" rows="2"></textarea>
-                    <select id="paymentMethod"><option value="Espèces">Espèces</option><option value="Carte">Carte</option><option value="Chèque">Chèque</option></select>
+                <input type="text" id="clientName" placeholder="Nom du Client" required>
+                <div id="livraisonInfo">
+                    <input type="tel" id="phone" placeholder="Téléphone">
+                    <textarea id="address" placeholder="Adresse" rows="2"></textarea>
+                    <select id="payment">
+                        <option value="Espèces">Espèces</option>
+                        <option value="Carte">Carte</option>
+                    </select>
                 </div>
                 <div id="pizzasList"></div>
                 <button type="button" class="btn-add" style="background:#2d5f3f" onclick="addPizza()">➕ PIZZA</button>
-                <div id="extrasList"></div>
-                <button type="button" class="btn-add" style="background:#333" onclick="addExtra()">➕ DESSERT / BOISSON</button>
-                <button type="submit" class="btn-submit" id="subBtn">🚀 ENVOYER EN CUISINE</button>
+                <div id="dessertsList"></div>
+                <button type="button" class="btn-add" style="background:#9b59b6" onclick="addExtra('dessertsList', '🍰 Dessert')">➕ DESSERT</button>
+                <div id="drinksList"></div>
+                <button type="button" class="btn-add" style="background:#3498db" onclick="addExtra('drinksList', '🥤 Boisson')">➕ BOISSON</button>
+                <button type="submit" class="btn-submit">🚀 ENVOYER CUISINE</button>
             </form>
         </div>
-        <div id="suiviSection" class="section"><div id="suiviContainer"></div></div>
+        <div id="suiviSection" class="section">
+            <div id="suiviList"></div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -69,65 +90,31 @@
     <script>
         const config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
         firebase.initializeApp(config); const db = firebase.firestore();
-        let currentType = 'Livraison'; let unsubSuivi = null;
-
-        const pizzasMenu = [{n:'Maria', p:11}, {n:'Mama', p:13}, {n:'Mwaka Moon', p:15}]; // Tes menus originaux ici
-        const supplements = [{n:'ANANAS', p:1}, {n:'OEUF', p:1}, {n:'CREVETTES', p:4}];
+        let currentType = 'Livraison';
+        let unsubSuivi = null;
 
         function showSection(id, btn) {
-            document.querySelectorAll('.section, .nav-btn').forEach(e=>e.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active'); btn.classList.add('active');
-            if(id === 'suiviSection') startSuivi(); else if(unsubSuivi) unsubSuivi();
+            if(id === 'suiviSection') listenSuivi();
+            else if(unsubSuivi) { unsubSuivi(); unsubSuivi = null; }
         }
 
-        function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livInfo').style.display = t==='Livraison'?'block':'none'; }
+        function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livraisonInfo').style.display = t==='Livraison'?'block':'none'; }
 
         function addPizza() {
             const div = document.createElement('div'); div.className = 'order-item';
-            div.innerHTML = `<div style="display:flex; gap:10px;"><select class="qty" style="width:60px"><option>1</option><option>2</option></select><input type="text" class="name" placeholder="Pizza..." required style="flex:1"></div><div class="supp-grid">${supplements.map(s=>`<label class="supp-label"><input type="checkbox" class="p-supp" data-name="${s.n}"> ${s.n}</label>`).join('')}</div><button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ Supprimer</button>`;
+            div.innerHTML = `<input type="text" class="p-name" placeholder="Nom Pizza" required>
+                <div class="supp-grid">
+                    <label class="supp-label"><input type="checkbox" class="p-supp" data-name="ANANAS"> ANANAS</label>
+                    <label class="supp-label"><input type="checkbox" class="p-supp" data-name="OEUF"> OEUF</label>
+                </div>`;
             document.getElementById('pizzasList').appendChild(div);
         }
 
-        function addExtra() {
+        function addExtra(id, label) {
             const div = document.createElement('div'); div.className = 'order-item';
-            div.innerHTML = `<div style="display:flex; gap:10px;"><select class="qty" style="width:60px"><option>1</option><option>2</option></select><input type="text" class="name" placeholder="Extra..." required style="flex:1"></div><button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ Supprimer</button>`;
-            document.getElementById('extrasList').appendChild(div);
+            div.innerHTML = `<input type="text" class="e-name" placeholder="${label}" required>`;
+            document.getElementById(id).appendChild(div);
         }
-
-        document.getElementById('orderForm').onsubmit = async (e) => {
-            e.preventDefault(); const btn = document.getElementById('subBtn'); btn.disabled = true;
-            const order = {
-                clientName: document.getElementById('clientName').value,
-                type: currentType.toUpperCase(),
-                paymentMethod: document.getElementById('paymentMethod').value,
-                phone: document.getElementById('phone').value || '',
-                address: document.getElementById('address').value || '',
-                items: Array.from(document.querySelectorAll('#pizzasList .order-item')).map(i => ({ qty: i.querySelector('.qty').value, name: i.querySelector('.name').value, supps: Array.from(i.querySelectorAll('.p-supp:checked')).map(s=>s.dataset.name) })),
-                extras: Array.from(document.querySelectorAll('#extrasList .order-item')).map(i => ({ qty: i.querySelector('.qty').value, name: i.querySelector('.name').value })),
-                status: 'en_attente', source: 'MANUEL', createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await db.collection("commandes").add(order); location.reload();
-        };
-
-        function startSuivi() {
-            if(unsubSuivi) unsubSuivi();
-            unsubSuivi = db.collection("commandes").orderBy("createdAt", "desc").limit(20).onSnapshot(snap => {
-                const cont = document.getElementById('suiviContainer'); cont.innerHTML = "";
-                snap.forEach(doc => {
-                    const o = doc.data();
-                    const time = o.createdAt ? o.createdAt.toDate().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-                    let st = { txt: 'Reçu', cl: 'st-attente' };
-                    if(o.status === 'production') st = { txt: 'En Prépa', cl: 'st-prepa' };
-                    if(o.status === 'cuisson') st = { txt: 'Au Four', cl: 'st-four' };
-                    if(o.status === 'termine') st = { txt: 'Prêt', cl: 'st-pret' };
-
-                    const d = document.createElement('div'); d.className = 'suivi-card';
-                    d.innerHTML = `<div class="s-time">${time}</div><div class="s-name">${o.clientName}</div><div class="s-status ${st.cl}">${st.txt}</div>${o.delay ? `<div class="s-delay">⏱️ ${o.delay}</div>` : ''}`;
-                    cont.appendChild(d);
-                });
-            });
-        }
-        window.onload = addPizza;
-    </script>
-</body>
-</html>
