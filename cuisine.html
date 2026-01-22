@@ -2,123 +2,118 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Pizza - CUISINE</title>
+    <title>Mwaka Pizza - CONSOLE CUISINE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; overflow-x: hidden; }
+        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; }
         .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 18px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
-        .tab-btn.active.tab-encours { color: #e74c3c; border-bottom-color: #e74c3c; background: #111; }
-        .tab-btn.active#tabTermine { color: #2ecc71; border-bottom-color: #2ecc71; background: #111; }
+        .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 16px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; }
+        .tab-btn.active { background: #111; }
+        .tab-btn.active#tabAFaire { color: #e74c3c; border-bottom-color: #e74c3c; }
+        .tab-btn.active#tabEnCours { color: #3498db; border-bottom-color: #3498db; }
+        .tab-btn.active#tabTermine { color: #2ecc71; border-bottom-color: #2ecc71; }
         
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; transition: 0.3s; }
+        .order-card.is-web { border-left-color: #3498db !important; }
         
-        /* CARTES ET COULEURS */
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .order-card.is-web { border-left-color: #3498db !important; } /* Bleu pour les commandes site web */
-        .order-card.livraison-manuelle { border-left-color: #e74c3c; }
+        /* ALERTE CLIENT PROCHE */
+        .order-card.client-proche { border: 6px solid #f1c40f !important; background: #2c2500; animation: pulse-arrival 1.5s infinite; }
+        @keyframes pulse-arrival { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .arrival-badge { display: none; background: #f1c40f; color: #000; padding: 10px; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-align: center; font-size: 1.2em; }
+        .client-proche .arrival-badge { display: block; }
 
-        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-        .type-tag { font-size: 14px; background: #333; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; color: #fff; }
+        .client-header { font-size: 24px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: #333; color: #aaa; text-transform: uppercase; }
         
-        /* BLOC INFOS CLIENT (Livraison / Contact) */
-        .delivery-box { background: #1e272e; padding: 15px; border-radius: 10px; border: 1px solid #3498db; margin-bottom: 15px; font-size: 1.3em; line-height: 1.4; color: #3498db; }
-        .delivery-box b { color: #fff; }
-
         .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.6em; border: 1px solid #333; }
-        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 12px 0; }
-        .pizza-line:last-child { border: none; }
+        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
 
         .actions { display: flex; gap: 12px; margin-top: 20px; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-done { background: #27ae60; color: white; }
+        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        .btn-accept { background: #27ae60; color: white; }
+        .btn-cuisson { background: #e67e22; color: white; }
+        .btn-prete { background: #2ecc71; color: white; }
+        .btn-remis { background: #9b59b6; color: white; }
         .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
         
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; text-transform: uppercase; }
+        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; }
     </style>
 </head>
 <body>
+
     <div class="tabs">
-        <button class="tab-btn active tab-encours" id="tabEncours" onclick="switchTab('en_attente')">EN COURS ⏳</button>
-        <button class="tab-btn" id="tabTermine" onclick="switchTab('termine')">TERMINE ✅</button>
+        <button class="tab-btn active" id="tabAFaire" onclick="switchTab('afaire')">À FAIRE 📝</button>
+        <button class="tab-btn" id="tabEnCours" onclick="switchTab('encours')">EN COURS 👨‍🍳</button>
+        <button class="tab-btn" id="tabTermine" onclick="switchTab('termine')">TERMINÉES ✅</button>
     </div>
+
     <div id="ordersContainer" class="orders-list"></div>
-    <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3" preload="auto"></audio>
+
+    <audio id="arrivalSound" src="https://assets.mixkit.co/active_storage/sfx/1017/1017-preview.mp3" preload="auto"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script>
-        // CONFIGURATION FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let currentView = 'en_attente';
+        
+        let currentView = 'afaire';
         let allOrders = {};
 
-        function startAlert() { const s = document.getElementById('notifSound'); s.loop = true; s.play().catch(e => {}); }
-        function stopAlert() { const s = document.getElementById('notifSound'); s.pause(); s.currentTime = 0; }
-
         function switchTab(status) {
-            stopAlert();
             currentView = status;
-            document.getElementById('tabEncours').classList.toggle('active', status === 'en_attente');
+            document.getElementById('tabAFaire').classList.toggle('active', status === 'afaire');
+            document.getElementById('tabEnCours').classList.toggle('active', status === 'encours');
             document.getElementById('tabTermine').classList.toggle('active', status === 'termine');
             loadOrders();
         }
 
         function loadOrders() {
-            db.collection("commandes").where("status", "==", currentView).onSnapshot((snapshot) => {
+            let query;
+            if (currentView === 'afaire') {
+                query = db.collection("commandes").where("status", "==", "en_attente");
+            } else if (currentView === 'encours') {
+                query = db.collection("commandes").where("status", "in", ["production", "cuisson", "prete"]);
+            } else {
+                query = db.collection("commandes").where("status", "==", "termine");
+            }
+
+            query.onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
                 container.innerHTML = "";
-                let orders = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                orders.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                
+                snapshot.forEach(doc => {
+                    const o = doc.data();
+                    const id = doc.id;
+                    allOrders[id] = o;
 
-                orders.forEach((o) => {
-                    allOrders[o.id] = o;
-                    const isWeb = (o.source === "PRESTASHOP");
-                    const isLivraison = (o.type === "LIVRAISON");
-                    
                     const card = document.createElement('div');
-                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isLivraison && !isWeb ? 'livraison-manuelle' : ''}`;
+                    const isWeb = o.source === "PRESTASHOP";
+                    const isArrival = o.clientArrivant === true;
                     
+                    if (isArrival && o.status !== "termine") document.getElementById('arrivalSound').play().catch(e=>{});
+
+                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isArrival ? 'client-proche' : ''}`;
                     card.innerHTML = `
+                        <div class="arrival-badge"><i class="fas fa-car"></i> CLIENT ARRIVÉ !</div>
                         <div class="client-header">
-                            <span>${o.clientName}</span>
-                            <span class="type-tag">${o.type}</span>
+                            <span>${o.clientName} <span class="status-badge">${o.status}</span></span>
+                            <span class="type-tag" style="font-size:12px; background:#444; padding:4px 8px; border-radius:5px;">${o.type}</span>
                         </div>
-                        
-                        ${(isWeb || isLivraison) ? `
-                            <div class="delivery-box">
-                                📍 <b>Adresse :</b> ${o.address || 'Non spécifiée'}<br>
-                                📞 <b>Téléphone :</b> ${o.phone || 'Non spécifié'}
-                            </div>
-                        ` : ''}
-
-                        <div class="items-area">
-                            ${o.items ? o.items.map(p => `
-                                <div class="pizza-line">
-                                    <strong>${p.qty}x ${p.name.toUpperCase()}</strong>
-                                </div>
-                            `).join('') : 'Aucun article'}
-                        </div>
-
+                        <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
                         <div class="actions">
-                            <button class="btn btn-print" onclick="printToBluetooth('${o.id}')">🖨️</button>
-                            ${currentView === 'en_attente' ? `
-                                <button class="btn btn-done" onclick="toggleDelayMenu('${o.id}')">
-                                    <i class="fas fa-clock"></i> ACCEPTER
-                                </button>
-                            ` : `
-                                <button class="btn" onclick="updateStatus('${o.id}', 'en_attente')">REMETTRE 🔄</button>
-                            `}
+                            <button class="btn btn-print" onclick="printTicket('${id}')">🖨️</button>
+                            ${renderContextButton(id, o)}
                         </div>
-
-                        <div id="delay-${o.id}" class="delay-menu">
-                            <button class="btn-delay" style="background:#2ecc71" onclick="updateStatus('${o.id}', 'termine', 'RAPIDE')">RAPIDE</button>
-                            <button class="btn-delay" style="background:#f39c12" onclick="updateStatus('${o.id}', 'termine', '15 min')">15 min</button>
-                            <button class="btn-delay" style="background:#e74c3c" onclick="updateStatus('${o.id}', 'termine', 'CHAUD !')">CHAUD !</button>
+                        <div id="delay-${id}" class="delay-menu">
+                            <button class="btn-delay" style="background:#2ecc71" onclick="validateOrder('${id}', 'RAPIDE')">RAPIDE</button>
+                            <button class="btn-delay" style="background:#f39c12" onclick="validateOrder('${id}', '15 MIN')">15 MIN</button>
+                            <button class="btn-delay" style="background:#e74c3c" onclick="validateOrder('${id}', 'CHAUD !')">CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -126,20 +121,38 @@
             });
         }
 
-        function toggleDelayMenu(id) {
+        function renderContextButton(id, o) {
+            if (o.status === "en_attente") {
+                return `<button class="btn btn-accept" onclick="toggleDelay('${id}')">ACCEPTER</button>`;
+            } else if (o.status === "production") {
+                return `<button class="btn btn-cuisson" style="background:#3498db" onclick="updateStatus('${id}', 'cuisson')">ENFOURNER</button>`;
+            } else if (o.status === "cuisson") {
+                return `<button class="btn btn-prete" onclick="updateStatus('${id}', 'prete')">SORTIR (PRÊTE)</button>`;
+            } else if (o.status === "prete") {
+                return `<button class="btn btn-remis" onclick="updateStatus('${id}', 'termine')">REMIS AU CLIENT</button>`;
+            }
+            return `<button class="btn" onclick="updateStatus('${id}', 'en_attente')">REMETTRE</button>`;
+        }
+
+        function toggleDelay(id) {
             const m = document.getElementById(`delay-${id}`);
-            const vis = m.style.display === 'grid';
-            document.querySelectorAll('.delay-menu').forEach(x => x.style.display = 'none');
-            m.style.display = vis ? 'none' : 'grid';
+            m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
         }
 
-        function updateStatus(id, newStatus, delay = null) {
-            stopAlert();
-            const data = { status: newStatus };
-            if(delay) data.delay = delay;
-            db.collection("commandes").doc(id).update(data);
+        function validateOrder(id, delayChoice) {
+            let updates = {
+                status: "production",
+                delay: delayChoice,
+                clientMsg: (delayChoice === "CHAUD !") ? "Spécialité sur place : Nous faisons au mieux pour vous servir chaud ! Checkez le suivi." : "Nous préparons votre commande !"
+            };
+            db.collection("commandes").doc(id).update(updates).then(() => switchTab('encours'));
         }
 
-        function printToBluetooth(orderId) {
-            const o = allOrders[orderId];
-            let text = "MWAKA PIZZA\n
+        function updateStatus(id, s) {
+            db.collection("commandes").doc(id).update({ status: s });
+        }
+
+        window.onload = loadOrders;
+    </script>
+</body>
+</html>
