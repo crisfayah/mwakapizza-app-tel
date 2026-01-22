@@ -2,74 +2,59 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Pizza - CONSOLE PRO</title>
+    <title>Mwaka Pizza - CONSOLE CUISINE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; }
         
-        /* NAVIGATION ET BADGES */
+        /* NAVIGATION */
         .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 16px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; display: flex; align-items: center; justify-content: center; }
         .tab-btn.active { background: #111; }
-        .tab-btn.active#tabAFaire { color: #e74c3c; border-bottom-color: #e74c3c; }
-        .tab-btn.active#tabEnCours { color: #3498db; border-bottom-color: #3498db; }
-        .tab-btn.active#tabTermine { color: #2ecc71; border-bottom-color: #2ecc71; }
+        #tabAFaire.active { color: #e74c3c; border-bottom-color: #e74c3c; }
+        #tabEnCours.active { color: #3498db; border-bottom-color: #3498db; }
+        #tabTermine.active { color: #2ecc71; border-bottom-color: #2ecc71; }
         
         .badge { background: #333; color: #fff; border-radius: 12px; padding: 2px 10px; font-size: 14px; margin-left: 10px; }
-        .active#tabAFaire .badge { background: #e74c3c; }
-        .active#tabEnCours .badge { background: #3498db; }
-        .active#tabTermine .badge { background: #2ecc71; }
+        #tabAFaire.active .badge { background: #e74c3c; }
+        #tabEnCours.active .badge { background: #3498db; }
+        #tabTermine.active .badge { background: #2ecc71; }
 
         .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
         
-        /* CARTES ET CHRONO */
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; transition: 0.3s; }
+        /* CARTES */
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; }
         .order-card.is-web { border-left-color: #3498db !important; }
         
-        .timer-tag { position: absolute; top: 20px; right: 20px; background: #333; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-family: monospace; font-size: 1.2em; }
+        .timer-tag { position: absolute; top: 20px; right: 20px; background: #333; padding: 5px 12px; border-radius: 8px; font-weight: bold; }
         
-        /* États d'urgence (Chrono) */
+        /* États Chrono */
         .order-card.warning { border-right: 8px solid #f39c12; }
-        .order-card.warning .timer-tag { color: #f39c12; border: 1px solid #f39c12; }
-        
-        .order-card.danger { border-right: 8px solid #e74c3c; animation: pulse-red 2s infinite; }
-        .order-card.danger .timer-tag { color: #e74c3c; border: 1px solid #e74c3c; font-size: 1.4em; }
-
-        @keyframes pulse-red { 
-            0% { background: #1a1a1a; } 
-            50% { background: #2c0b0b; } 
-            100% { background: #1a1a1a; } 
-        }
+        .order-card.danger { border-right: 8px solid #e74c3c; background: #210a0a; }
 
         .client-header { font-size: 24px; font-weight: 900; margin-bottom: 10px; padding-right: 80px; }
         .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.6em; border: 1px solid #333; }
         .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
 
         .actions { display: flex; gap: 12px; margin-top: 20px; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
         
         .btn-accept { background: #27ae60; color: white; }
         .btn-cuisson { background: #3498db; color: white; }
         .btn-prete { background: #2ecc71; color: white; }
         .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
         
-        .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; color: white; }
+        .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
 
     <div class="tabs">
-        <button class="tab-btn active" id="tabAFaire" onclick="switchTab('afaire')">
-            À FAIRE <span id="countAFaire" class="badge">0</span>
-        </button>
-        <button class="tab-btn" id="tabEnCours" onclick="switchTab('encours')">
-            EN COURS <span id="countEnCours" class="badge">0</span>
-        </button>
-        <button class="tab-btn" id="tabTermine" onclick="switchTab('termine')">
-            TERMINÉES <span id="countTermine" class="badge">0</span>
-        </button>
+        <button class="tab-btn active" id="tabAFaire" onclick="switchTab('afaire')">À FAIRE <span id="countAFaire" class="badge">0</span></button>
+        <button class="tab-btn" id="tabEnCours" onclick="switchTab('encours')">EN COURS <span id="countEnCours" class="badge">0</span></button>
+        <button class="tab-btn" id="tabTermine" onclick="switchTab('termine')">TERMINÉES <span id="countTermine" class="badge">0</span></button>
     </div>
 
     <div id="ordersContainer" class="orders-list"></div>
@@ -81,89 +66,88 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        let currentView = 'afaire';
+        let currentTab = 'afaire';
         let unsubscribe = null;
 
-        // --- GESTION DES BADGES ---
-        function listenToCounts() {
+        // Mise à jour des compteurs globale
+        function startWatchers() {
             db.collection("commandes").where("status", "==", "en_attente").onSnapshot(s => document.getElementById('countAFaire').innerText = s.size);
             db.collection("commandes").where("status", "in", ["production", "cuisson"]).onSnapshot(s => document.getElementById('countEnCours').innerText = s.size);
             db.collection("commandes").where("status", "==", "termine").onSnapshot(s => document.getElementById('countTermine').innerText = s.size);
         }
 
-        function switchTab(status) {
-            currentView = status;
+        function switchTab(tab) {
+            currentTab = tab;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            if(status === 'afaire') document.getElementById('tabAFaire').classList.add('active');
-            if(status === 'encours') document.getElementById('tabEnCours').classList.add('active');
-            if(status === 'termine') document.getElementById('tabTermine').classList.add('active');
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
             loadOrders();
         }
 
         function loadOrders() {
             if (unsubscribe) unsubscribe();
-            let query;
-            if (currentView === 'afaire') query = db.collection("commandes").where("status", "==", "en_attente");
-            else if (currentView === 'encours') query = db.collection("commandes").where("status", "in", ["production", "cuisson"]);
-            else query = db.collection("commandes").where("status", "==", "termine");
 
+            let query = db.collection("commandes");
+            if (currentTab === 'afaire') query = query.where("status", "==", "en_attente");
+            else if (currentTab === 'encours') query = query.where("status", "in", ["production", "cuisson"]);
+            else query = query.where("status", "==", "termine");
+
+            // Tri par date de création (le plus récent en haut)
             unsubscribe = query.onSnapshot((snapshot) => {
                 const container = document.getElementById('ordersContainer');
                 container.innerHTML = "";
-                snapshot.forEach(doc => renderCard(doc, container));
+                
+                snapshot.forEach(doc => {
+                    const o = doc.data();
+                    const id = doc.id;
+                    
+                    // Calcul du chrono
+                    const now = new Date();
+                    const created = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate() : now;
+                    const diff = Math.floor((now - created) / 60000);
+
+                    let alertClass = "";
+                    if (currentTab !== 'termine') {
+                        if (diff >= 15) alertClass = "danger";
+                        else if (diff >= 10) alertClass = "warning";
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''} ${alertClass}`;
+                    card.innerHTML = `
+                        <div class="timer-tag">${diff} min</div>
+                        <div class="client-header">${o.clientName}</div>
+                        <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
+                        <div class="actions">
+                            <button class="btn btn-print" onclick="window.location.href='intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=${btoa(unescape(encodeURIComponent(o.clientName + '\n' + (o.items ? o.items.map(p=>p.qty+'x '+p.name).join('\n') : ''))))};end;'">🖨️</button>
+                            ${renderBtn(id, o.status)}
+                        </div>
+                        <div id="delay-${id}" class="delay-menu">
+                            <button class="btn-delay" style="background:#2ecc71" onclick="validate('${id}', 'RAPIDE')">RAPIDE</button>
+                            <button class="btn-delay" style="background:#f39c12" onclick="validate('${id}', '15 MIN')">15 MIN</button>
+                            <button class="btn-delay" style="background:#e74c3c" onclick="validate('${id}', 'CHAUD !')">CHAUD !</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
             });
         }
 
-        function renderCard(doc, container) {
-            const o = doc.data();
-            const id = doc.id;
-            const now = new Date();
-            const created = o.createdAt ? o.createdAt.toDate() : now;
-            const diffMin = Math.floor((now - created) / 60000);
-
-            let alertClass = "";
-            if (diffMin >= 15 && o.status !== "termine") alertClass = "danger";
-            else if (diffMin >= 10 && o.status !== "termine") alertClass = "warning";
-
-            const card = document.createElement('div');
-            card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''} ${alertClass}`;
-            card.innerHTML = `
-                <div class="timer-tag">${diffMin} min</div>
-                <div class="client-header"><span>${o.clientName}</span></div>
-                <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
-                <div class="actions">
-                    <button class="btn btn-print" onclick="console.log('print')">🖨️</button>
-                    ${renderActionBtn(id, o.status)}
-                </div>
-                <div id="delay-${id}" class="delay-menu">
-                    <button class="btn-delay" style="background:#2ecc71" onclick="validate('${id}', 'RAPIDE')">RAPIDE</button>
-                    <button class="btn-delay" style="background:#f39c12" onclick="validate('${id}', '15 MIN')">15 MIN</button>
-                    <button class="btn-delay" style="background:#e74c3c" onclick="validate('${id}', 'CHAUD !')">CHAUD !</button>
-                </div>
-            `;
-            container.appendChild(card);
-        }
-
-        function renderActionBtn(id, status) {
-            if (status === "en_attente") return `<button class="btn btn-accept" onclick="toggleDelay('${id}')">ACCEPTER</button>`;
+        function renderBtn(id, status) {
+            if (status === "en_attente") return `<button class="btn btn-accept" onclick="toggleMenu('${id}')">ACCEPTER</button>`;
             if (status === "production") return `<button class="btn btn-cuisson" onclick="upd('${id}', 'cuisson')">AU FOUR !</button>`;
             if (status === "cuisson") return `<button class="btn btn-prete" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
-            return `<button class="btn" onclick="upd('${id}', 'en_attente')">REMETTRE</button>`;
+            return `<button class="btn" onclick="upd('${id}', 'en_attente')">RÉACTIVER</button>`;
         }
 
-        function toggleDelay(id) {
+        function toggleMenu(id) {
             const m = document.getElementById(`delay-${id}`);
-            const vis = m.style.display === 'grid';
-            document.querySelectorAll('.delay-menu').forEach(menu => menu.style.display = 'none');
-            m.style.display = vis ? 'none' : 'grid';
+            m.style.display = (m.style.display === 'grid') ? 'none' : 'grid';
         }
 
         function validate(id, d) { db.collection("commandes").doc(id).update({ status: "production", delay: d }); }
         function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
 
-        window.onload = () => { listenToCounts(); loadOrders(); };
-        // Rafraîchir les chronos toutes les minutes sans recharger la page
-        setInterval(() => { if(currentView !== 'termine') loadOrders(); }, 60000);
+        window.onload = () => { startWatchers(); loadOrders(); };
     </script>
 </body>
 </html>
