@@ -2,73 +2,62 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Pizza - CONSOLE CUISINE</title>
+    <title>Mwaka Console - Cuisine</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --red-soft: #a93226;
-            --blue-soft: #2e86c1;
-            --green-soft: #28b463;
-            --dark-bg: #0b0b0b;
-        }
+        :root { --red: #a93226; --blue: #2e86c1; --green: #28b463; --dark: #0b0b0b; }
+        body { font-family: sans-serif; background: var(--dark); color: #fff; margin:0; padding: 0; }
+        
+        /* NAVIGATION COMPACTE */
+        .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 75px; gap: 8px; padding: 6px; box-sizing: border-box; }
+        .tab-btn { flex: 1; border: none; border-radius: 10px; font-size: 13px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.5; color: #fff; text-transform: uppercase; cursor: pointer; }
+        #tab-afaire { flex: 1.4; background: #4d1111; border: 1px solid var(--red); }
+        #tab-encours { flex: 1; background: #11264d; border: 1px solid var(--blue); }
+        #tab-termine { flex: 1; background: #114d20; border: 1px solid var(--green); }
+        .tab-btn.active { opacity: 1; border-width: 2px; }
+        #tab-afaire.active { background: var(--red); }
+        #tab-encours.active { background: var(--blue); }
+        #tab-termine.active { background: var(--green); }
+        .badge { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 15px; font-size: 11px; margin-top: 3px; }
 
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--dark-bg); color: #fff; margin:0; padding: 0; touch-action: manipulation; }
+        .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 800px; margin: 0 auto; }
+        .order-card { background: #1a1a1a; border-radius: 12px; padding: 18px; border-left: 12px solid var(--green); position: relative; }
+        .order-card.is-web { border-left-color: var(--blue) !important; }
         
-        /* NAVIGATION */
-        .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 100px; gap: 10px; padding: 10px; box-sizing: border-box; }
-        .tab-btn { flex: 1; border: none; border-radius: 14px; font-size: 16px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s ease; opacity: 0.5; color: #fff; text-transform: uppercase; cursor: pointer; }
-        
-        #tab-afaire { flex: 1.4; background: #5d1a1a; border: 1px solid var(--red-soft); }
-        #tab-encours { flex: 1; background: #1a325d; border: 1px solid var(--blue-soft); }
-        #tab-termine { flex: 1; background: #1a5d2e; border: 1px solid var(--green-soft); }
-        
-        .tab-btn.active { opacity: 1; transform: scale(0.97); }
-        #tab-afaire.active { background: var(--red-soft); }
-        #tab-encours.active { background: var(--blue-soft); }
-        #tab-termine.active { background: var(--green-soft); }
-        .badge { background: rgba(0,0,0,0.5); color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 14px; margin-top: 5px; font-weight: 800; }
+        .timer { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 6px; font-weight: bold; font-family: monospace; border: 1px solid #444; font-size: 0.9em; }
+        .danger { background: #641e16 !important; border-right: 8px solid var(--red) !important; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
-        /* CARTES */
-        .orders-list { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 900px; margin: 0 auto; }
-        .order-card { background: #1a1a1a; border-radius: 18px; padding: 25px; border-left: 15px solid var(--green-soft); position: relative; }
-        .order-card.is-web { border-left-color: var(--blue-soft) !important; }
-        
-        /* INFOS LIVRAISON */
-        .delivery-info { background: #14263d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--blue-soft); font-size: 1.1em; }
-        .delivery-info b { color: var(--blue-soft); }
-        .payment-tag { display: inline-block; background: #f39c12; color: #000; padding: 4px 10px; border-radius: 6px; font-weight: 900; font-size: 0.9em; margin-top: 8px; border: 2px solid #fff; }
+        .client-header { font-size: 20px; font-weight: 900; margin-bottom: 8px; padding-right: 80px; text-transform: uppercase; }
+        .delivery-box { background: #14263d; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9em; border-left: 4px solid var(--blue); }
+        .pay-tag { display: inline-block; background: #f39c12; color: #000; padding: 4px 10px; border-radius: 6px; font-weight: 900; font-size: 0.85em; margin-top: 8px; border: 1px solid #fff; }
 
-        .timer-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 8px; font-weight: bold; font-family: monospace; border: 1px solid #444; }
-        
-        .danger { background: #641e16 !important; border-right: 12px solid var(--red-soft) !important; animation: soft-pulse 2s infinite; }
-        @keyframes soft-pulse { 0% { background: #641e16; } 50% { background: #7b241c; } 100% { background: #641e16; } }
+        /* TAILLE DES PIZZAS RÉDUITE */
+        .items-area { background: #222; padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 1.4em; border: 1px solid #333; }
+        .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0; }
 
-        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 12px; padding-right: 100px; text-transform: uppercase; }
-        .items-area { background: #222; padding: 20px; border-radius: 12px; margin: 15px 0; font-size: 2.2em; border: 1px solid #333; }
-        .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px 0; }
-
-        .actions { display: flex; gap: 15px; margin-top: 25px; }
-        .btn { flex: 1; height: 85px; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; }
-        .btn-green { background: var(--green-soft); color: #fff; }
-        .btn-blue { background: var(--blue-soft); color: #fff; }
-        .btn-grey { background: #333; color: white; width: 100px; flex: none; font-size: 32px; }
+        /* BOUTONS RÉDUITS */
+        .actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; height: 60px; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+        .btn-green { background: var(--green); color: #fff; }
+        .btn-blue { background: var(--blue); color: #fff; }
+        .btn-grey { background: #333; color: white; width: 65px; flex: none; font-size: 24px; }
         
-        .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        .btn-d { height: 75px; border: none; border-radius: 10px; font-weight: 900; color: #fff; font-size: 18px; }
+        .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .btn-d { height: 50px; border: none; border-radius: 8px; font-weight: 900; color: #fff; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div class="tabs">
-        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">À FAIRE <span id="count-afaire" class="badge">0</span></button>
-        <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">EN COURS <span id="count-encours" class="badge">0</span></button>
-        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">TERMINÉES <span id="count-termine" class="badge">0</span></button>
+        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">À FAIRE <span id="c-afaire" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">EN COURS <span id="c-encours" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">TERMINÉES <span id="c-termine" class="badge">0</span></button>
     </div>
 
     <div id="ordersContainer" class="orders-list"></div>
-
-    <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3" preload="auto"></audio>
+    <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -83,113 +72,86 @@
 
         db.collection("commandes").onSnapshot((snapshot) => {
             allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // SONNERIE : Boucle si une commande est en attente
             const hasPending = allOrders.some(o => o.status === "en_attente");
-            if (hasPending) {
-                sound.play().catch(e => {});
-            } else {
-                sound.pause();
-                sound.currentTime = 0;
-            }
-
+            if (hasPending) { sound.play().catch(e => {}); } else { sound.pause(); sound.currentTime = 0; }
             updateBadges();
-            renderOrders();
+            render();
         });
 
         function updateBadges() {
-            document.getElementById('count-afaire').innerText = allOrders.filter(o => o.status === "en_attente").length;
-            document.getElementById('count-encours').innerText = allOrders.filter(o => o.status === "production" || o.status === "cuisson").length;
-            document.getElementById('count-termine').innerText = allOrders.filter(o => o.status === "termine").length;
+            document.getElementById('c-afaire').innerText = allOrders.filter(o => o.status === "en_attente").length;
+            document.getElementById('c-encours').innerText = allOrders.filter(o => o.status === "production" || o.status === "cuisson").length;
+            document.getElementById('c-termine').innerText = allOrders.filter(o => o.status === "termine").length;
         }
 
-        function switchTab(tab) {
-            currentTab = tab;
+        function switchTab(t) {
+            currentTab = t;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + (tab === 'en_attente' ? 'afaire' : tab)).classList.add('active');
-            renderOrders();
+            document.getElementById('tab-' + (t === 'en_attente' ? 'afaire' : t)).classList.add('active');
+            render();
         }
 
-        function renderOrders() {
+        function render() {
             const container = document.getElementById('ordersContainer');
             container.innerHTML = "";
             
-            let filtered = allOrders.filter(o => {
+            let list = allOrders.filter(o => {
                 if (currentTab === 'en_attente') return o.status === 'en_attente';
                 if (currentTab === 'encours') return (o.status === 'production' || o.status === 'cuisson');
                 if (currentTab === 'termine') return o.status === 'termine';
-                return false;
             });
 
-            filtered.sort((a, b) => b.id.localeCompare(a.id));
+            list.sort((a, b) => b.id.localeCompare(a.id));
 
-            filtered.forEach(o => {
+            list.forEach(o => {
                 let d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || Date.now());
                 const diff = Math.floor((new Date() - d) / 60000);
-                
                 const isLivr = (o.type === "LIVRAISON");
                 const isWeb = (o.source === "PRESTASHOP");
 
                 const card = document.createElement('div');
                 card.className = `order-card ${isWeb ? 'is-web' : ''} ${(diff >= 15 && o.status !== 'termine') ? 'danger' : ''}`;
                 
-                // TITRE : Nom + LIVRAISON (si c'en est une)
                 let title = o.clientName || 'CLIENT';
                 if (isLivr) title += " - LIVRAISON";
 
                 card.innerHTML = `
-                    <div class="timer-tag">${diff} min</div>
+                    <div class="timer">${diff} min</div>
                     <div class="client-header">${title}</div>
                     
                     ${(isLivr || o.address || o.phone) ? `
-                        <div class="delivery-info">
-                            ${o.address ? `<b>📍 ADRESSE :</b> ${o.address}<br>` : ''}
+                        <div class="delivery-box">
+                            ${o.address ? `<b>📍 ADR :</b> ${o.address}<br>` : ''}
                             ${o.phone ? `<b>📞 TEL :</b> ${o.phone}<br>` : ''}
-                            
-                            ${(!isWeb && o.paymentMethod) ? `
-                                <div class="payment-tag">💰 À ENCAISSER : ${o.paymentMethod}</div>
-                            ` : ''}
+                            ${(!isWeb && o.paymentMethod) ? `<div class="pay-tag">💰 RÈGLEMENT : ${o.paymentMethod}</div>` : ''}
                         </div>
                     ` : ''}
 
                     <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
                     
                     <div class="actions">
-                        <button class="btn btn-grey" onclick="printTicket('${o.id}')"><i class="fas fa-print"></i></button>
+                        <button class="btn btn-grey" onclick="window.print()"><i class="fas fa-print"></i></button>
                         ${getBtn(o.id, o.status)}
                     </div>
 
                     <div id="m-${o.id}" class="delay-menu">
                         <button class="btn-d" style="background:#27ae60" onclick="upd('${o.id}', 'production')">RAPIDE</button>
-                        <button class="btn-d" style="background:#f39c12" onclick="upd('${o.id}', '15 MIN')">15 MIN</button>
-                        <button class="btn-d" style="background:#e74c3c" onclick="upd('${o.id}', 'CHAUD !')">CHAUD !</button>
+                        <button class="btn-d" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15 MIN</button>
+                        <button class="btn-d" style="background:#e74c3c" onclick="upd('${o.id}', 'production')">CHAUD !</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function getBtn(id, status) {
-            if (status === "en_attente") return `<button class="btn btn-green" onclick="document.getElementById('m-${id}').style.display='grid'">ACCEPTER</button>`;
-            if (status === "production") return `<button class="btn btn-blue" onclick="upd('${id}', 'cuisson')">AU FOUR !</button>`;
-            if (status === "cuisson") return `<button class="btn btn-green" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
-            return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">RÉACTIVER</button>`;
+        function getBtn(id, s) {
+            if (s === "en_attente") return `<button class="btn btn-green" onclick="document.getElementById('m-${id}').style.display='grid'">ACCEPTER</button>`;
+            if (s === "production") return `<button class="btn btn-blue" onclick="upd('${id}', 'cuisson')">AU FOUR !</button>`;
+            if (s === "cuisson") return `<button class="btn btn-green" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
+            return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">REMETTRE</button>`;
         }
 
-        function upd(id, s) { 
-            db.collection("commandes").doc(id).update({ status: s }); 
-        }
-
-        function printTicket(id) {
-            const o = allOrders.find(x => x.id === id);
-            let t = (o.clientName || 'CLIENT') + (o.type === 'LIVRAISON' ? ' - LIVRAISON' : '') + "\n";
-            if(o.address) t += "ADR: " + o.address + "\n";
-            if(o.phone) t += "TEL: " + o.phone + "\n";
-            if(o.paymentMethod && o.source !== 'PRESTASHOP') t += "PAYER: " + o.paymentMethod + "\n";
-            t += "----------------\n";
-            if(o.items) t += o.items.map(p => p.qty + "x " + p.name).join("\n");
-            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + btoa(unescape(encodeURIComponent(t))) + ";end;";
-        }
+        function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
     </script>
 </body>
 </html>
