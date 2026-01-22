@@ -19,7 +19,7 @@
         .section { display: none; }
         .section.active { display: block; }
 
-        /* Styles existants de l'onglet Commander */
+        /* Styles Onglet Commander */
         .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #222; color: #888; cursor: pointer; font-weight: bold; }
         .type-btn.selected { background: #e74c3c; color: white; border-color: #e74c3c; }
@@ -37,25 +37,45 @@
         .btn-submit { width: 100%; padding: 18px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         .total-box { background: #1a1a1a; border: 2px solid #2d5f3f; padding: 15px; border-radius: 15px; text-align: center; margin-top: 20px; }
         .total-amount { font-size: 24px; font-weight: 700; color: #2ecc71; }
-        .autocomplete-list { background: #222; border: 1px solid #444; max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 10; }
-        .autocomplete-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; background: #222; }
         .delete-btn { color: #e74c3c; background: none; border: none; font-size: 11px; font-weight: bold; margin-top: 10px; width: 100%; text-align: right; cursor: pointer; }
 
-        /* NOUVEAUX STYLES : SUIVI SUR UNE SEULE LIGNE */
-        .suivi-card { 
+        /* --- STYLE SUIVI AMÉLIORÉ (UNE LIGNE) --- */
+        .suivi-row { 
             background: #111; 
-            padding: 12px; 
+            padding: 10px; 
             border-radius: 8px; 
-            margin-bottom: 6px; 
+            margin-bottom: 5px; 
             border: 1px solid #222; 
             display: flex; 
-            justify-content: space-between; 
             align-items: center; 
+            justify-content: space-between; 
             gap: 10px;
         }
-        .s-time { color: #888; font-size: 12px; font-family: monospace; min-width: 45px; }
+        .s-time { color: #888; font-size: 11px; font-family: monospace; min-width: 40px; }
         .s-name { flex: 1; font-weight: bold; font-size: 14px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .s-delay { color: #f1c40f; font-weight: 800; font-size: 13px; min-width: 60px; text-align: center; }
+        .s-delay { color: #f1c40f; font-weight: 800; font-size: 12px; min-width: 50px; text-align: center; }
         .s-status { 
-            padding: 4px 10px; 
-            border-
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 10px; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            min-width: 85px; 
+            text-align: center;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-tabs">
+        <button class="nav-btn active" id="btn-nav-order" onclick="showSection('orderSection', this)">Commander</button>
+        <button class="nav-btn" id="btn-nav-suivi" onclick="showSection('suiviSection', this)">Suivi</button>
+    </div>
+
+    <div class="header"><h1>🍕 Mwaka Pizza</h1></div>
+
+    <div class="container">
+        <div id="orderSection" class="section active">
+            <div class="type-selector">
+                <button type="button" class="type-btn" id="btnEmporter" onclick="setType('Emporter')
