@@ -2,62 +2,72 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Pizza - CONSOLE STABLE</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwaka Pizza - CONSOLE FLUIDE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; }
-        #debug-log { background: #440000; color: #ffaaaa; padding: 5px; font-size: 10px; text-align: center; display: none; }
+        body { font-family: sans-serif; background: #0b0b0b; color: #fff; margin:0; padding: 0; touch-action: manipulation; }
         
-        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .tab-btn { flex: 1; padding: 20px; border: none; background: none; color: #555; font-size: 16px; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; display: flex; align-items: center; justify-content: center; }
-        .tab-btn.active { background: #111; }
-        #tab-afaire.active { color: #e74c3c; border-bottom-color: #e74c3c; }
-        #tab-encours.active { color: #3498db; border-bottom-color: #3498db; }
-        #tab-termine.active { color: #2ecc71; border-bottom-color: #2ecc71; }
+        /* NAVIGATION OPTIMISÉE POUR TABLETTE */
+        .tabs { display: flex; background: #1a1a1a; position: sticky; top: 0; z-index: 1000; height: 80px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        .tab-btn { 
+            flex: 1; border: none; background: transparent; color: #666; font-size: 18px; font-weight: 800; 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 0.2s; border-bottom: 5px solid transparent; -webkit-tap-highlight-color: transparent;
+        }
         
-        .badge { background: #333; color: #fff; border-radius: 12px; padding: 2px 10px; font-size: 14px; margin-left: 10px; }
-        #tab-afaire.active .badge { background: #e74c3c; }
-        #tab-encours.active .badge { background: #3498db; }
+        /* États Actifs */
+        .tab-btn.active#tab-afaire { color: #fff; background: #3d1414; border-bottom-color: #e74c3c; }
+        .tab-btn.active#tab-encours { color: #fff; background: #14263d; border-bottom-color: #3498db; }
+        .tab-btn.active#tab-termine { color: #fff; background: #143d20; border-bottom-color: #2ecc71; }
+        
+        .badge { background: #333; color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 14px; margin-top: 5px; }
+        .active .badge { background: rgba(255,255,255,0.2); }
 
-        .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 900px; margin: 0 auto; }
+        /* LISTE ET CARTES */
+        .orders-list { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 900px; margin: 0 auto; }
         .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; border-right: 1px solid #333; }
         .order-card.is-web { border-left-color: #3498db !important; }
         
-        .timer-tag { position: absolute; top: 20px; right: 20px; background: #222; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-family: monospace; }
-        .danger { border-right: 8px solid #e74c3c !important; background: #210a0a !important; }
-        .warning { border-right: 8px solid #f39c12 !important; }
+        .timer-tag { position: absolute; top: 20px; right: 20px; background: #000; padding: 8px 15px; border-radius: 10px; font-weight: bold; border: 1px solid #333; }
+        .danger { border-right: 10px solid #e74c3c !important; background: #210a0a !important; }
+        .warning { border-right: 10px solid #f39c12 !important; }
 
-        .client-header { font-size: 24px; font-weight: 900; margin-bottom: 10px; padding-right: 100px; }
-        .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.6em; border: 1px solid #333; }
-        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
+        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 10px; padding-right: 110px; color: #fff; }
+        .items-area { background: #252525; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 1.8em; border: 1px solid #333; }
+        .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 12px 0; }
+        .pizza-line:last-child { border: none; }
 
-        .actions { display: flex; gap: 12px; margin-top: 20px; }
-        .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        /* BOUTONS D'ACTION */
+        .actions { display: flex; gap: 15px; margin-top: 20px; }
+        .btn { flex: 1; height: 70px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
         .btn-accept { background: #27ae60; color: white; }
         .btn-cuisson { background: #3498db; color: white; }
         .btn-prete { background: #2ecc71; color: white; }
-        .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
+        .btn-print { background: #444; color: white; width: 90px; flex: none; font-size: 28px; }
         
-        .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .btn-delay { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        /* MENU DÉLAI */
+        .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .btn-delay { height: 60px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; }
         
-        .empty-msg { text-align: center; color: #555; margin-top: 50px; font-size: 1.2em; }
+        .empty-msg { text-align: center; color: #555; margin-top: 80px; font-size: 1.4em; }
     </style>
 </head>
 <body>
 
-    <div id="debug-log"></div>
-
     <div class="tabs">
-        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">À FAIRE <span id="count-afaire" class="badge">0</span></button>
-        <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">EN COURS <span id="count-encours" class="badge">0</span></button>
-        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">TERMINÉES</button>
+        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">
+            À FAIRE <span id="count-afaire" class="badge">0</span>
+        </button>
+        <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">
+            EN COURS <span id="count-encours" class="badge">0</span>
+        </button>
+        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">
+            TERMINÉES
+        </button>
     </div>
 
-    <div id="ordersContainer" class="orders-list">
-        <div class="empty-msg">Connexion à Firebase...</div>
-    </div>
+    <div id="ordersContainer" class="orders-list"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -67,22 +77,20 @@
         const db = firebase.firestore();
         
         let currentStatusFilter = 'en_attente';
-        let unsubscribe = null;
+        let ordersData = [];
 
-        function logError(msg) {
-            const div = document.getElementById('debug-log');
-            div.style.display = 'block';
-            div.innerText = "ERREUR : " + msg;
-            console.error(msg);
-        }
+        // 1. Écouteur unique et global (Évite de re-télécharger à chaque clic)
+        db.collection("commandes").onSnapshot((snapshot) => {
+            ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateBadges();
+            renderAll();
+        });
 
-        // Compteurs simples
         function updateBadges() {
-            db.collection("commandes").where("status", "==", "en_attente").onSnapshot(s => document.getElementById('count-afaire').innerText = s.size);
-            db.collection("commandes").onSnapshot(s => {
-                const enCours = s.docs.filter(d => d.data().status === "production" || d.data().status === "cuisson").length;
-                document.getElementById('count-encours').innerText = enCours;
-            });
+            const afaire = ordersData.filter(o => o.status === "en_attente").length;
+            const encours = ordersData.filter(o => o.status === "production" || o.status === "cuisson").length;
+            document.getElementById('count-afaire').innerText = afaire;
+            document.getElementById('count-encours').innerText = encours;
         }
 
         function switchTab(status) {
@@ -91,85 +99,75 @@
             if(status === 'en_attente') document.getElementById('tab-afaire').classList.add('active');
             else if(status === 'encours') document.getElementById('tab-encours').classList.add('active');
             else document.getElementById('tab-termine').classList.add('active');
-            loadOrders();
+            renderAll();
         }
 
-        function loadOrders() {
-            if (unsubscribe) unsubscribe();
+        function renderAll() {
             const container = document.getElementById('ordersContainer');
+            container.innerHTML = "";
             
-            // On écoute toute la collection et on filtre en JS (plus sûr que les index Firebase pour le moment)
-            unsubscribe = db.collection("commandes").onSnapshot((snapshot) => {
-                container.innerHTML = "";
-                let hasOrders = false;
+            let filtered = ordersData.filter(o => {
+                if (currentStatusFilter === 'en_attente') return o.status === 'en_attente';
+                if (currentStatusFilter === 'encours') return (o.status === 'production' || o.status === 'cuisson');
+                if (currentStatusFilter === 'termine') return o.status === 'termine';
+                return false;
+            });
 
-                snapshot.forEach(doc => {
-                    const o = doc.data();
-                    const id = doc.id;
+            // Tri par date décroissante
+            filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-                    // Filtrage manuel selon l'onglet
-                    let match = false;
-                    if (currentStatusFilter === 'en_attente' && o.status === 'en_attente') match = true;
-                    else if (currentStatusFilter === 'encours' && (o.status === 'production' || o.status === 'cuisson')) match = true;
-                    else if (currentStatusFilter === 'termine' && o.status === 'termine') match = true;
-
-                    if (match) {
-                        hasOrders = true;
-                        renderCard(id, o, container);
-                    }
-                });
-
-                if (!hasOrders) {
-                    container.innerHTML = '<div class="empty-msg">Aucune commande dans cet onglet.</div>';
-                }
-            }, (error) => logError(error.message));
-        }
-
-        function renderCard(id, o, container) {
-            const now = new Date();
-            const created = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate() : now;
-            const diff = Math.floor((now - created) / 60000);
-
-            let alertClass = "";
-            if (o.status !== 'termine') {
-                if (diff >= 15) alertClass = "danger";
-                else if (diff >= 10) alertClass = "warning";
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-msg">Aucune commande ici.</div>';
+                return;
             }
 
-            const card = document.createElement('div');
-            card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''} ${alertClass}`;
-            card.innerHTML = `
-                <div class="timer-tag">${diff} min</div>
-                <div class="client-header">${o.clientName || 'Inconnu'}</div>
-                <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
-                <div class="actions">
-                    <button class="btn btn-print" onclick="window.print()">🖨️</button>
-                    ${renderBtn(id, o.status)}
-                </div>
-                <div id="delay-${id}" class="delay-menu">
-                    <button class="btn-delay" style="background:#2ecc71" onclick="upd('${id}', 'production')">RAPIDE</button>
-                    <button class="btn-delay" style="background:#f39c12" onclick="upd('${id}', 'production')">15 MIN</button>
-                    <button class="btn-delay" style="background:#e74c3c" onclick="upd('${id}', 'production')">CHAUD !</button>
-                </div>
-            `;
-            container.appendChild(card);
+            filtered.forEach(o => {
+                const now = new Date();
+                const created = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate() : now;
+                const diff = Math.floor((now - created) / 60000);
+
+                let alertClass = "";
+                if (o.status !== 'termine') {
+                    if (diff >= 15) alertClass = "danger";
+                    else if (diff >= 10) alertClass = "warning";
+                }
+
+                const card = document.createElement('div');
+                card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''} ${alertClass}`;
+                card.innerHTML = `
+                    <div class="timer-tag">${diff} min</div>
+                    <div class="client-header">${o.clientName || 'CLIENT'}</div>
+                    <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
+                    <div class="actions">
+                        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i></button>
+                        ${renderBtn(o.id, o.status)}
+                    </div>
+                    <div id="delay-${o.id}" class="delay-menu">
+                        <button class="btn-delay" style="background:#2ecc71" onclick="upd('${o.id}', 'production')">RAPIDE</button>
+                        <button class="btn-delay" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15 MIN</button>
+                        <button class="btn-delay" style="background:#e74c3c" onclick="upd('${o.id}', 'production')">CHAUD !</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
         function renderBtn(id, status) {
-            if (status === "en_attente") return `<button class="btn btn-accept" onclick="document.getElementById('delay-${id}').style.display='grid'">ACCEPTER</button>`;
+            if (status === "en_attente") return `<button class="btn btn-accept" onclick="showDelay('${id}')">ACCEPTER</button>`;
             if (status === "production") return `<button class="btn btn-cuisson" onclick="upd('${id}', 'cuisson')">AU FOUR !</button>`;
             if (status === "cuisson") return `<button class="btn btn-prete" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
             return `<button class="btn" onclick="upd('${id}', 'en_attente')">RÉACTIVER</button>`;
         }
 
-        function upd(id, s) { 
-            db.collection("commandes").doc(id).update({ status: s }).catch(e => logError(e.message)); 
+        function showDelay(id) {
+            const m = document.getElementById(`delay-${id}`);
+            m.style.display = 'grid';
         }
 
-        window.onload = () => { 
-            updateBadges(); 
-            loadOrders(); 
-        };
+        function upd(id, s) { 
+            db.collection("commandes").doc(id).update({ status: s }); 
+        }
+
     </script>
 </body>
 </html>
