@@ -7,23 +7,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #0b0b0b; color: #fff; text-align: center; padding: 20px; }
-        .status-box { background: #1a1a1a; border-radius: 20px; padding: 30px; margin-top: 30px; border-top: 5px solid #3498db; }
-        #msg { font-size: 1.4em; font-weight: bold; margin: 20px 0; color: #3498db; }
-        .info-speciale { background: #2c3e50; padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 20px; border: 1px dashed #3498db; }
-        .step-icon { font-size: 50px; margin-bottom: 20px; opacity: 0.3; transition: 0.5s; }
-        .active-icon { opacity: 1; color: #3498db; transform: scale(1.2); }
+        .container { max-width: 400px; margin: 0 auto; }
+        
+        /* JAUGE DYNAMIQUE */
+        .gauge-container { width: 100%; height: 12px; background: #222; border-radius: 10px; margin: 40px 0; overflow: hidden; border: 1px solid #333; }
+        .gauge-fill { height: 100%; width: 10%; background: linear-gradient(90deg, #3498db, #2ecc71); transition: width 1s ease-in-out; }
+
+        /* ICONES ET ETAPES */
+        .steps { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .step { opacity: 0.2; transition: 0.5s; font-size: 30px; }
+        .step.active { opacity: 1; color: #3498db; transform: scale(1.2); }
+        .step.done { opacity: 1; color: #2ecc71; }
+        
+        .status-box { background: #1a1a1a; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #status-msg { font-size: 1.4em; font-weight: bold; margin: 20px 0; }
+        
+        .info-chaud { background: #e74c3c; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; animation: blink 2s infinite; display: none; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <img src="https://moniresto.com/mwakapizza/img/mwaka-pizza-logo-1615545224.jpg" width="120">
-    
-    <div class="status-box">
-        <div id="icon-container">
-            <i id="icon" class="fas fa-utensils step-icon active-icon"></i>
+    <div class="container">
+        <img src="https://moniresto.com/mwakapizza/img/mwaka-pizza-logo-1615545224.jpg" width="120">
+        
+        <div class="gauge-container"><div id="gauge" class="gauge-fill"></div></div>
+
+        <div class="steps">
+            <i id="i-attente" class="fas fa-clock step"></i>
+            <i id="i-prod" class="fas fa-utensils step"></i>
+            <i id="i-cuisson" class="fas fa-fire step"></i>
+            <i id="i-prete" class="fas fa-check-circle step"></i>
         </div>
-        <div id="status-label" style="text-transform: uppercase; letter-spacing: 2px; color: #555;">Préparation</div>
-        <div id="msg">Chargement...</div>
-        <div id="special" class="info-speciale" style="display:none;"></div>
+
+        <div class="status-box">
+            <div id="status-msg">Chargement...</div>
+            <div id="msg-chaud" class="info-chaud">🔥 SERVICE CHAUD SUR PLACE ! On fait au mieux, restez attentif.</div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -33,41 +52,41 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('id');
+        const orderId = new URLSearchParams(window.location.search).get('id');
 
         if (orderId) {
             db.collection("commandes").doc(orderId).onSnapshot((doc) => {
                 if (doc.exists) {
                     const d = doc.data();
-                    const msgDiv = document.getElementById('msg');
-                    const specDiv = document.getElementById('special');
-                    const icon = document.getElementById('icon');
-                    const label = document.getElementById('status-label');
+                    const gauge = document.getElementById('gauge');
+                    const msg = document.getElementById('status-msg');
+                    
+                    // Reset icônes
+                    document.querySelectorAll('.step').forEach(s => s.className = s.className.replace(' active', '').replace(' done', ''));
+                    document.getElementById('msg-chaud').style.display = (d.delay === "CHAUD !") ? "block" : "none";
 
                     if (d.status === "en_attente") {
-                        msgDiv.innerText = "Commande en attente de validation...";
-                        icon.className = "fas fa-clock step-icon active-icon";
-                    } else if (d.status === "production") {
-                        msgDiv.innerText = (d.delay === "CHAUD !") ? "C'est pour tout de suite !" : "On prépare vos pizzas !";
-                        icon.className = "fas fa-utensils step-icon active-icon";
-                        label.innerText = (d.delay === "CHAUD !") ? "CHAUD SUR PLACE" : "PRÉPARATION";
-                    } else if (d.status === "cuisson") {
-                        msgDiv.innerText = "C'est au four ! 🔥";
-                        icon.className = "fas fa-fire step-icon active-icon";
-                        label.innerText = "CUISSON";
-                    } else if (d.status === "prete") {
-                        msgDiv.innerText = "C'EST PRÊT ! ✅";
-                        icon.className = "fas fa-check-circle step-icon active-icon";
-                        icon.style.color = "#2ecc71";
-                        label.innerText = "DISPONIBLE";
-                    }
-
-                    if (d.delay === "CHAUD !") {
-                        specDiv.style.display = "block";
-                        specDiv.innerText = d.clientMsg;
-                    } else {
-                        specDiv.style.display = "none";
+                        gauge.style.width = "10%";
+                        msg.innerText = "Commande reçue !";
+                        document.getElementById('i-attente').classList.add('active');
+                    } 
+                    else if (d.status === "production") {
+                        gauge.style.width = "40%";
+                        msg.innerText = "Préparation en cours...";
+                        document.getElementById('i-attente').classList.add('done');
+                        document.getElementById('i-prod').classList.add('active');
+                    } 
+                    else if (d.status === "cuisson") {
+                        gauge.style.width = "75%";
+                        msg.innerText = "C'est au four ! 🔥";
+                        document.getElementById('i-attente').classList.add('done');
+                        document.getElementById('i-prod').classList.add('done');
+                        document.getElementById('i-cuisson').classList.add('active');
+                    } 
+                    else if (d.status === "termine") {
+                        gauge.style.width = "100%";
+                        msg.innerHTML = "<span style='color:#2ecc71'>C'EST PRÊT ! Bon appétit ! ✅</span>";
+                        document.querySelectorAll('.step').forEach(s => s.classList.add('done'));
                     }
                 }
             });
