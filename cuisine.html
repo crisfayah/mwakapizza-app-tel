@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Console - Cuisine</title>
+    <title>Mwaka Pizza - CONSOLE EXPERT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,53 +15,37 @@
 
         body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--dark-bg); color: #fff; margin:0; padding: 0; touch-action: manipulation; }
         
-        /* NAVIGATION - ZONES DE CLIC ÉLARGIES */
+        /* NAVIGATION */
         .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 100px; gap: 10px; padding: 10px; box-sizing: border-box; }
-        
-        .tab-btn { 
-            border: none; border-radius: 14px; font-size: 16px; font-weight: 900; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 0.2s ease; opacity: 0.5; color: #fff; text-transform: uppercase;
-            cursor: pointer; -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Largeur spécifique pour À FAIRE */
+        .tab-btn { flex: 1; border: none; border-radius: 14px; font-size: 16px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s ease; opacity: 0.5; color: #fff; text-transform: uppercase; cursor: pointer; }
         #tab-afaire { flex: 1.4; background: #5d1a1a; border: 1px solid var(--red-soft); }
         #tab-encours { flex: 1; background: #1a325d; border: 1px solid var(--blue-soft); }
         #tab-termine { flex: 1; background: #1a5d2e; border: 1px solid var(--green-soft); }
-
-        /* États Actifs */
         .tab-btn.active { opacity: 1; transform: scale(0.97); }
-        #tab-afaire.active { background: var(--red-soft); box-shadow: 0 0 15px rgba(169, 50, 38, 0.4); }
-        #tab-encours.active { background: var(--blue-soft); box-shadow: 0 0 15px rgba(46, 134, 193, 0.4); }
-        #tab-termine.active { background: var(--green-soft); box-shadow: 0 0 15px rgba(40, 180, 99, 0.4); }
-        
+        #tab-afaire.active { background: var(--red-soft); }
+        #tab-encours.active { background: var(--blue-soft); }
+        #tab-termine.active { background: var(--green-soft); }
         .badge { background: rgba(0,0,0,0.5); color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 14px; margin-top: 5px; font-weight: 800; }
-        .active .badge { background: #fff; color: #000; }
 
         /* LISTE DES CARTES */
         .orders-list { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 900px; margin: 0 auto; }
-        .order-card { background: #1a1a1a; border-radius: 18px; padding: 25px; border-left: 15px solid var(--green-soft); position: relative; transition: 0.3s ease; }
+        .order-card { background: #1a1a1a; border-radius: 18px; padding: 25px; border-left: 15px solid var(--green-soft); position: relative; }
         .order-card.is-web { border-left-color: var(--blue-soft) !important; }
         
-        .timer-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 8px; font-weight: bold; font-family: monospace; font-size: 1.1em; border: 1px solid #444; }
-        
-        /* ALERTES CHRONO (Moins violent) */
-        .warning { border-right: 12px solid #f39c12; background: #2c2100; }
-        .danger { 
-            background: #641e16 !important; /* Rouge sombre au lieu de flash */
-            border-right: 12px solid var(--red-soft) !important; 
-            animation: soft-pulse 2s infinite;
-        }
+        /* BLOC LIVRAISON / INFOS CLIENT */
+        .delivery-info { background: #14263d; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--blue-soft); font-size: 1.1em; }
+        .delivery-info b { color: var(--blue-soft); }
+        .payment-tag { display: inline-block; background: #f39c12; color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; margin-top: 5px; }
 
+        .timer-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 8px; font-weight: bold; font-family: monospace; border: 1px solid #444; }
+        
+        .danger { background: #641e16 !important; border-right: 12px solid var(--red-soft) !important; animation: soft-pulse 2s infinite; }
         @keyframes soft-pulse { 0% { background: #641e16; } 50% { background: #7b241c; } 100% { background: #641e16; } }
 
-        .client-header { font-size: 28px; font-weight: 900; margin-bottom: 12px; padding-right: 100px; color: #fff; }
+        .client-header { font-size: 26px; font-weight: 900; margin-bottom: 12px; padding-right: 100px; }
         .items-area { background: #222; padding: 20px; border-radius: 12px; margin: 15px 0; font-size: 2.1em; border: 1px solid #333; }
         .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px 0; }
-        .pizza-line:last-child { border-bottom: none; }
 
-        /* BOUTONS ACTIONS */
         .actions { display: flex; gap: 15px; margin-top: 25px; }
         .btn { flex: 1; height: 80px; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
         .btn-green { background: var(--green-soft); color: #fff; }
@@ -70,25 +54,19 @@
         
         .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
         .btn-d { height: 70px; border: none; border-radius: 10px; font-weight: 900; color: #fff; font-size: 18px; }
-        
-        .empty-msg { text-align: center; color: #444; margin-top: 100px; font-size: 1.5em; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="tabs">
-        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">
-            À FAIRE <span id="count-afaire" class="badge">0</span>
-        </button>
-        <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">
-            EN COURS <span id="count-encours" class="badge">0</span>
-        </button>
-        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">
-            TERMINÉES <span id="count-termine" class="badge">0</span>
-        </button>
+        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">À FAIRE <span id="count-afaire" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">EN COURS <span id="count-encours" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">TERMINÉES <span id="count-termine" class="badge">0</span></button>
     </div>
 
     <div id="ordersContainer" class="orders-list"></div>
+
+    <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3" preload="auto"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -96,13 +74,23 @@
         const config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
         firebase.initializeApp(config);
         const db = firebase.firestore();
+        const sound = document.getElementById('alertSound');
         
         let currentTab = 'en_attente';
         let allOrders = [];
 
-        // Écouteur global pour stabiliser les flux
         db.collection("commandes").onSnapshot((snapshot) => {
             allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // GESTION DU SON : Si au moins une commande est en attente, on boucle
+            const hasPending = allOrders.some(o => o.status === "en_attente");
+            if (hasPending) {
+                sound.play().catch(e => console.log("Interaction requise pour le son"));
+            } else {
+                sound.pause();
+                sound.currentTime = 0;
+            }
+
             updateBadges();
             renderOrders();
         });
@@ -133,41 +121,38 @@
 
             filtered.sort((a, b) => b.id.localeCompare(a.id));
 
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-msg">AUCUNE COMMANDE ICI</div>';
-                return;
-            }
-
             filtered.forEach(o => {
-                let dateObj = new Date();
-                if (o.createdAt) {
-                    dateObj = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
-                }
-                const diff = Math.floor((new Date() - dateObj) / 60000);
-
-                let alertClass = "";
-                if (o.status !== 'termine') {
-                    if (diff >= 15) alertClass = "danger";
-                    else if (diff >= 10) alertClass = "warning";
-                }
+                let d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || Date.now());
+                const diff = Math.floor((new Date() - d) / 60000);
+                const isLivr = (o.type === "LIVRAISON");
+                const isWeb = (o.source === "PRESTASHOP");
 
                 const card = document.createElement('div');
-                card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''} ${alertClass}`;
+                card.className = `order-card ${isWeb ? 'is-web' : ''} ${(diff >= 15 && o.status !== 'termine') ? 'danger' : ''}`;
                 
-                const itemsHtml = o.items ? o.items.map(p => `
-                    <div class="pizza-line">
-                        <strong>${p.qty}x ${p.name.toUpperCase()}</strong>
-                    </div>
-                `).join('') : '<div class="pizza-line">Chargement des articles...</div>';
+                // Formatage du nom : Prénom Nom - WEB - LIVRAISON
+                let displayTitle = o.clientName || 'CLIENT';
+                if (isWeb && isLivr) displayTitle += " - LIVRAISON";
 
                 card.innerHTML = `
                     <div class="timer-tag">${diff} min</div>
-                    <div class="client-header">${o.clientName || 'CLIENT'}</div>
-                    <div class="items-area">${itemsHtml}</div>
+                    <div class="client-header">${displayTitle}</div>
+                    
+                    ${(isLivr || o.address) ? `
+                        <div class="delivery-info">
+                            <b>📍 Adresse :</b> ${o.address || 'Non renseignée'}<br>
+                            <b>📞 Tel :</b> ${o.phone || 'Non renseigné'}<br>
+                            ${o.paymentMethod ? `<span class="payment-tag">💳 ${o.paymentMethod}</span>` : ''}
+                        </div>
+                    ` : ''}
+
+                    <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
+                    
                     <div class="actions">
                         <button class="btn btn-grey" onclick="printTicket('${o.id}')"><i class="fas fa-print"></i></button>
                         ${getActionButton(o.id, o.status)}
                     </div>
+
                     <div id="m-${o.id}" class="delay-menu">
                         <button class="btn-d" style="background:#27ae60" onclick="upd('${o.id}', 'production')">RAPIDE</button>
                         <button class="btn-d" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15 MIN</button>
@@ -185,12 +170,21 @@
             return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">RÉACTIVER</button>`;
         }
 
-        function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
+        function upd(id, s) { 
+            db.collection("commandes").doc(id).update({ status: s }); 
+            if (s !== 'en_attente') { // Arrêter le son si on accepte
+                 sound.pause();
+            }
+        }
 
         function printTicket(id) {
             const o = allOrders.find(x => x.id === id);
-            const text = o.clientName + "\n" + (o.items ? o.items.map(p => p.qty + "x " + p.name).join("\n") : "");
-            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + btoa(unescape(encodeURIComponent(text))) + ";end;";
+            let t = (o.clientName || 'CLIENT') + "\n";
+            if(o.address) t += "ADR: " + o.address + "\n";
+            if(o.phone) t += "TEL: " + o.phone + "\n";
+            t += "----------------\n";
+            if(o.items) t += o.items.map(p => p.qty + "x " + p.name).join("\n");
+            window.location.href = "intent:#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.base64=" + btoa(unescape(encodeURIComponent(t))) + ";end;";
         }
     </script>
 </body>
