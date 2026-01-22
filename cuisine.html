@@ -18,15 +18,7 @@
         .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 15px solid #2ecc71; position: relative; transition: 0.3s; }
         .order-card.is-web { border-left-color: #3498db !important; }
         
-        /* ALERTE CLIENT PROCHE */
-        .order-card.client-proche { border: 6px solid #f1c40f !important; background: #2c2500; animation: pulse-arrival 1.5s infinite; }
-        @keyframes pulse-arrival { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-        .arrival-badge { display: none; background: #f1c40f; color: #000; padding: 10px; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-align: center; font-size: 1.2em; }
-        .client-proche .arrival-badge { display: block; }
-
         .client-header { font-size: 24px; font-weight: 900; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: #333; color: #aaa; text-transform: uppercase; }
-        
         .items-area { background: #252525; padding: 15px; border-radius: 10px; margin: 15px 0; font-size: 1.6em; border: 1px solid #333; }
         .pizza-line { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
 
@@ -34,9 +26,8 @@
         .btn { flex: 1; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         
         .btn-accept { background: #27ae60; color: white; }
-        .btn-cuisson { background: #e67e22; color: white; }
+        .btn-cuisson { background: #3498db; color: white; }
         .btn-prete { background: #2ecc71; color: white; }
-        .btn-remis { background: #9b59b6; color: white; }
         .btn-print { background: #444; color: white; width: 80px; flex: none; font-size: 24px; }
         
         .delay-menu { display: none; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
@@ -53,8 +44,6 @@
 
     <div id="ordersContainer" class="orders-list"></div>
 
-    <audio id="arrivalSound" src="https://assets.mixkit.co/active_storage/sfx/1017/1017-preview.mp3" preload="auto"></audio>
-
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script>
@@ -63,7 +52,6 @@
         const db = firebase.firestore();
         
         let currentView = 'afaire';
-        let allOrders = {};
 
         function switchTab(status) {
             currentView = status;
@@ -78,7 +66,7 @@
             if (currentView === 'afaire') {
                 query = db.collection("commandes").where("status", "==", "en_attente");
             } else if (currentView === 'encours') {
-                query = db.collection("commandes").where("status", "in", ["production", "cuisson", "prete"]);
+                query = db.collection("commandes").where("status", "in", ["production", "cuisson"]);
             } else {
                 query = db.collection("commandes").where("status", "==", "termine");
             }
@@ -90,30 +78,19 @@
                 snapshot.forEach(doc => {
                     const o = doc.data();
                     const id = doc.id;
-                    allOrders[id] = o;
-
                     const card = document.createElement('div');
-                    const isWeb = o.source === "PRESTASHOP";
-                    const isArrival = o.clientArrivant === true;
-                    
-                    if (isArrival && o.status !== "termine") document.getElementById('arrivalSound').play().catch(e=>{});
-
-                    card.className = `order-card ${isWeb ? 'is-web' : ''} ${isArrival ? 'client-proche' : ''}`;
+                    card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''}`;
                     card.innerHTML = `
-                        <div class="arrival-badge"><i class="fas fa-car"></i> CLIENT ARRIVÉ !</div>
-                        <div class="client-header">
-                            <span>${o.clientName} <span class="status-badge">${o.status}</span></span>
-                            <span class="type-tag" style="font-size:12px; background:#444; padding:4px 8px; border-radius:5px;">${o.type}</span>
-                        </div>
+                        <div class="client-header"><span>${o.clientName}</span></div>
                         <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
                         <div class="actions">
                             <button class="btn btn-print" onclick="printTicket('${id}')">🖨️</button>
-                            ${renderContextButton(id, o)}
+                            ${renderBtn(id, o.status)}
                         </div>
                         <div id="delay-${id}" class="delay-menu">
-                            <button class="btn-delay" style="background:#2ecc71" onclick="validateOrder('${id}', 'RAPIDE')">RAPIDE</button>
-                            <button class="btn-delay" style="background:#f39c12" onclick="validateOrder('${id}', '15 MIN')">15 MIN</button>
-                            <button class="btn-delay" style="background:#e74c3c" onclick="validateOrder('${id}', 'CHAUD !')">CHAUD !</button>
+                            <button class="btn-delay" style="background:#2ecc71" onclick="validate('${id}', 'RAPIDE')">RAPIDE</button>
+                            <button class="btn-delay" style="background:#f39c12" onclick="validate('${id}', '15 MIN')">15 MIN</button>
+                            <button class="btn-delay" style="background:#e74c3c" onclick="validate('${id}', 'CHAUD !')">CHAUD !</button>
                         </div>
                     `;
                     container.appendChild(card);
@@ -121,17 +98,11 @@
             });
         }
 
-        function renderContextButton(id, o) {
-            if (o.status === "en_attente") {
-                return `<button class="btn btn-accept" onclick="toggleDelay('${id}')">ACCEPTER</button>`;
-            } else if (o.status === "production") {
-                return `<button class="btn btn-cuisson" style="background:#3498db" onclick="updateStatus('${id}', 'cuisson')">ENFOURNER</button>`;
-            } else if (o.status === "cuisson") {
-                return `<button class="btn btn-prete" onclick="updateStatus('${id}', 'prete')">SORTIR (PRÊTE)</button>`;
-            } else if (o.status === "prete") {
-                return `<button class="btn btn-remis" onclick="updateStatus('${id}', 'termine')">REMIS AU CLIENT</button>`;
-            }
-            return `<button class="btn" onclick="updateStatus('${id}', 'en_attente')">REMETTRE</button>`;
+        function renderBtn(id, status) {
+            if (status === "en_attente") return `<button class="btn btn-accept" onclick="toggleDelay('${id}')">ACCEPTER</button>`;
+            if (status === "production") return `<button class="btn btn-cuisson" onclick="upd('${id}', 'cuisson')">ENFOURNER</button>`;
+            if (status === "cuisson") return `<button class="btn btn-prete" onclick="upd('${id}', 'termine')">PRÊTE (FINIR)</button>`;
+            return `<button class="btn" onclick="upd('${id}', 'en_attente')">REMETTRE</button>`;
         }
 
         function toggleDelay(id) {
@@ -139,18 +110,11 @@
             m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
         }
 
-        function validateOrder(id, delayChoice) {
-            let updates = {
-                status: "production",
-                delay: delayChoice,
-                clientMsg: (delayChoice === "CHAUD !") ? "Spécialité sur place : Nous faisons au mieux pour vous servir chaud ! Checkez le suivi." : "Nous préparons votre commande !"
-            };
-            db.collection("commandes").doc(id).update(updates).then(() => switchTab('encours'));
+        function validate(id, delay) {
+            db.collection("commandes").doc(id).update({ status: "production", delay: delay }).then(() => switchTab('encours'));
         }
 
-        function updateStatus(id, s) {
-            db.collection("commandes").doc(id).update({ status: s });
-        }
+        function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
 
         window.onload = loadOrders;
     </script>
