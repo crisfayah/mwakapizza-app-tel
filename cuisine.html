@@ -6,40 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --red: #a93226; --blue: #2e86c1; --green: #28b463; --dark: #0b0b0b; }
+        :root { --red: #a93226; --blue: #2e86c1; --green: #28b463; --dark: #000; }
         body { font-family: sans-serif; background: var(--dark); color: #fff; margin:0; padding: 0; }
         
-        /* NAVIGATION COMPACTE */
         .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 75px; gap: 8px; padding: 6px; box-sizing: border-box; }
         .tab-btn { flex: 1; border: none; border-radius: 10px; font-size: 13px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.5; color: #fff; text-transform: uppercase; cursor: pointer; }
-        #tab-afaire { flex: 1.4; background: #4d1111; border: 1px solid var(--red); }
-        #tab-encours { flex: 1; background: #11264d; border: 1px solid var(--blue); }
-        #tab-termine { flex: 1; background: #114d20; border: 1px solid var(--green); }
+        #tab-afaire { background: #4d1111; border: 1px solid var(--red); }
+        #tab-encours { background: #11264d; border: 1px solid var(--blue); }
+        #tab-termine { background: #114d20; border: 1px solid var(--green); }
         .tab-btn.active { opacity: 1; border-width: 2px; }
         #tab-afaire.active { background: var(--red); }
         #tab-encours.active { background: var(--blue); }
         #tab-termine.active { background: var(--green); }
-        .badge { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 15px; font-size: 11px; margin-top: 3px; }
+        .badge { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 15px; font-size: 12px; margin-top: 3px; }
 
-        .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 800px; margin: 0 auto; }
+        .orders-list { display: flex; flex-direction: column; gap: 15px; padding: 15px; max-width: 850px; margin: 0 auto; }
         .order-card { background: #1a1a1a; border-radius: 12px; padding: 18px; border-left: 12px solid var(--green); position: relative; }
         .order-card.is-web { border-left-color: var(--blue) !important; }
         
-        .timer { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 6px; font-weight: bold; font-family: monospace; border: 1px solid #444; font-size: 0.9em; }
+        .timer { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; font-weight: bold; font-family: monospace; border: 1px solid #444; font-size: 0.9em; }
         .danger { background: #641e16 !important; border-right: 8px solid var(--red) !important; animation: blink 2s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
 
         .client-header { font-size: 20px; font-weight: 900; margin-bottom: 8px; padding-right: 80px; text-transform: uppercase; }
         .delivery-box { background: #14263d; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9em; border-left: 4px solid var(--blue); }
-        .pay-tag { display: inline-block; background: #f39c12; color: #000; padding: 4px 10px; border-radius: 6px; font-weight: 900; font-size: 0.85em; margin-top: 8px; border: 1px solid #fff; }
+        .pay-tag { display: inline-block; background: #f39c12; color: #000; padding: 3px 8px; border-radius: 6px; font-weight: 900; font-size: 0.85em; margin-top: 5px; border: 1px solid #fff; }
 
-        /* TAILLE DES PIZZAS RÉDUITE */
         .items-area { background: #222; padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 1.4em; border: 1px solid #333; }
-        .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 6px 0; }
+        .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0; }
 
-        /* BOUTONS RÉDUITS */
         .actions { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; height: 60px; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+        .btn { flex: 1; height: 60px; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; }
         .btn-green { background: var(--green); color: #fff; }
         .btn-blue { background: var(--blue); color: #fff; }
         .btn-grey { background: #333; color: white; width: 65px; flex: none; font-size: 24px; }
@@ -49,13 +46,11 @@
     </style>
 </head>
 <body>
-
     <div class="tabs">
         <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">À FAIRE <span id="c-afaire" class="badge">0</span></button>
         <button class="tab-btn" id="tab-encours" onclick="switchTab('encours')">EN COURS <span id="c-encours" class="badge">0</span></button>
         <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">TERMINÉES <span id="c-termine" class="badge">0</span></button>
     </div>
-
     <div id="ordersContainer" class="orders-list"></div>
     <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3"></audio>
 
@@ -63,19 +58,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script>
         const config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
-        firebase.initializeApp(config);
-        const db = firebase.firestore();
-        const sound = document.getElementById('alertSound');
-        
-        let currentTab = 'en_attente';
-        let allOrders = [];
+        firebase.initializeApp(config); const db = firebase.firestore(); const sound = document.getElementById('alertSound');
+        let currentTab = 'en_attente'; let allOrders = [];
 
         db.collection("commandes").onSnapshot((snapshot) => {
             allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const hasPending = allOrders.some(o => o.status === "en_attente");
             if (hasPending) { sound.play().catch(e => {}); } else { sound.pause(); sound.currentTime = 0; }
-            updateBadges();
-            render();
+            updateBadges(); render();
         });
 
         function updateBadges() {
@@ -84,41 +74,28 @@
             document.getElementById('c-termine').innerText = allOrders.filter(o => o.status === "termine").length;
         }
 
-        function switchTab(t) {
-            currentTab = t;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + (t === 'en_attente' ? 'afaire' : t)).classList.add('active');
-            render();
-        }
+        function switchTab(t) { currentTab = t; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('tab-' + (t==='en_attente'?'afaire':t)).classList.add('active'); render(); }
 
         function render() {
-            const container = document.getElementById('ordersContainer');
-            container.innerHTML = "";
-            
+            const container = document.getElementById('ordersContainer'); container.innerHTML = "";
             let list = allOrders.filter(o => {
                 if (currentTab === 'en_attente') return o.status === 'en_attente';
                 if (currentTab === 'encours') return (o.status === 'production' || o.status === 'cuisson');
                 if (currentTab === 'termine') return o.status === 'termine';
             });
-
             list.sort((a, b) => b.id.localeCompare(a.id));
-
             list.forEach(o => {
                 let d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || Date.now());
                 const diff = Math.floor((new Date() - d) / 60000);
-                const isLivr = (o.type === "LIVRAISON");
+                const isLivr = (o.type === "LIVRAISON"); // Majuscules pour correspondre à index.html
                 const isWeb = (o.source === "PRESTASHOP");
-
                 const card = document.createElement('div');
-                card.className = `order-card ${isWeb ? 'is-web' : ''} ${(diff >= 15 && o.status !== 'termine') ? 'danger' : ''}`;
-                
+                card.className = `order-card ${isWeb?'is-web':''} ${(diff>=15&&o.status!=='termine')?'danger':''}`;
                 let title = o.clientName || 'CLIENT';
                 if (isLivr) title += " - LIVRAISON";
-
                 card.innerHTML = `
                     <div class="timer">${diff} min</div>
                     <div class="client-header">${title}</div>
-                    
                     ${(isLivr || o.address || o.phone) ? `
                         <div class="delivery-box">
                             ${o.address ? `<b>📍 ADR :</b> ${o.address}<br>` : ''}
@@ -126,14 +103,11 @@
                             ${(!isWeb && o.paymentMethod) ? `<div class="pay-tag">💰 RÈGLEMENT : ${o.paymentMethod}</div>` : ''}
                         </div>
                     ` : ''}
-
                     <div class="items-area">${o.items ? o.items.map(p => `<div class="pizza-line"><strong>${p.qty}x ${p.name.toUpperCase()}</strong></div>`).join('') : ''}</div>
-                    
                     <div class="actions">
                         <button class="btn btn-grey" onclick="window.print()"><i class="fas fa-print"></i></button>
                         ${getBtn(o.id, o.status)}
                     </div>
-
                     <div id="m-${o.id}" class="delay-menu">
                         <button class="btn-d" style="background:#27ae60" onclick="upd('${o.id}', 'production')">RAPIDE</button>
                         <button class="btn-d" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15 MIN</button>
@@ -143,14 +117,12 @@
                 container.appendChild(card);
             });
         }
-
         function getBtn(id, s) {
             if (s === "en_attente") return `<button class="btn btn-green" onclick="document.getElementById('m-${id}').style.display='grid'">ACCEPTER</button>`;
             if (s === "production") return `<button class="btn btn-blue" onclick="upd('${id}', 'cuisson')">AU FOUR !</button>`;
             if (s === "cuisson") return `<button class="btn btn-green" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
-            return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">REMETTRE</button>`;
+            return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">RÉACTIVER</button>`;
         }
-
         function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
     </script>
 </body>
