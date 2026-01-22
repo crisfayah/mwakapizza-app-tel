@@ -5,35 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mwaka Pizza - Commande & Suivi</title>
     <style>
+        /* REPRISE EXACTE DU DESIGN DE index(1).html */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: sans-serif; background: #000; color: #fff; padding-bottom: 40px; }
-        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top: 0; z-index: 1000; }
+        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top:0; z-index:100; }
         .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .nav-btn.active { color: #fff; background: #2d5f3f; }
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .header { background: #1a1a1a; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .section { display: none; }
         .section.active { display: block; }
+
+        /* SÉLECTEUR TYPE */
         .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #1a1a1a; color: #888; cursor: pointer; font-weight: bold; }
+        .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #222; color: #888; cursor: pointer; font-weight: bold; }
         .type-btn.selected { background: #e74c3c; color: white; border-color: #e74c3c; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #2d5f3f; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #111; color: white; font-size: 16px; }
-        .order-item { background: #111; border: 1px solid #222; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #2d5f3f; position: relative; }
-        .item-row { display: flex; gap: 8px; align-items: center; }
-        .qty-select { width: 55px; flex: none; text-align: center; font-weight: bold; }
-        .autocomplete-wrapper { position: relative; flex: 1; }
-        .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: #222; border: 1px solid #444; z-index: 100; max-height: 150px; overflow-y: auto; }
-        .suggestion-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; font-size: 14px; }
-        .supp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
-        .supp-label { font-size: 10px; background: #222; padding: 5px; border-radius: 4px; display: flex; align-items: center; gap: 5px; }
+
+        /* FORMULAIRE */
+        label { display: block; margin-bottom: 5px; color: #2d5f3f; font-weight: bold; font-size: 0.9em; text-transform: uppercase; margin-top: 15px; }
+        input, textarea, select { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; font-size: 16px; }
+
+        /* PRODUITS (Design Original) */
+        .order-item { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 6px solid #2d5f3f; }
+        .dessert-item { border-left-color: #9b59b6; }
+        .drink-item { border-left-color: #3498db; }
+        
+        .supp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .supp-label { display: flex; align-items: center; gap: 8px; font-size: 11px; background: #222; padding: 8px; border-radius: 6px; cursor: pointer; }
         .supp-label input { width: auto; }
-        .btn-add { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; margin: 5px 0; font-weight: bold; color: #fff; }
-        .total-area { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-top: 15px; border: 2px dashed #2d5f3f; text-align: center; }
+
+        /* BOUTONS */
+        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px 0; font-weight: bold; }
+        .btn-pizza { background: #2d5f3f; }
+        .btn-dessert { background: #9b59b6; }
+        .btn-drink { background: #3498db; }
+        
+        .total-box { background: #1a1a1a; border: 2px solid #2d5f3f; padding: 15px; border-radius: 15px; text-align: center; margin-top: 20px; }
         .btn-calc { background: none; border: 1px solid #2ecc71; color: #2ecc71; padding: 5px 15px; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
-        .total-val { font-size: 24px; font-weight: bold; color: #2ecc71; }
-        .btn-submit { width: 100%; padding: 18px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        .delete-btn { color: #e74c3c; background: none; border: none; font-size: 11px; width: 100%; text-align: right; cursor: pointer; padding-top: 5px; }
+        .total-amount { font-size: 24px; font-weight: 700; color: #2ecc71; }
+
+        .btn-submit { width: 100%; padding: 20px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .delete-btn { color: #e74c3c; background: none; border: none; font-size: 11px; font-weight: bold; margin-top: 10px; width: 100%; text-align: right; cursor: pointer; }
+        
+        .autocomplete-list { background: #222; border: 1px solid #444; max-height: 150px; overflow-y: auto; position: absolute; width: 80%; z-index: 10; }
+        .suggestion { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -51,15 +66,16 @@
             </div>
 
             <form id="orderForm">
-                <div class="form-group"><label>Nom / Prénom</label><input type="text" id="clientName" required></div>
-                <div id="livraisonFields">
+                <div class="form-group"><label>Nom du Client</label><input type="text" id="clientName" required></div>
+
+                <div id="livraisonInfo">
                     <div class="form-group"><label>Téléphone</label><input type="tel" id="phone"></div>
                     <div class="form-group"><label>Adresse</label><textarea id="address" rows="2"></textarea></div>
                     <div class="form-group">
-                        <label>Règlement</label>
-                        <select id="paymentMethod">
+                        <label>Mode de règlement</label>
+                        <select id="payment">
                             <option value="Espèces">Espèces</option>
-                            <option value="Carte">Carte</option>
+                            <option value="Carte">Carte Bancaire</option>
                             <option value="Chèque">Chèque</option>
                         </select>
                     </div>
@@ -67,21 +83,28 @@
 
                 <label>Pizzas</label>
                 <div id="pizzasList"></div>
-                <button type="button" class="btn-add" style="background:#2d5f3f" onclick="addPizza()">+ PIZZA</button>
-                
-                <label style="margin-top:10px">Desserts & Boissons</label>
-                <div id="extrasList"></div>
-                <button type="button" class="btn-add" style="background:#333" onclick="addExtra()">+ DESSERT / BOISSON</button>
+                <button type="button" class="btn-add btn-pizza" onclick="addPizza()">➕ PIZZA</button>
 
-                <div class="total-area">
-                    <button type="button" class="btn-calc" onclick="calculateTotal()">Afficher le TOTAL (€)</button>
-                    <div>TOTAL : <span id="totalDisplay" class="total-val">0.00 €</span></div>
+                <label>Desserts</label>
+                <div id="dessertsList"></div>
+                <button type="button" class="btn-add btn-dessert" onclick="addDessert()">🍰 DESSERT</button>
+
+                <label>Boissons</label>
+                <div id="drinksList"></div>
+                <button type="button" class="btn-add btn-drink" onclick="addDrink()">🥤 BOISSON</button>
+
+                <div class="total-box">
+                    <button type="button" class="btn-calc" onclick="calcTotal()">Calculer le TOTAL (€)</button>
+                    <div class="total-amount" id="totalDisplay">0.00 €</div>
                 </div>
 
-                <button type="submit" class="btn-submit" id="submitBtn">🚀 ENVOYER CUISINE</button>
+                <button type="submit" class="btn-submit" id="submitBtn">🚀 ENVOYER EN CUISINE</button>
             </form>
         </div>
-        <div id="suiviSection" class="section"><div id="suiviList"></div></div>
+
+        <div id="suiviSection" class="section">
+            <div id="suiviList"></div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -91,72 +114,94 @@
         firebase.initializeApp(config); const db = firebase.firestore();
 
         let currentType = 'Livraison';
-        
-        // --- CATALOGUE COMPLET index (1).html ---
-        const menuPizzas = [
-            {n:'Maria', p:11}, {n:'Mama', p:13}, {n:'Ochan', p:14}, {n:'Salam', p:14}, {n:'Diamond', p:14},
-            {n:'4 Croisées', p:16}, {n:'Jah', p:15}, {n:'Nossa', p:16}, {n:'Gwo Model', p:16},
-            {n:'Taken', p:14}, {n:'Bad Gyal', p:15}, {n:'Poudrière', p:16}, {n:'Danjé', p:17.9},
-            {n:'Sirène', p:17.9}, {n:'Mwaka Moon', p:15}, {n:'Ya Koi Ici', p:16}, {n:'Ou La', p:17}, {n:'Tombolo', p:17}
-        ];
-        const supplements = [ 
-            {n:'ANANAS', p:1}, {n:'OEUF', p:1}, {n:'CREVETTES', p:4}, {n:'CREME FRAICHE', p:1},
-            {n:'MERGUEZ', p:2.5}, {n:'BACON', p:2.5}, {n:'MARLIN FUME', p:4}, {n:'SAUMON FUME', p:4},
-            {n:'JAMBON', p:1.5}
-        ];
-        const extras = [
-            {n:'Glace B&J', p:8.9}, {n:'Beignet', p:2.9}, {n:'Tiramisu', p:3.9}, {n:'Muffin', p:3.9},
-            {n:'Coca 50cl', p:2.5}, {n:'Coca 2L', p:5}, {n:'Fanta 50cl', p:2.5}, {n:'Chanflor 50cl', p:2}
-        ];
+        let unsubSuivi = null;
 
-        function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livraisonFields').style.display = t==='Livraison'?'block':'none'; }
+        // CATALOGUES
+        const pizzasMenu = [{n:'Maria', p:11}, {n:'Mama', p:13}, {n:'Taken', p:14}, {n:'Mwaka Moon', p:15}, {n:'Tombolo', p:17}];
+        const suppsMenu = [{n:'OEUF', p:1}, {n:'ANANAS', p:1}, {n:'CREVETTES', p:4}, {n:'SAUMON', p:4}];
+        const dessertsMenu = [{n:'Tiramisu', p:3.9}, {n:'Muffin', p:3.9}];
+        const drinksMenu = [{n:'Coca 50cl', p:2.5}, {n:'Chanflor', p:2}];
+
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+            document.getElementById(id).classList.add('active'); btn.classList.add('active');
+            if(id === 'suiviSection') startSuivi(); else if(unsubSuivi) unsubSuivi();
+        }
+
+        function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livraisonInfo').style.display = t==='Livraison'?'block':'none'; }
 
         function addPizza() {
             const div = document.createElement('div'); div.className = 'order-item';
-            div.innerHTML = `
-                <div class="item-row"><select class="qty"><option>1</option><option>2</option><option>3</option></select>
-                <div class="autocomplete-wrapper"><input type="text" class="name-in" placeholder="Pizza..." oninput="search(this, menuPizzas)"><div class="autocomplete-list" style="display:none"></div></div></div>
-                <div class="supp-grid">${supplements.map(s=>`<label class="supp-label"><input type="checkbox" class="p-supp" data-price="${s.p}" data-name="${s.n}"> ${s.n}</label>`).join('')}</div>
-                <button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ Supprimer</button>`;
+            div.innerHTML = `<div style="display:flex; gap:10px;"><select class="p-qty"><option>1</option><option>2</option></select><input type="text" class="p-name" placeholder="Pizza..." oninput="search(this, pizzasMenu)"><div class="autocomplete-list" style="display:none"></div></div><div class="supp-grid">${suppsMenu.map(s=>`<label class="supp-label"><input type="checkbox" class="p-supp" data-price="${s.p}" data-name="${s.n}"> ${s.n}</label>`).join('')}</div><button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ SUPPRIMER</button>`;
             document.getElementById('pizzasList').appendChild(div);
         }
 
-        function addExtra() {
-            const div = document.createElement('div'); div.className = 'order-item';
-            div.innerHTML = `<div class="item-row"><select class="qty"><option>1</option><option>2</option></select>
-            <div class="autocomplete-wrapper"><input type="text" class="name-in" placeholder="Extra..." oninput="search(this, extras)"><div class="autocomplete-list" style="display:none"></div></div></div>
-            <button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ Supprimer</button>`;
-            document.getElementById('extrasList').appendChild(div);
+        function addDessert() {
+            const div = document.createElement('div'); div.className = 'order-item dessert-item';
+            div.innerHTML = `<div style="display:flex; gap:10px;"><select class="d-qty"><option>1</option><option>2</option></select><select class="d-name">${dessertsMenu.map(d=>`<option value="${d.n}" data-price="${d.p}">${d.n}</option>`).join('')}</select></div><button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ SUPPRIMER</button>`;
+            document.getElementById('dessertsList').appendChild(div);
+        }
+
+        function addDrink() {
+            const div = document.createElement('div'); div.className = 'order-item drink-item';
+            div.innerHTML = `<div style="display:flex; gap:10px;"><select class="dr-qty"><option>1</option><option>2</option></select><select class="dr-name">${drinksMenu.map(d=>`<option value="${d.n}" data-price="${d.p}">${d.n}</option>`).join('')}</select></div><button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️ SUPPRIMER</button>`;
+            document.getElementById('drinksList').appendChild(div);
         }
 
         function search(input, data) {
-            const list = input.nextElementSibling; const val = input.value.toLowerCase();
-            list.innerHTML = ""; if(!val) { list.style.display="none"; return; }
+            const list = input.nextElementSibling; const val = input.value.toLowerCase(); list.innerHTML = "";
+            if(!val) { list.style.display="none"; return; }
             const matches = data.filter(m => m.n.toLowerCase().includes(val));
             if(matches.length){
                 list.style.display="block";
                 matches.forEach(m=>{
-                    const d = document.createElement('div'); d.className='suggestion-item'; d.innerText=`${m.n} (${m.p}€)`;
-                    d.onclick=()=>{ input.value=m.n; input.dataset.price=m.p; list.style.display="none"; };
-                    list.appendChild(d);
+                    const d = document.createElement('div'); d.className='suggestion'; d.innerText=m.n;
+                    d.onclick=()=>{ input.value=m.n; input.dataset.price=m.p; list.style.display="none"; }; list.appendChild(d);
                 });
             }
         }
 
-        function calculateTotal() {
-            let total = 0;
-            document.querySelectorAll('.order-item').forEach(item => {
-                const q = parseInt(item.querySelector('.qty').value);
-                const p = parseFloat(item.querySelector('.name-in').dataset.price || 0);
-                let sP = 0; item.querySelectorAll('.p-supp:checked').forEach(s => sP += parseFloat(s.dataset.price));
-                total += q * (p + sP);
+        function calcTotal() {
+            let t = 0;
+            document.querySelectorAll('.order-item:not(.dessert-item):not(.drink-item)').forEach(p=>{
+                const q = parseInt(p.querySelector('.p-qty').value);
+                const pr = parseFloat(p.querySelector('.p-name').dataset.price || 0);
+                let sP = 0; p.querySelectorAll('.p-supp:checked').forEach(s => sP += parseFloat(s.dataset.price));
+                t += q * (pr + sP);
             });
-            document.getElementById('totalDisplay').innerText = total.toFixed(2) + " €";
+            document.querySelectorAll('.dessert-item').forEach(d=>{ t += parseInt(d.querySelector('.d-qty').value) * parseFloat(d.querySelector('.d-name').options[d.querySelector('.d-name').selectedIndex].dataset.price || 0); });
+            document.querySelectorAll('.drink-item').forEach(dr=>{ t += parseInt(dr.querySelector('.dr-qty').value) * parseFloat(dr.querySelector('.dr-name').options[dr.querySelector('.dr-name').selectedIndex].dataset.price || 0); });
+            document.getElementById('totalDisplay').innerText = t.toFixed(2) + " €";
         }
 
         document.getElementById('orderForm').onsubmit = async (e) => {
             e.preventDefault(); const btn = document.getElementById('submitBtn'); btn.disabled = true;
             const order = {
                 clientName: document.getElementById('clientName').value,
-                type: currentType.toUpperCase(), // "LIVRAISON" ou "EMPORTER"
-                paymentMethod: document.getElementById('payment
+                type: currentType.toUpperCase(), // "LIVRAISON"
+                paymentMethod: document.getElementById('payment').value,
+                address: document.getElementById('address').value || '',
+                phone: document.getElementById('phone').value || '',
+                items: Array.from(document.querySelectorAll('#pizzasList .order-item')).map(p => ({
+                    qty: p.querySelector('.p-qty').value,
+                    name: p.querySelector('.p-name').value,
+                    supps: Array.from(p.querySelectorAll('.p-supp:checked')).map(s => s.dataset.name)
+                })),
+                desserts: Array.from(document.querySelectorAll('.dessert-item')).map(d => ({ qty: d.querySelector('.d-qty').value, name: d.querySelector('.d-name').value })),
+                drinks: Array.from(document.querySelectorAll('.drink-item')).map(dr => ({ qty: dr.querySelector('.dr-qty').value, name: dr.querySelector('.dr-name').value })),
+                status: 'en_attente', source: 'MANUEL', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection("commandes").add(order); location.reload();
+        };
+
+        function startSuivi() {
+            unsubSuivi = db.collection("commandes").orderBy("createdAt", "desc").limit(10).onSnapshot(snap => {
+                const list = document.getElementById('suiviList'); list.innerHTML = "";
+                snap.forEach(doc => { const o = doc.data(); const d = document.createElement('div'); d.style.padding="10px"; d.innerHTML=`${o.clientName} - ${o.status}`; list.appendChild(d); });
+            });
+        }
+        window.onload = addPizza;
+    </script>
+</body>
+</html>
