@@ -2,68 +2,74 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka Pizza - CONSOLE PRO</title>
+    <title>Mwaka Pizza - CONSOLE DE COMMANDE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #000; color: #fff; margin:0; padding: 0; touch-action: manipulation; }
         
-        /* NAVIGATION COULEURS DIFFÉRENCIÉES */
-        .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 90px; gap: 5px; padding: 5px; }
+        /* BARRE D'ONGLETS - HAUTE VISIBILITÉ */
+        .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 95px; gap: 8px; padding: 8px; box-sizing: border-box; }
         .tab-btn { 
-            flex: 1; border: none; border-radius: 10px; font-size: 18px; font-weight: 900; 
+            flex: 1; border: none; border-radius: 12px; font-size: 16px; font-weight: 900; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 0.2s; opacity: 0.5; color: #fff;
+            transition: 0.2s; opacity: 0.5; color: #fff; -webkit-tap-highlight-color: transparent;
         }
 
-        /* Couleurs fixes par onglet */
+        /* Couleurs d'identification par onglet */
         #tab-afaire { background: #4d1111; border: 2px solid #e74c3c; }
         #tab-encours { background: #11264d; border: 2px solid #3498db; }
         #tab-termine { background: #114d20; border: 2px solid #2ecc71; }
 
-        /* État Actif : pleine luminosité */
-        .tab-btn.active { opacity: 1; transform: scale(0.98); box-shadow: inset 0 0 20px rgba(255,255,255,0.2); }
+        /* État Actif : Couleur vive et texte contrasté */
+        .tab-btn.active { opacity: 1; transform: scale(0.98); }
         #tab-afaire.active { background: #e74c3c; color: #000; }
         #tab-encours.active { background: #3498db; color: #000; }
         #tab-termine.active { background: #2ecc71; color: #000; }
         
-        .badge { background: rgba(0,0,0,0.5); color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 16px; margin-top: 5px; }
+        .badge { background: rgba(0,0,0,0.6); color: #fff; border-radius: 20px; padding: 2px 12px; font-size: 16px; margin-top: 5px; font-weight: 800; }
         .active .badge { background: #fff; color: #000; }
 
-        /* LISTE ET CARTES */
+        /* LISTE DES COMMANDES */
         .orders-list { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1000px; margin: 0 auto; }
-        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 20px solid #2ecc71; position: relative; }
+        .order-card { background: #1a1a1a; border-radius: 15px; padding: 20px; border-left: 20px solid #2ecc71; position: relative; border-right: 1px solid #333; }
         .order-card.is-web { border-left-color: #3498db !important; }
         
         .timer-tag { position: absolute; top: 15px; right: 15px; background: #000; padding: 8px 15px; border-radius: 10px; font-weight: bold; border: 1px solid #333; font-size: 1.2em; }
         
-        /* ALERTES CHRONO VIVES */
-        .warning { background: #3d2b00 !important; border-right: 12px solid #f39c12 !important; }
+        /* ALERTES DE RETARD (TIMER) */
+        .warning { background: #3d2b00 !important; border-right: 15px solid #f39c12 !important; }
         .danger { 
-            background: #ff0000 !important; /* ROUGE PUR */
-            border-right: 12px solid #fff !important; 
-            color: #000 !important; /* Texte noir pour contraste max sur fond rouge */
+            background: #ff0000 !important; /* ROUGE VIF FLASHY */
+            border-right: 15px solid #fff !important; 
+            color: #000 !important; 
             animation: flash-danger 1s infinite;
         }
-        .danger .client-header, .danger .pizza-line, .danger .timer-tag { color: #000 !important; }
-        .danger .items-area { background: rgba(255,255,255,0.8); border-color: #000; }
+        .danger .client-header, .danger .pizza-line, .danger .timer-tag { color: #000 !important; font-weight: 900; }
+        .danger .items-area { background: rgba(255,255,255,0.9); border-color: #000; }
+        .danger .timer-tag { border-color: #000; }
 
         @keyframes flash-danger { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        .client-header { font-size: 30px; font-weight: 900; margin-bottom: 10px; padding-right: 110px; }
-        .items-area { background: #252525; padding: 15px; border-radius: 12px; margin: 15px 0; font-size: 2em; border: 1px solid #333; }
+        /* CONTENU DE LA CARTE */
+        .client-header { font-size: 30px; font-weight: 900; margin-bottom: 10px; padding-right: 110px; text-transform: uppercase; }
+        .items-area { background: #252525; padding: 18px; border-radius: 12px; margin: 15px 0; font-size: 2.2em; border: 1px solid #333; }
         .pizza-line { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0; }
+        .pizza-line:last-child { border-bottom: none; }
 
         /* BOUTONS D'ACTION */
         .actions { display: flex; gap: 15px; margin-top: 20px; }
-        .btn { flex: 1; height: 80px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+        .btn { flex: 1; height: 85px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
         .btn-accept { background: #27ae60; color: white; }
         .btn-cuisson { background: #3498db; color: white; }
         .btn-prete { background: #2ecc71; color: white; }
-        .btn-print { background: #444; color: white; width: 100px; flex: none; font-size: 30px; }
+        .btn-print { background: #444; color: white; width: 100px; flex: none; font-size: 32px; }
         
+        /* MENU DÉLAI */
         .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        .btn-delay { height: 70px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; font-size: 18px; }
+        .btn-delay { height: 75px; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; color: white; font-size: 20px; }
+        
+        .empty-msg { text-align: center; color: #555; margin-top: 100px; font-size: 1.6em; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -76,7 +82,7 @@
             EN COURS <span id="count-encours" class="badge">0</span>
         </button>
         <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">
-            TERMINÉES
+            TERMINÉES <span id="count-termine" class="badge">0</span>
         </button>
     </div>
 
@@ -85,77 +91,5 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        
-        let currentStatusFilter = 'en_attente';
-        let ordersData = [];
-
-        // Écouteur global pour la fluidité
-        db.collection("commandes").onSnapshot((snapshot) => {
-            ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateBadges();
-            renderAll();
-        });
-
-        function updateBadges() {
-            const afaire = ordersData.filter(o => o.status === "en_attente").length;
-            const encours = ordersData.filter(o => o.status === "production" || o.status === "cuisson").length;
-            document.getElementById('count-afaire').innerText = afaire;
-            document.getElementById('count-encours').innerText = encours;
-        }
-
-        function switchTab(status) {
-            currentStatusFilter = status;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            if(status === 'en_attente') document.getElementById('tab-afaire').classList.add('active');
-            else if(status === 'encours') document.getElementById('tab-encours').classList.add('active');
-            else document.getElementById('tab-termine').classList.add('active');
-            renderAll();
-        }
-
-        function renderAll() {
-            const container = document.getElementById('ordersContainer');
-            container.innerHTML = "";
-            
-            let filtered = ordersData.filter(o => {
-                if (currentStatusFilter === 'en_attente') return o.status === 'en_attente';
-                if (currentStatusFilter === 'encours') return (o.status === 'production' || o.status === 'cuisson');
-                if (currentStatusFilter === 'termine') return o.status === 'termine';
-                return false;
-            });
-
-            filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-            filtered.forEach(o => {
-                const now = new Date();
-                const created = (o.createdAt && o.createdAt.toDate) ? o.createdAt.toDate() : now;
-                const diff = Math.floor((now - created) / 60000);
-
-                let alertClass = "";
-                if (o.status !== 'termine') {
-                    if (diff >= 15) alertClass = "danger";
-                    else if (diff >= 10) alertClass = "warning";
-                }
-
-                const card = document.createElement('div');
-                card.className = `order-card ${o.source === "PRESTASHOP" ? 'is-web' : ''} ${alertClass}`;
-                
-                // Construction robuste des items pour éviter la disparition
-                const itemsHtml = o.items ? o.items.map(p => `
-                    <div class="pizza-line">
-                        <strong>${p.qty}x ${p.name.toUpperCase()}</strong>
-                    </div>
-                `).join('') : '<div class="pizza-line">Aucun article</div>';
-
-                card.innerHTML = `
-                    <div class="timer-tag">${diff} min</div>
-                    <div class="client-header">${o.clientName || 'CLIENT'}</div>
-                    <div class="items-area">${itemsHtml}</div>
-                    <div class="actions">
-                        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i></button>
-                        ${renderBtn(o.id, o.status)}
-                    </div>
-                    <div id="delay-${o.id}" class="delay-menu">
-                        <button class="btn-delay" style="background:#2ecc71" onclick="upd('${o.id}', 'production')">RAPIDE</button>
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:2
