@@ -2,18 +2,16 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mwaka KDS - PILOTAGE COMPLET</title>
+    <title>Mwaka KDS - PILOTAGE PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --red: #a93226; --blue: #2e86c1; --green: #28b463; --dark: #000; --orange: #f39c12; }
         body { font-family: sans-serif; background: var(--dark); color: #fff; margin:0; padding: 0; overflow-x: hidden; }
         
-        /* Header & Flux Info */
         .header-top { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px 15px; border-bottom: 1px solid #333; height: 50px; }
         .flux-info { background: #1a1a1a; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--orange); color: var(--orange); font-weight: 900; font-size: 14px; }
 
-        /* Navigation Onglets avec couleurs spécifiques */
         .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 1000; height: 75px; gap: 5px; padding: 6px; box-sizing: border-box; }
         .tab-btn { flex: 1; border: none; border-radius: 10px; font-size: 10px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.4; color: #fff; text-transform: uppercase; cursor: pointer; border: 1px solid transparent; }
         
@@ -22,25 +20,20 @@
         #tab-aufour { background: #4d3311; border-color: var(--orange); }
         #tab-termine { background: #114d20; border-color: var(--green); }
         
-        .tab-btn.active { opacity: 1; border: 2px solid #fff; transform: scale(1.02); }
+        .tab-btn.active { opacity: 1; border: 2px solid #fff; }
         #tab-afaire.active { background: var(--red); }
         #tab-encours.active { background: var(--blue); }
         #tab-aufour.active { background: var(--orange); }
         #tab-termine.active { background: var(--green); }
         .badge { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 15px; font-size: 11px; margin-top: 3px; }
 
-        /* Grilles KDS (3 colonnes) */
         .kds-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; }
-        
-        /* Listes Classiques */
         .orders-list { display: flex; flex-direction: column; gap: 12px; padding: 12px; max-width: 850px; margin: 0 auto; }
         
-        /* Cartes de commandes */
         .order-card { background: #1a1a1a; border-radius: 12px; padding: 15px; border-left: 10px solid var(--green); position: relative; display: flex; flex-direction: column; min-height: 380px; box-sizing: border-box; }
         .order-card.is-web { border-left-color: var(--blue) !important; }
         .order-card.danger { background: #2c0c0c !important; border-right: 8px solid var(--red) !important; }
 
-        /* Matching & Dressing */
         .matching-pizza { background: rgba(243, 156, 18, 0.2); border-left: 4px solid var(--orange); animation: pulseMatch 2s infinite; border-radius: 4px; padding-left: 5px; }
         @keyframes pulseMatch { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
@@ -54,12 +47,9 @@
         .item-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
         .supp-text { color: #f1c40f; font-size: 0.75em; display: block; font-weight: bold; }
 
-        /* Liste d'attente (Overflow) */
         .overflow-section { border-top: 2px dashed #444; margin-top: 20px; padding: 15px; }
-        .overflow-title { color: #888; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 10px; }
         .waiting-row { display: flex; justify-content: space-between; background: #111; padding: 12px; margin-bottom: 6px; border-radius: 8px; border: 1px solid #222; }
 
-        /* Actions */
         .actions { display: flex; gap: 8px; margin-top: 10px; }
         .btn { flex: 1; height: 55px; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 14px; }
         .btn-green { background: var(--green); color: #fff; }
@@ -72,7 +62,7 @@
     </style>
 </head>
 <body>
-    <div id="alert-box">⚠️ FOUR SATURÉ : ÇA TRAINE !</div>
+    <div id="alert-box">⚠️ FOUR SATURÉ !</div>
 
     <div class="header-top">
         <div style="font-weight: 900; font-size: 18px;">MWAKA KDS</div>
@@ -103,4 +93,145 @@
         const pizzaCatalog = {
             "MARIA": { prep: 0.15, cook: 3, dressing: 1 }, "MAMA": { prep: 0.20, cook: 3, dressing: 0 },
             "DANJÉ": { prep: 0.15, cook: 3, dressing: 1 }, "SIRÈNE": { prep: 0.50, cook: 4, dressing: 1 },
-            "OCHAN": { prep: 0.50, cook: 4, dressing: 0 }, "SALAM": { prep: 0.50, cook: 4, dressing:
+            "OCHAN": { prep: 0.50, cook: 4, dressing: 0 }, "SALAM": { prep: 0.50, cook: 4, dressing: 0 },
+            "DIAMOND": { prep: 0.50, cook: 4, dressing: 0 }, "NOSSA": { prep: 0.50, cook: 3, dressing: 0 },
+            "GWO MODEL": { prep: 0.50, cook: 4, dressing: 0 }, "MADA": { prep: 0.50, cook: 3, dressing: 0 },
+            "JAH": { prep: 0.50, cook: 4, dressing: 0 }, "LAMBIS": { prep: 0.50, cook: 4, dressing: 0 },
+            "OU LA": { prep: 0.20, cook: 3, dressing: 1 }, "MWAKA MOON": { prep: 1.50, cook: 5, dressing: 0 },
+            "BIG MACHINE": { prep: 0.50, cook: 5, dressing: 0 }, "TOMBOLO": { prep: 0.50, cook: 4, dressing: 1 }
+        };
+
+        db.collection("commandes").onSnapshot((snapshot) => {
+            try {
+                allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateBadges(); updateFluxDelay(); render();
+                if (allOrders.some(o => o.status === "en_attente")) { sound.play().catch(() => {}); } else { sound.pause(); sound.currentTime = 0; }
+            } catch (e) { console.error("Erreur Snapshot:", e); }
+        });
+
+        function updateFluxDelay() {
+            const manualWork = allOrders.filter(o => o.status === 'en_attente' || o.status === 'production')
+                                        .reduce((acc, o) => acc + (o.items || []).reduce((s, p) => s + (pizzaCatalog[(p.name||"").toUpperCase()]?.prep || 0.5), 0), 0);
+            const totalDelay = Math.ceil(manualWork + 5 + 1.25);
+            document.getElementById('flux-tracker').innerText = `Flux actuel : ${manualWork > 0 ? totalDelay : '8'} min`;
+        }
+
+        function updateBadges() {
+            document.getElementById('c-afaire').innerText = allOrders.filter(o => o.status === 'en_attente').length;
+            document.getElementById('c-encours').innerText = allOrders.filter(o => o.status === 'production').length;
+            document.getElementById('c-aufour').innerText = allOrders.filter(o => o.status === 'cuisson').length;
+            document.getElementById('c-termine').innerText = allOrders.filter(o => o.status === 'termine').length;
+        }
+
+        function switchTab(t) { 
+            currentTab = t; 
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+            const btnId = (t === 'en_attente') ? 'tab-afaire' : (t === 'production' ? 'tab-encours' : (t === 'cuisson' ? 'tab-aufour' : 'tab-termine'));
+            document.getElementById(btnId).classList.add('active'); 
+            render(); 
+        }
+
+        function render() {
+            const container = document.getElementById('ordersContainer');
+            if (!container) return;
+            container.innerHTML = "";
+            let list = allOrders.filter(o => o.status === currentTab);
+            
+            if (currentTab === 'cuisson') list.sort((a, b) => (a.ovenAt?.seconds || 0) - (b.ovenAt?.seconds || 0));
+            else list.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+
+            if (currentTab === 'en_attente' || currentTab === 'termine') renderListView(container, list);
+            else renderKDSView(container, list);
+        }
+
+        function renderListView(container, list) {
+            const wrapper = document.createElement('div');
+            wrapper.className = "orders-list";
+            const displayList = currentTab === 'en_attente' ? [...list].reverse() : list;
+            displayList.forEach(o => { try { wrapper.appendChild(createOrderCard(o, false)); } catch(e) {} });
+            container.appendChild(wrapper);
+        }
+
+        function renderKDSView(container, list) {
+            const top3 = list.slice(0, 3);
+            const waiting = list.slice(3);
+            const gridList = [...top3].reverse();
+
+            let pizzaCounts = {};
+            if(currentTab === 'production') {
+                gridList.flatMap(o => o.items || []).forEach(p => { 
+                    const name = (p.name||"").toUpperCase();
+                    pizzaCounts[name] = (pizzaCounts[name] || 0) + 1; 
+                });
+            }
+
+            const grid = document.createElement('div');
+            grid.className = "kds-grid";
+            gridList.forEach(o => { try { grid.appendChild(createOrderCard(o, true, pizzaCounts)); } catch(e) {} });
+            container.appendChild(grid);
+
+            if (waiting.length > 0) {
+                const ovf = document.createElement('div');
+                ovf.className = "overflow-section";
+                ovf.innerHTML = `<div class="overflow-title">Suite de la file (${waiting.length})</div>`;
+                waiting.forEach(o => {
+                    ovf.innerHTML += `<div class="waiting-row"><span><strong>${o.clientName || 'CLIENT'}</strong> (${(o.items||[]).length} pz)</span> <span>${o.phone || o.contact || ''}</span></div>`;
+                });
+                container.appendChild(ovf);
+            }
+        }
+
+        function createOrderCard(o, isKDS, counts = {}) {
+            const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+            const diff = Math.floor((new Date() - d) / 60000);
+            const isLivr = (o.type||"").toLowerCase().includes("livraison");
+            const card = document.createElement('div');
+            card.className = `order-card ${o.source==='PRESTASHOP'?'is-web':''} ${(diff>=15 && o.status !== 'termine')?'danger':''}`;
+            
+            let itemsHtml = (o.items || []).map(p => {
+                const nameUp = (p.name||"").toUpperCase();
+                const suppsTxt = (p.supps && Array.isArray(p.supps)) ? p.supps.join(', ') : '';
+                return `<div class="item-line ${counts[nameUp] > 1 ? 'matching-pizza' : ''}">
+                    <div><strong>${p.qty||1}x ${nameUp}</strong>${suppsTxt ? `<br><span class="supp-text">+ ${suppsTxt}</span>` : ''}</div>
+                    ${pizzasDressage.includes(nameUp) ? '<span>🥗</span>' : ''}
+                </div>`;
+            }).join('');
+
+            card.innerHTML = `
+                <div class="timer">${diff} min</div>
+                <div class="client-header">${o.clientName || 'CLIENT'} ${isLivr ? '<br><span class="badge-livraison"><i class="fas fa-truck"></i> LIVRAISON</span>' : ''}</div>
+                <div class="phone-text"><i class="fas fa-phone"></i> ${o.phone || o.contact || ''}</div>
+                ${(isLivr || o.address) ? `<div class="delivery-box">📍 ${o.address || 'Livraison'}</div>` : ''}
+                <div class="items-area">${itemsHtml}</div>
+                <div class="actions">
+                    <button class="btn btn-grey" onclick="window.print()"><i class="fas fa-print"></i></button>
+                    ${getBtn(o.id, o.status)}
+                </div>
+                <div id="m-${o.id}" class="delay-menu">
+                    <button class="btn" style="background:#27ae60" onclick="upd('${o.id}', 'production')">FAST</button>
+                    <button class="btn" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15M</button>
+                    <button class="btn" style="background:#e74c3c" onclick="upd('${o.id}', 'production')">HOT</button>
+                </div>`;
+            return card;
+        }
+
+        function getBtn(id, s) {
+            if (s === "en_attente") return `<button class="btn btn-green" onclick="document.getElementById('m-${id}').style.display='grid'">ACCEPTER</button>`;
+            if (s === "production") return `<button class="btn btn-blue" onclick="checkOvenAndUpd('${id}')">AU FOUR !</button>`;
+            if (s === "cuisson") return `<button class="btn btn-green" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
+            return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">REFAIRE</button>`;
+        }
+
+        function checkOvenAndUpd(id) {
+            const ovenCount = allOrders.filter(o => o.status === 'cuisson').reduce((acc, o) => acc + (o.items ? o.items.length : 0), 0);
+            if (ovenCount >= 8) {
+                const box = document.getElementById('alert-box'); box.innerText = `⚠️ FOUR SATURÉ (${ovenCount}/8) !`;
+                box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 4000);
+            }
+            db.collection("commandes").doc(id).update({ status: 'cuisson', ovenAt: firebase.firestore.FieldValue.serverTimestamp() });
+        }
+
+        function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
+    </script>
+</body>
+</html>
