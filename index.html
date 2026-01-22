@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mwaka Pizza - Commande & Suivi</title>
+    <title>Mwaka Pizza - Commande</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: sans-serif; background: #000; color: #fff; padding-bottom: 40px; }
@@ -12,71 +12,45 @@
         .nav-btn.active { color: #fff; background: #2d5f3f; }
         .header { background: #1a1a1a; padding: 20px; text-align: center; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .section { display: none; }
-        .section.active { display: block; }
         .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #222; color: #888; cursor: pointer; font-weight: bold; }
         .type-btn.selected { background: #e74c3c; color: white; border-color: #e74c3c; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #2d5f3f; font-weight: bold; font-size: 0.9em; text-transform: uppercase; }
         input, textarea, select { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; font-size: 16px; }
-        .restaurant-choice { display: flex; gap: 10px; }
-        .res-btn { flex: 1; padding: 10px; border: 1px solid #2d5f3f; background: #1a1a1a; color: #2d5f3f; border-radius: 8px; cursor: pointer; }
-        .res-btn.active { background: #2d5f3f; color: white; }
         .order-item { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 15px; border-left: 6px solid #2d5f3f; }
-        .supp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
-        .supp-label { display: flex; align-items: center; gap: 8px; font-size: 11px; background: #222; padding: 8px; border-radius: 6px; cursor: pointer; }
-        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px 0; font-weight: bold; }
-        .btn-pizza { background: #2d5f3f; }
+        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px 0; font-weight: bold; background: #2d5f3f; }
         .btn-submit { width: 100%; padding: 18px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .total-box { background: #1a1a1a; border: 2px solid #2d5f3f; padding: 15px; border-radius: 15px; text-align: center; margin-top: 20px; }
-        .total-amount { font-size: 24px; font-weight: 700; color: #2ecc71; }
         .autocomplete-list { background: #222; border: 1px solid #444; max-height: 150px; overflow-y: auto; position: absolute; width: 100%; z-index: 10; }
         .autocomplete-item { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
-        .delete-btn { color: #e74c3c; background: none; border: none; font-size: 11px; font-weight: bold; margin-top: 10px; width: 100%; text-align: right; }
     </style>
 </head>
 <body>
-    <div class="nav-tabs">
-        <button class="nav-btn active" onclick="showSection('orderSection', this)">Commander</button>
-        <button class="nav-btn" onclick="showSection('suiviSection', this)">Suivi</button>
-    </div>
     <div class="header"><h1>🍕 Mwaka Pizza</h1></div>
     <div class="container">
-        <div id="orderSection" class="section active">
-            <div class="type-selector">
-                <button type="button" class="type-btn" id="btnEmporter" onclick="setType('Emporter')">🏠 Emporter</button>
-                <button type="button" class="type-btn selected" id="btnLivraison" onclick="setType('Livraison')">🚗 Livraison</button>
-            </div>
-            <form id="orderForm">
-                <div id="resGroup" class="form-group" style="display:none;">
-                    <label>Restaurant</label>
-                    <div class="restaurant-choice">
-                        <button type="button" id="btnValm" class="res-btn active" onclick="setRes('Valmenière')">Valmenière</button>
-                        <button type="button" id="btnCentre" class="res-btn" onclick="setRes('Centre-ville')">Centre-ville</button>
-                    </div>
-                </div>
-                <div class="form-group"><label>Nom / Prénom</label><input type="text" id="clientName" required></div>
-                <div id="livraisonInfo">
-                    <div class="form-group"><label>Téléphone</label><input type="tel" id="phone"></div>
-                    <div class="form-group"><label>Adresse</label><textarea id="address" rows="2"></textarea></div>
-                    <div class="form-group">
-                        <label>Mode de règlement</label>
-                        <select id="payment">
-                            <option value="Espèces">Espèces</option>
-                            <option value="Carte">Carte bancaire</option>
-                            <option value="Ticket Resto">Ticket Restaurant</option>
-                        </select>
-                    </div>
-                </div>
-                <label>Pizzas</label>
-                <div id="pizzasList"></div>
-                <button type="button" class="btn-add btn-pizza" onclick="addPizza()">➕ PIZZA</button>
-                <div class="total-box"><div class="total-amount" id="totalDisplay">0.00 €</div></div>
-                <button type="submit" class="btn-submit" id="submitBtn">ENVOYER EN CUISINE 🚀</button>
-            </form>
+        <div class="type-selector">
+            <button type="button" class="type-btn" id="btnEmporter" onclick="setType('Emporter')">🏠 Emporter</button>
+            <button type="button" class="type-btn selected" id="btnLivraison" onclick="setType('Livraison')">🚗 Livraison</button>
         </div>
-        <div id="suiviSection" class="section"><div id="suiviList"></div></div>
+        <form id="orderForm">
+            <div class="form-group"><label>Nom / Prénom</label><input type="text" id="clientName" required></div>
+            <div id="livraisonInfo">
+                <div class="form-group"><label>Téléphone</label><input type="tel" id="phone"></div>
+                <div class="form-group"><label>Adresse</label><textarea id="address" rows="2"></textarea></div>
+                <div class="form-group">
+                    <label>Mode de règlement</label>
+                    <select id="payment">
+                        <option value="Espèces">Espèces</option>
+                        <option value="Carte">Carte bancaire</option>
+                        <option value="Ticket Resto">Ticket Restaurant</option>
+                    </select>
+                </div>
+            </div>
+            <label>Pizzas</label>
+            <div id="pizzasList"></div>
+            <button type="button" class="btn-add" onclick="addPizza()">➕ AJOUTER PIZZA</button>
+            <button type="submit" class="btn-submit">ENVOYER EN CUISINE 🚀</button>
+        </form>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -84,20 +58,25 @@
     <script>
         const config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
         firebase.initializeApp(config); const db = firebase.firestore();
-        let currentType = 'Livraison'; let currentRes = 'Valmenière';
+        let currentType = 'Livraison';
 
-        function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livraisonInfo').style.display = t==='Livraison'?'block':'none'; document.getElementById('resGroup').style.display = t==='Emporter'?'block':'none'; }
-        function setRes(r) { currentRes = r; document.getElementById('btnValm').classList.toggle('active', r==='Valmenière'); document.getElementById('btnCentre').classList.toggle('active', r==='Centre-ville'); }
-        function addPizza() { const div = document.createElement('div'); div.className = 'order-item'; div.innerHTML = `<div style="display:flex; gap:10px;"><select class="p-qty" style="width:65px" onchange="calcTotal()">${[1,2,3,4,5].map(v=>`<option value="${v}">${v}</option>`).join('')}</select><input type="text" class="p-name" placeholder="Pizza..." required oninput="search(this)" style="flex:1"><div class="autocomplete-list"></div></div><button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">🗑️ SUPPRIMER</button>`; document.getElementById('pizzasList').appendChild(div); }
-        function search(input) { const list = input.nextElementSibling; list.innerHTML = ''; const val = input.value.toLowerCase(); if(!val) return; [{n:'Maria', p:11}, {n:'Mama', p:13}, {n:'Mwaka Moon', p:15}].filter(m=>m.n.toLowerCase().includes(val)).forEach(m=>{ const d = document.createElement('div'); d.className='autocomplete-item'; d.innerText=m.n; d.onclick=()=>{input.value=m.n; input.dataset.price=m.p; list.innerHTML=''; calcTotal();}; list.appendChild(d); }); }
-        function calcTotal() { let t=0; document.querySelectorAll('.order-item').forEach(p=>{ const q=parseInt(p.querySelector('.p-qty').value); const pr=parseFloat(p.querySelector('.p-name').dataset.price||0); t+=q*pr; }); document.getElementById('totalDisplay').innerText = t.toFixed(2)+" €"; return t; }
+        function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livraisonInfo').style.display = t==='Livraison'?'block':'none'; }
+        
+        function addPizza() {
+            const div = document.createElement('div');
+            div.className = 'order-item';
+            div.innerHTML = `<div style="display:flex; gap:10px;"><select class="p-qty" style="width:65px"><option value="1">1</option><option value="2">2</option></select><input type="text" class="p-name" placeholder="Nom de la pizza..." required style="flex:1"></div>`;
+            document.getElementById('pizzasList').appendChild(div);
+        }
 
         document.getElementById('orderForm').onsubmit = async (e) => {
             e.preventDefault();
             const order = {
                 clientName: document.getElementById('clientName').value,
-                type: currentType.toUpperCase(), // "LIVRAISON" ou "EMPORTER"
-                paymentMethod: document.getElementById('payment').value || 'N/A', // Clé corrigée pour la cuisine
+                // CORRECTION ICI : MAJUSCULES
+                type: currentType.toUpperCase(), 
+                // CORRECTION ICI : paymentMethod
+                paymentMethod: document.getElementById('payment').value,
                 phone: document.getElementById('phone').value || '',
                 address: document.getElementById('address').value || '',
                 items: Array.from(document.querySelectorAll('.order-item')).map(p => ({ qty: p.querySelector('.p-qty').value, name: p.querySelector('.p-name').value })),
@@ -108,8 +87,7 @@
             await db.collection("commandes").add(order);
             location.reload();
         };
-        function showSection(id, btn) { document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-        window.onload = () => { addPizza(); };
+        window.onload = addPizza;
     </script>
 </body>
 </html>
