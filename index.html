@@ -3,34 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mwaka Pizza - Prise de Commande</title>
+    <title>Mwaka Pizza - Commande</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: sans-serif; background: #000; color: #fff; padding-bottom: 40px; }
-        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top: 0; z-index: 1000; }
-        .nav-btn { flex: 1; padding: 18px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        body { font-family: 'Segoe UI', sans-serif; background: #000; color: #fff; padding-bottom: 40px; }
+        
+        /* NAVIGATION */
+        .nav-tabs { display: flex; background: #111; border-bottom: 3px solid #2d5f3f; position: sticky; top: 0; z-index: 1000; }
+        .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: #666; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .nav-btn.active { color: #fff; background: #2d5f3f; }
+
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
         .section { display: none; }
         .section.active { display: block; }
+
+        /* TYPE SELECTOR */
         .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #222; color: #888; cursor: pointer; font-weight: bold; }
+        .type-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #333; background: #1a1a1a; color: #888; cursor: pointer; font-weight: bold; }
         .type-btn.selected { background: #e74c3c; color: white; border-color: #e74c3c; }
+
+        /* FORMULAIRE */
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #2d5f3f; font-weight: bold; font-size: 0.9em; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; font-size: 16px; }
-        .order-item { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 6px solid #2d5f3f; }
-        .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 5px 0; font-weight: bold; }
-        .btn-submit { width: 100%; padding: 20px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 20px; }
-        .total-box { background: #1a1a1a; border: 2px solid #2d5f3f; padding: 15px; border-radius: 15px; text-align: center; margin-top: 10px; font-size: 22px; }
-        .delete-btn { color: #e74c3c; background: none; border: none; font-size: 12px; padding: 10px; width: 100%; text-align: right; cursor: pointer; }
+        label { display: block; margin-bottom: 5px; color: #2d5f3f; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #111; color: white; font-size: 16px; }
+
+        /* MODULE PIZZA COMPACT */
+        .order-item { background: #111; border: 1px solid #222; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #2d5f3f; position: relative; }
+        .item-row { display: flex; gap: 8px; align-items: center; }
+        .qty-select { width: 55px; flex: none; text-align: center; font-weight: bold; }
+        .name-input { flex: 1; }
+
+        /* SUGGESTIONS */
+        .autocomplete-wrapper { position: relative; flex: 1; }
+        .autocomplete-list { 
+            position: absolute; top: 100%; left: 0; width: 100%; background: #222; 
+            border: 1px solid #444; z-index: 100; border-radius: 0 0 10px 10px; 
+            max-height: 200px; overflow-y: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; font-size: 14px; }
+        .suggestion-item:hover { background: #2d5f3f; }
+
+        /* BOUTONS */
+        .btn-add { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; margin: 5px 0; font-weight: bold; font-size: 14px; color: #fff; }
+        .btn-pizza { background: #2d5f3f; }
+        .btn-extra { background: #333; }
+
+        .total-area { 
+            background: #1a1a1a; padding: 15px; border-radius: 12px; margin-top: 20px; 
+            border: 2px dashed #2d5f3f; text-align: center; 
+        }
+        .btn-calc { background: none; border: 1px solid #2ecc71; color: #2ecc71; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-bottom: 10px; }
+        .total-val { font-size: 24px; font-weight: bold; color: #2ecc71; }
+
+        .btn-submit { width: 100%; padding: 20px; background: #e74c3c; color: white; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .delete-btn { color: #e74c3c; background: none; border: none; font-size: 11px; padding: 8px 0; width: 100%; text-align: right; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="nav-tabs">
-        <button class="nav-btn active" id="btn-com" onclick="showSection('orderSection', this)">Commander</button>
-        <button class="nav-btn" id="btn-sui" onclick="showSection('suiviSection', this)">Suivi</button>
+        <button class="nav-btn active" onclick="showSection('orderSection', this)">Commander</button>
+        <button class="nav-btn" onclick="showSection('suiviSection', this)">Suivi</button>
     </div>
 
     <div class="container">
@@ -56,22 +89,25 @@
                     </div>
                 </div>
 
+                <label>Pizzas</label>
                 <div id="pizzasList"></div>
-                <button type="button" class="btn-add" style="background:#2d5f3f" onclick="addItem('pizzasList', 'P')">+ PIZZA</button>
+                <button type="button" class="btn-add btn-pizza" onclick="addItem('pizzasList', menuPizzas)">+ AJOUTER PIZZA</button>
                 
-                <div id="dessertsList"></div>
-                <button type="button" class="btn-add" style="background:#9b59b6" onclick="addItem('dessertsList', 'D')">+ DESSERT</button>
-                
-                <div id="drinksList"></div>
-                <button type="button" class="btn-add" style="background:#3498db" onclick="addItem('drinksList', 'B')">+ BOISSON</button>
+                <label style="margin-top:15px">Extras (Desserts / Boissons)</label>
+                <div id="extrasList"></div>
+                <button type="button" class="btn-add btn-extra" onclick="addItem('extrasList', menuExtras)">+ AJOUTER EXTRA</button>
 
-                <div class="total-box">TOTAL : <span id="totalDisplay">0.00 €</span></div>
-                <button type="submit" class="btn-submit" id="submitBtn">🚀 ENVOYER CUISINE</button>
+                <div class="total-area">
+                    <button type="button" class="btn-calc" onclick="calculateTotal()">Afficher le TOTAL (€)</button>
+                    <div>TOTAL : <span id="totalDisplay" class="total-val">0.00 €</span></div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">🚀 ENVOYER EN CUISINE</button>
             </form>
         </div>
 
         <div id="suiviSection" class="section">
-            <div id="suiviList"></div>
+            <div id="suiviContainer"></div>
         </div>
     </div>
 
@@ -84,92 +120,22 @@
         let currentType = 'Livraison';
         let unsubSuivi = null;
 
-        // --- NAVIGATION ---
+        // CATALOGUE (À enrichir selon tes prix)
+        const menuPizzas = [
+            {n:'Maria', p:11}, {n:'Mama', p:13}, {n:'Mwaka Moon', p:15}, 
+            {n:'Reine', p:12}, {n:'4 Fromages', p:14}, {n:'Végétarienne', p:13}
+        ];
+        const menuExtras = [
+            {n:'Tiramisu', p:3.9}, {n:'Coca 50cl', p:2.5}, {n:'Chanflor', p:2}
+        ];
+
         function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             btn.classList.add('active');
-            
             if(id === 'suiviSection') startSuivi();
-            else if(unsubSuivi) { unsubSuivi(); unsubSuivi = null; }
         }
 
         function setType(t) { 
-            currentType = t; 
-            document.getElementById('btnEmporter').className = (t==='Emporter'?'type-btn selected':'type-btn');
-            document.getElementById('btnLivraison').className = (t==='Livraison'?'type-btn selected':'type-btn');
-            document.getElementById('livraisonFields').style.display = (t==='Livraison'?'block':'none');
-        }
-
-        // --- GESTION ARTICLES ---
-        function addItem(containerId, type) {
-            const div = document.createElement('div');
-            div.className = 'order-item';
-            div.innerHTML = `
-                <div style="display:flex; gap:10px;">
-                    <select class="qty" style="width:60px" onchange="updateTotal()"><option>1</option><option>2</option><option>3</option></select>
-                    <input type="text" class="name" placeholder="Nom..." required style="flex:1">
-                </div>
-                <button type="button" class="delete-btn" onclick="this.parentElement.remove(); updateTotal()">🗑️ Supprimer</button>
-            `;
-            document.getElementById(containerId).appendChild(div);
-        }
-
-        function updateTotal() {
-            // Logique simplifiée pour éviter le freeze
-            document.getElementById('totalDisplay').innerText = "Calcul...";
-            setTimeout(() => { document.getElementById('totalDisplay').innerText = "-- €"; }, 500);
-        }
-
-        // --- ENVOI ---
-        document.getElementById('orderForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "PATIENTEZ...";
-
-            const order = {
-                clientName: document.getElementById('clientName').value,
-                type: currentType.toUpperCase(), // "LIVRAISON" ou "EMPORTER"
-                paymentMethod: document.getElementById('paymentMethod').value, 
-                address: document.getElementById('address').value || '',
-                phone: document.getElementById('phone').value || '',
-                items: Array.from(document.querySelectorAll('#pizzasList .order-item')).map(i => ({ qty: i.querySelector('.qty').value, name: i.querySelector('.name').value })),
-                desserts: Array.from(document.querySelectorAll('#dessertsList .order-item')).map(i => ({ qty: i.querySelector('.qty').value, name: i.querySelector('.name').value })),
-                drinks: Array.from(document.querySelectorAll('#drinksList .order-item')).map(i => ({ qty: i.querySelector('.qty').value, name: i.querySelector('.name').value })),
-                status: 'en_attente',
-                source: 'MANUEL',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            try {
-                await db.collection("commandes").add(order);
-                alert("✅ ENVOYÉ !");
-                location.reload();
-            } catch(err) {
-                alert("Erreur : " + err.message);
-                btn.disabled = false; btn.innerText = "RÉESSAYER";
-            }
-        };
-
-        // --- SUIVI ---
-        function startSuivi() {
-            if(unsubSuivi) unsubSuivi();
-            document.getElementById('suiviList').innerHTML = "Chargement...";
-            unsubSuivi = db.collection("commandes").orderBy("createdAt", "desc").limit(10).onSnapshot(snap => {
-                const list = document.getElementById('suiviList');
-                list.innerHTML = "";
-                snap.forEach(doc => {
-                    const o = doc.data();
-                    const d = document.createElement('div');
-                    d.style.cssText = "background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:10px; border:1px solid #333";
-                    d.innerHTML = `<strong>${o.clientName}</strong> - <span style="color:#2ecc71">${o.status}</span>`;
-                    list.appendChild(d);
-                });
-            });
-        }
-
-        window.onload = () => { addItem('pizzasList', 'P'); };
-    </script>
-</body>
-</html>
+            current
