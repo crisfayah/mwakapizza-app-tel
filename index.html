@@ -22,32 +22,6 @@
         .btn-add { width: 100%; padding: 15px; color: white; border: none; border-radius: 10px; cursor: pointer; margin: 10px 0; font-weight: bold; }
         input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; background: #111; color: #fff; border: 1px solid #333; margin-top: 5px; }
         .btn-submit { width: 100%; padding: 20px; background: #e74c3c; color: #fff; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; margin-top: 20px; }
-
-        /* DESIGN SUIVI SUR UNE LIGNE */
-        .suivi-card { 
-            background: #1a1a1a; 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin-bottom: 8px; 
-            border: 1px solid #333; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            gap: 10px;
-            font-size: 13px;
-        }
-        .s-time { color: #888; font-family: monospace; min-width: 40px; }
-        .s-name { flex: 1; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
-        .s-delay { color: #f1c40f; font-weight: bold; min-width: 50px; text-align: center; }
-        .s-status { 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-size: 11px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            min-width: 75px; 
-            text-align: center; 
-        }
     </style>
 </head>
 <body>
@@ -80,9 +54,7 @@
                 <button type="submit" class="btn-submit">🚀 ENVOYER CUISINE</button>
             </form>
         </div>
-        <div id="suiviSection" class="section">
-            <div id="suiviList"></div>
-        </div>
+        <div id="suiviSection" class="section"><div id="suiviList"></div></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -91,14 +63,12 @@
         const config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
         firebase.initializeApp(config); const db = firebase.firestore();
         let currentType = 'Livraison';
-        let unsubSuivi = null;
 
         function showSection(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active'); btn.classList.add('active');
             if(id === 'suiviSection') listenSuivi();
-            else if(unsubSuivi) { unsubSuivi(); unsubSuivi = null; }
         }
 
         function setType(t) { currentType = t; document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter'); document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison'); document.getElementById('livraisonInfo').style.display = t==='Livraison'?'block':'none'; }
@@ -118,3 +88,33 @@
             div.innerHTML = `<input type="text" class="e-name" placeholder="${label}" required>`;
             document.getElementById(id).appendChild(div);
         }
+
+        document.getElementById('orderForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const order = {
+                clientName: document.getElementById('clientName').value,
+                type: currentType.toUpperCase(),
+                paymentMethod: document.getElementById('payment').value,
+                phone: document.getElementById('phone').value || '',
+                address: document.getElementById('address').value || '',
+                items: Array.from(document.querySelectorAll('#pizzasList .order-item')).map(p => ({
+                    qty: 1, name: p.querySelector('.p-name').value,
+                    supps: Array.from(p.querySelectorAll('.p-supp:checked')).map(s => s.dataset.name)
+                })),
+                desserts: Array.from(document.querySelectorAll('#dessertsList .order-item')).map(d => ({ qty: 1, name: d.querySelector('.e-name').value })),
+                drinks: Array.from(document.querySelectorAll('#drinksList .order-item')).map(dr => ({ qty: 1, name: dr.querySelector('.e-name').value })),
+                status: 'en_attente', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection("commandes").add(order); location.reload();
+        };
+
+        function listenSuivi() {
+            db.collection("commandes").orderBy("createdAt", "desc").limit(10).onSnapshot(snap => {
+                const list = document.getElementById('suiviList'); list.innerHTML = "";
+                snap.forEach(doc => { const o = doc.data(); const d = document.createElement('div'); d.style.padding="10px"; d.innerHTML=`${o.clientName} - ${o.status}`; list.appendChild(d); });
+            });
+        }
+        window.onload = addPizza;
+    </script>
+</body>
+</html>
