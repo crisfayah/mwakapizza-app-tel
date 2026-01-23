@@ -57,4 +57,119 @@
 
         .actions { display: flex; gap: 8px; margin-top: 10px; }
         .btn { flex: 1; height: 55px; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 14px; }
-        .btn-green { background: var
+        .btn-green { background: var(--green); color: #fff; }
+        .btn-blue { background: var(--blue); color: #fff; }
+        .btn-orange { background: var(--orange); color: #fff; }
+        .btn-grey { background: #333; color: white; width: 55px; flex: none; font-size: 18px; }
+        
+        .delay-menu { display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+        #alert-box { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--red); color: white; padding: 15px 30px; border-radius: 30px; font-weight: bold; z-index: 9999; display: none; border: 2px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+    <div id="alert-box">⚠️ FOUR SATURÉ !</div>
+
+    <div class="header-top">
+        <div style="font-weight: 900; font-size: 18px;">MWAKA KDS</div>
+        <div class="flux-info" id="flux-tracker">Flux actuel : -- min</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">À FAIRE <span id="c-afaire" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-encours" onclick="switchTab('production')">EN COURS <span id="c-encours" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-aufour" onclick="switchTab('cuisson')">AU FOUR <span id="c-aufour" class="badge">0</span></button>
+        <button class="tab-btn" id="tab-termine" onclick="switchTab('termine')">TERMINÉES <span id="c-termine" class="badge">0</span></button>
+    </div>
+
+    <div id="mainView"><div id="ordersContainer"></div></div>
+
+    <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script>
+        const config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
+        firebase.initializeApp(config); const db = firebase.firestore(); const sound = document.getElementById('alertSound');
+        
+        let currentTab = 'en_attente'; let allOrders = [];
+        const pizzasDressage = ["DANJÉ", "SIRÈNE", "OU LA", "TOMBOLO"];
+        const pizzaCatalog = { "MARIA": { prep: 0.15, cook: 3, dressing: 1 }, "MAMA": { prep: 0.20, cook: 3, dressing: 0 }, "DANJÉ": { prep: 0.15, cook: 3, dressing: 1 }, "SIRÈNE": { prep: 0.50, cook: 4, dressing: 1 }, "OCHAN": { prep: 0.50, cook: 4, dressing: 0 }, "SALAM": { prep: 0.50, cook: 4, dressing: 0 }, "DIAMOND": { prep: 0.50, cook: 4, dressing: 0 }, "NOSSA": { prep: 0.50, cook: 3, dressing: 0 }, "GWO MODEL": { prep: 0.50, cook: 4, dressing: 0 }, "MADA": { prep: 0.50, cook: 3, dressing: 0 }, "JAH": { prep: 0.50, cook: 4, dressing: 0 }, "LAMBIS": { prep: 0.50, cook: 4, dressing: 0 }, "OU LA": { prep: 0.20, cook: 3, dressing: 1 }, "MWAKA MOON": { prep: 1.50, cook: 5, dressing: 0 }, "BIG MACHINE": { prep: 0.50, cook: 5, dressing: 0 }, "TOMBOLO": { prep: 0.50, cook: 4, dressing: 1 } };
+
+        db.collection("commandes").onSnapshot((snapshot) => {
+            try {
+                allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateBadges(); updateFluxDelay(); render();
+                if (allOrders.some(o => o.status === "en_attente")) { sound.play().catch(() => {}); } else { sound.pause(); sound.currentTime = 0; }
+            } catch(e) { console.error("Snapshot error", e); }
+        });
+
+        function updateFluxDelay() {
+            const work = allOrders.filter(o => o.status === 'en_attente' || o.status === 'production').reduce((acc, o) => acc + (o.items || []).reduce((s, p) => s + (pizzaCatalog[(p.name||"").toUpperCase()]?.prep || 0.5), 0), 0);
+            document.getElementById('flux-tracker').innerText = `Flux actuel : ${work > 0 ? Math.ceil(work + 6.25) : '8'} min`;
+        }
+
+        function updateBadges() {
+            document.getElementById('c-afaire').innerText = allOrders.filter(o => o.status === 'en_attente').length;
+            document.getElementById('c-encours').innerText = allOrders.filter(o => o.status === 'production').length;
+            document.getElementById('c-aufour').innerText = allOrders.filter(o => o.status === 'cuisson').length;
+            document.getElementById('c-termine').innerText = allOrders.filter(o => o.status === 'termine').length;
+        }
+
+        function switchTab(t) { 
+            currentTab = t; 
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+            const mapping = { en_attente: 'tab-afaire', production: 'tab-encours', cuisson: 'tab-aufour', termine: 'tab-termine' };
+            document.getElementById(mapping[t]).classList.add('active'); 
+            render(); 
+        }
+
+        function render() {
+            const container = document.getElementById('ordersContainer'); container.innerHTML = "";
+            let list = allOrders.filter(o => o.status === currentTab).sort((a, b) => (currentTab === 'cuisson' ? (a.ovenAt?.seconds || 0) - (b.ovenAt?.seconds || 0) : (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)));
+            if (currentTab === 'en_attente' || currentTab === 'termine') {
+                const wrapper = document.createElement('div'); wrapper.className = "orders-list";
+                (currentTab === 'en_attente' ? list.reverse() : list).forEach(o => wrapper.appendChild(createOrderCard(o, false)));
+                container.appendChild(wrapper);
+            } else {
+                const top3 = list.slice(0, 3); const waiting = list.slice(3);
+                let counts = {}; if(currentTab === 'production') top3.flatMap(o => o.items || []).forEach(p => { let n = (p.name||"").toUpperCase(); counts[n] = (counts[n] || 0) + 1; });
+                const grid = document.createElement('div'); grid.className = "kds-grid";
+                [...top3].reverse().forEach(o => grid.appendChild(createOrderCard(o, true, counts)));
+                container.appendChild(grid);
+                if (waiting.length > 0) {
+                    const ovf = document.createElement('div'); ovf.className = "overflow-section"; ovf.innerHTML = `<div class="overflow-title">SUIVANTS (${waiting.length})</div>`;
+                    waiting.forEach(o => { ovf.innerHTML += `<div class="waiting-row"><span><strong>${o.clientName || 'CLIENT'}</strong> (${(o.items||[]).length} pz)</span> <span>${o.phone || o.contact || ''}</span></div>`; });
+                    container.appendChild(ovf);
+                }
+            }
+        }
+
+        function createOrderCard(o, isKDS, counts = {}) {
+            const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(); const diff = Math.floor((new Date() - d) / 60000);
+            const isLivr = (o.type||"").toLowerCase().includes("livraison"); const card = document.createElement('div');
+            card.className = `order-card ${o.source==='PRESTASHOP'?'is-web':''} ${(diff>=15 && o.status !== 'termine')?'danger':''}`;
+            let itemsHtml = (o.items || []).map(p => {
+                let n = (p.name||"").toUpperCase();
+                return `<div class="item-line ${counts[n] > 1 ? 'matching-pizza' : ''}"><div><strong>${p.qty||1}x ${n}</strong>${(p.supps||[]).map(s => `<br><span class="supp-text">+ ${s}</span>`).join('')}</div>${pizzasDressage.includes(n) ? '<span>🥗</span>' : ''}</div>`;
+            }).join('');
+            card.innerHTML = `<div class="timer">${diff} min</div><div class="client-header">${o.clientName || 'CLIENT'} ${isLivr ? '<br><span class="badge-livraison"><i class="fas fa-truck"></i> LIVRAISON</span>' : ''}</div><div class="phone-text"><i class="fas fa-phone"></i> ${o.phone || o.contact || ''}</div>${(isLivr || o.address || o.paymentMethod || o.payment) ? `<div class="delivery-box">${o.address ? `📍 ${o.address}<br>` : ''}${(o.paymentMethod || o.payment) ? `<div class="pay-tag">💰 ${o.paymentMethod || o.payment}</div>` : ''}</div>` : ''}<div class="items-area">${itemsHtml}</div><div class="actions"><button class="btn btn-grey" onclick="window.print()"><i class="fas fa-print"></i></button>${getBtn(o.id, o.status)}</div><div id="m-${o.id}" class="delay-menu"><button class="btn" style="background:#27ae60" onclick="upd('${o.id}', 'production')">FAST</button><button class="btn" style="background:#f39c12" onclick="upd('${o.id}', 'production')">15M</button><button class="btn" style="background:#e74c3c" onclick="upd('${o.id}', 'production')">HOT</button></div>`;
+            return card;
+        }
+
+        function getBtn(id, s) {
+            if (s === "en_attente") return `<button class="btn btn-green" onclick="document.getElementById('m-${id}').style.display='grid'">ACCEPTER</button>`;
+            if (s === "production") return `<button class="btn btn-blue" onclick="checkOvenAndUpd('${id}')">AU FOUR !</button>`;
+            if (s === "cuisson") return `<button class="btn btn-green" onclick="upd('${id}', 'termine')">PRÊTE !</button>`;
+            return `<button class="btn btn-grey" style="flex:1" onclick="upd('${id}', 'en_attente')">RÉACTIVER</button>`;
+        }
+
+        function checkOvenAndUpd(id) {
+            const ovenCount = allOrders.filter(o => o.status === 'cuisson').reduce((acc, o) => acc + (o.items ? o.items.length : 0), 0);
+            if (ovenCount >= 8) { const box = document.getElementById('alert-box'); box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 4000); }
+            db.collection("commandes").doc(id).update({ status: 'cuisson', ovenAt: firebase.firestore.FieldValue.serverTimestamp() });
+        }
+
+        function upd(id, s) { db.collection("commandes").doc(id).update({ status: s }); }
+    </script>
+</body>
+</html>
