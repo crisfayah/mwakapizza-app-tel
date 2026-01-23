@@ -2,40 +2,41 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suivi Mwaka Pizza - Drive & Live</title>
+    <title>Suivi Mwaka Pizza - Votre Commande</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --blue: #3498db; --orange: #f39c12; --green: #2ecc71; --dark: #0b0b0b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff; text-align: center; padding: 20px; margin: 0; }
         
-        .logo { margin-bottom: 20px; border-radius: 50%; border: 2px solid var(--blue); }
+        .logo { margin-bottom: 20px; width: 120px; height: 120px; object-fit: contain; }
         
         .status-box { background: #1a1a1a; border-radius: 25px; padding: 30px; margin: 10px auto; max-width: 500px; border-top: 6px solid var(--blue); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         #status-label { text-transform: uppercase; letter-spacing: 3px; color: #777; font-size: 0.9em; margin-bottom: 10px; }
-        #msg { font-size: 1.6em; font-weight: 900; margin: 15px 0; color: #fff; }
+        #msg { font-size: 1.4em; font-weight: 900; margin: 15px 0; color: #fff; line-height: 1.3; }
         
         .step-icon { font-size: 60px; margin-bottom: 20px; color: var(--blue); text-shadow: 0 0 20px rgba(52, 152, 219, 0.4); }
         
-        /* Bouton Drive */
+        /* Bouton Drive / Géoloc */
         .drive-section { margin-top: 30px; padding: 20px; background: #222; border-radius: 20px; display: none; border: 1px solid #333; }
         .btn-drive { background: var(--orange); color: #000; border: none; padding: 15px 25px; border-radius: 50px; font-weight: 900; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s; }
         .btn-drive.active { background: var(--green); color: #fff; }
-        .pulse { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(243, 156, 18, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); } }
+        
+        .pulse { animation: pulse-orange 2s infinite; }
+        @keyframes pulse-orange { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(243, 156, 18, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); } }
 
-        .location-info { font-size: 0.8em; color: #888; margin-top: 10px; }
-        .info-speciale { background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 20px; border: 1px dashed var(--blue); }
+        .location-info { font-size: 0.8em; color: #888; margin-top: 12px; }
+        .info-speciale { background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 20px; border: 1px dashed var(--blue); color: var(--blue); }
     </style>
 </head>
 <body>
-    <img src="https://moniresto.com/mwakapizza/img/mwaka-pizza-logo-1615545224.jpg" width="100" class="logo">
+    <img src="https://crisfayah.github.io/mwakapizza-app-tel/logo.png" class="logo" alt="Mwaka Pizza">
     
     <div class="status-box">
-        <div id="status-label">Chargement...</div>
+        <div id="status-label">Recherche...</div>
         <div id="icon-container">
-            <i id="icon" class="fas fa-spinner fa-spin step-icon"></i>
+            <i id="icon" class="fas fa-circle-notch fa-spin step-icon"></i>
         </div>
         <div id="msg">Récupération de votre commande...</div>
         
@@ -45,7 +46,7 @@
             <button id="btn-depart" class="btn-drive pulse" onclick="signalerDepart()">
                 <i class="fas fa-car"></i> JE PARS CHERCHER MA PIZZA
             </button>
-            <div id="gps-status" class="location-info">En signalant votre départ, la cuisine préparera votre sac au moment idéal.</div>
+            <div id="gps-status" class="location-info">En signalant votre départ, l'équipe pourra préparer votre sac au moment idéal de votre arrivée.</div>
         </div>
     </div>
 
@@ -56,9 +57,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Récupération de l'ID dans l'URL (ex: suivi.html?id=a7sr7jhdNFDexMega9rE)
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
-        let watchId = null;
 
         if (orderId) {
             db.collection("commandes").doc(orderId).onSnapshot((doc) => {
@@ -68,40 +69,45 @@
                     const icon = document.getElementById('icon');
                     const label = document.getElementById('status-label');
                     const driveArea = document.getElementById('drive-area');
+                    const specDiv = document.getElementById('special-msg');
 
-                    // Synchronisation des statuts avec cuisine.html
+                    // Synchronisation des statuts
                     if (d.status === "en_attente") {
                         label.innerText = "Reçue";
-                        msgDiv.innerText = "Mwaka a bien reçu votre commande !";
+                        msgDiv.innerText = "Mwaka a bien reçu votre commande ! Elle va être validée.";
                         icon.className = "fas fa-clock step-icon";
                     } else if (d.status === "production") {
-                        label.innerText = "En préparation";
-                        msgDiv.innerText = "Le pizzaiolo prépare vos pizzas... 👩‍🍳";
+                        label.innerText = "Préparation";
+                        msgDiv.innerText = "Le pizzaiolo est en train de garnir vos pizzas... 👩‍🍳";
                         icon.className = "fas fa-utensils step-icon";
                     } else if (d.status === "cuisson") {
                         label.innerText = "Au four";
-                        msgDiv.innerText = "C'est en train de dorer au four ! 🔥";
+                        msgDiv.innerText = "Vos pizzas sont au four ! Ça dore... 🔥";
                         icon.className = "fas fa-fire step-icon";
                     } else if (d.status === "termine") {
                         label.innerText = "Prête !";
-                        msgDiv.innerText = "C'EST PRÊT ! RÉCUPÉREZ-LA ! ✅";
+                        msgDiv.innerText = "C'EST PRÊT ! VOUS POUVEZ RÉCUPÉRER VOTRE COMMANDE ! ✅";
                         icon.className = "fas fa-check-circle step-icon";
                         icon.style.color = "#2ecc71";
                     }
 
-                    // Afficher le bouton Drive si c'est de l'emporté/drive
-                    if (d.type !== "LIVRAISON" && d.status !== "termine") {
+                    // Affichage du bouton Drive (sauf si livraison ou déjà fini)
+                    const isLivr = (d.type || "").toLowerCase().includes("livraison");
+                    if (!isLivr && d.status !== "termine") {
                         driveArea.style.display = "block";
                     } else {
                         driveArea.style.display = "none";
                     }
 
-                    // Message spécial (ex: délai chaud)
-                    if (d.clientMsg) {
-                        const spec = document.getElementById('special-msg');
-                        spec.style.display = "block";
-                        spec.innerText = d.clientMsg;
+                    // Affichage message spécial (ex: "FAST", "15M", "HOT")
+                    if (d.clientMsg || d.delay) {
+                        specDiv.style.display = "block";
+                        specDiv.innerText = d.clientMsg || "Délai estimé : " + d.delay;
+                    } else {
+                        specDiv.style.display = "none";
                     }
+                } else {
+                    document.getElementById('msg').innerText = "Commande introuvable...";
                 }
             });
         }
@@ -111,20 +117,15 @@
             const gpsStatus = document.getElementById('gps-status');
 
             if (!navigator.geolocation) {
-                alert("La géolocalisation n'est pas supportée par votre navigateur.");
+                alert("GPS non supporté par votre appareil.");
                 return;
             }
 
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> ACTIVATION GPS...';
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> CONNEXION GPS...';
             
-            // On commence à surveiller la position
-            watchId = navigator.geolocation.watchPosition((position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-
-                // Mise à jour Firebase
+            navigator.geolocation.watchPosition((position) => {
                 db.collection("commandes").doc(orderId).update({
-                    clientLocation: { lat: lat, lng: lng },
+                    clientLocation: { lat: position.coords.latitude, lng: position.coords.longitude },
                     isEnRoute: true,
                     lastGpsUpdate: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -132,17 +133,11 @@
                 btn.classList.remove('pulse');
                 btn.classList.add('active');
                 btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> VOUS ÊTES EN ROUTE !';
-                gpsStatus.innerText = "Position partagée. La cuisine est prévenue de votre arrivée.";
-
-            }, (error) => {
-                console.error(error);
-                gpsStatus.innerText = "Erreur GPS : Veuillez autoriser la localisation.";
-                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> GPS DÉSACTIVÉ';
-            }, {
-                enableHighAccuracy: true,
-                maximumAge: 30000,
-                timeout: 27000
-            });
+                gpsStatus.innerText = "Votre position est partagée avec la cuisine pour un service optimal.";
+            }, (err) => {
+                gpsStatus.innerText = "Merci d'autoriser la localisation pour le Drive.";
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> GPS REQUIS';
+            }, { enableHighAccuracy: true });
         }
     </script>
 </body>
