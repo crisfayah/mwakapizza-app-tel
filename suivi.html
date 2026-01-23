@@ -2,46 +2,50 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suivi Mwaka Pizza</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi Mwaka Pizza - Drive & Live</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #0b0b0b; color: #fff; text-align: center; padding: 20px; }
-        .container { max-width: 400px; margin: 0 auto; }
+        :root { --blue: #3498db; --orange: #f39c12; --green: #2ecc71; --dark: #0b0b0b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff; text-align: center; padding: 20px; margin: 0; }
         
-        /* JAUGE DYNAMIQUE */
-        .gauge-container { width: 100%; height: 12px; background: #222; border-radius: 10px; margin: 40px 0; overflow: hidden; border: 1px solid #333; }
-        .gauge-fill { height: 100%; width: 10%; background: linear-gradient(90deg, #3498db, #2ecc71); transition: width 1s ease-in-out; }
+        .logo { margin-bottom: 20px; border-radius: 50%; border: 2px solid var(--blue); }
+        
+        .status-box { background: #1a1a1a; border-radius: 25px; padding: 30px; margin: 10px auto; max-width: 500px; border-top: 6px solid var(--blue); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        #status-label { text-transform: uppercase; letter-spacing: 3px; color: #777; font-size: 0.9em; margin-bottom: 10px; }
+        #msg { font-size: 1.6em; font-weight: 900; margin: 15px 0; color: #fff; }
+        
+        .step-icon { font-size: 60px; margin-bottom: 20px; color: var(--blue); text-shadow: 0 0 20px rgba(52, 152, 219, 0.4); }
+        
+        /* Bouton Drive */
+        .drive-section { margin-top: 30px; padding: 20px; background: #222; border-radius: 20px; display: none; border: 1px solid #333; }
+        .btn-drive { background: var(--orange); color: #000; border: none; padding: 15px 25px; border-radius: 50px; font-weight: 900; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s; }
+        .btn-drive.active { background: var(--green); color: #fff; }
+        .pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(243, 156, 18, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); } }
 
-        /* ICONES ET ETAPES */
-        .steps { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .step { opacity: 0.2; transition: 0.5s; font-size: 30px; }
-        .step.active { opacity: 1; color: #3498db; transform: scale(1.2); }
-        .step.done { opacity: 1; color: #2ecc71; }
-        
-        .status-box { background: #1a1a1a; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #status-msg { font-size: 1.4em; font-weight: bold; margin: 20px 0; }
-        
-        .info-chaud { background: #e74c3c; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; animation: blink 2s infinite; display: none; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .location-info { font-size: 0.8em; color: #888; margin-top: 10px; }
+        .info-speciale { background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 20px; border: 1px dashed var(--blue); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="https://moniresto.com/mwakapizza/img/mwaka-pizza-logo-1615545224.jpg" width="120">
-        
-        <div class="gauge-container"><div id="gauge" class="gauge-fill"></div></div>
-
-        <div class="steps">
-            <i id="i-attente" class="fas fa-clock step"></i>
-            <i id="i-prod" class="fas fa-utensils step"></i>
-            <i id="i-cuisson" class="fas fa-fire step"></i>
-            <i id="i-prete" class="fas fa-check-circle step"></i>
+    <img src="https://moniresto.com/mwakapizza/img/mwaka-pizza-logo-1615545224.jpg" width="100" class="logo">
+    
+    <div class="status-box">
+        <div id="status-label">Chargement...</div>
+        <div id="icon-container">
+            <i id="icon" class="fas fa-spinner fa-spin step-icon"></i>
         </div>
+        <div id="msg">Récupération de votre commande...</div>
+        
+        <div id="special-msg" class="info-speciale" style="display:none;"></div>
 
-        <div class="status-box">
-            <div id="status-msg">Chargement...</div>
-            <div id="msg-chaud" class="info-chaud">🔥 SERVICE CHAUD SUR PLACE ! On fait au mieux, restez attentif.</div>
+        <div id="drive-area" class="drive-section">
+            <button id="btn-depart" class="btn-drive pulse" onclick="signalerDepart()">
+                <i class="fas fa-car"></i> JE PARS CHERCHER MA PIZZA
+            </button>
+            <div id="gps-status" class="location-info">En signalant votre départ, la cuisine préparera votre sac au moment idéal.</div>
         </div>
     </div>
 
@@ -52,43 +56,92 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const orderId = new URLSearchParams(window.location.search).get('id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('id');
+        let watchId = null;
 
         if (orderId) {
             db.collection("commandes").doc(orderId).onSnapshot((doc) => {
                 if (doc.exists) {
                     const d = doc.data();
-                    const gauge = document.getElementById('gauge');
-                    const msg = document.getElementById('status-msg');
-                    
-                    // Reset icônes
-                    document.querySelectorAll('.step').forEach(s => s.className = s.className.replace(' active', '').replace(' done', ''));
-                    document.getElementById('msg-chaud').style.display = (d.delay === "CHAUD !") ? "block" : "none";
+                    const msgDiv = document.getElementById('msg');
+                    const icon = document.getElementById('icon');
+                    const label = document.getElementById('status-label');
+                    const driveArea = document.getElementById('drive-area');
 
+                    // Synchronisation des statuts avec cuisine.html
                     if (d.status === "en_attente") {
-                        gauge.style.width = "10%";
-                        msg.innerText = "Commande reçue !";
-                        document.getElementById('i-attente').classList.add('active');
-                    } 
-                    else if (d.status === "production") {
-                        gauge.style.width = "40%";
-                        msg.innerText = "Préparation en cours...";
-                        document.getElementById('i-attente').classList.add('done');
-                        document.getElementById('i-prod').classList.add('active');
-                    } 
-                    else if (d.status === "cuisson") {
-                        gauge.style.width = "75%";
-                        msg.innerText = "C'est au four ! 🔥";
-                        document.getElementById('i-attente').classList.add('done');
-                        document.getElementById('i-prod').classList.add('done');
-                        document.getElementById('i-cuisson').classList.add('active');
-                    } 
-                    else if (d.status === "termine") {
-                        gauge.style.width = "100%";
-                        msg.innerHTML = "<span style='color:#2ecc71'>C'EST PRÊT ! Bon appétit ! ✅</span>";
-                        document.querySelectorAll('.step').forEach(s => s.classList.add('done'));
+                        label.innerText = "Reçue";
+                        msgDiv.innerText = "Mwaka a bien reçu votre commande !";
+                        icon.className = "fas fa-clock step-icon";
+                    } else if (d.status === "production") {
+                        label.innerText = "En préparation";
+                        msgDiv.innerText = "Le pizzaiolo prépare vos pizzas... 👩‍🍳";
+                        icon.className = "fas fa-utensils step-icon";
+                    } else if (d.status === "cuisson") {
+                        label.innerText = "Au four";
+                        msgDiv.innerText = "C'est en train de dorer au four ! 🔥";
+                        icon.className = "fas fa-fire step-icon";
+                    } else if (d.status === "termine") {
+                        label.innerText = "Prête !";
+                        msgDiv.innerText = "C'EST PRÊT ! RÉCUPÉREZ-LA ! ✅";
+                        icon.className = "fas fa-check-circle step-icon";
+                        icon.style.color = "#2ecc71";
+                    }
+
+                    // Afficher le bouton Drive si c'est de l'emporté/drive
+                    if (d.type !== "LIVRAISON" && d.status !== "termine") {
+                        driveArea.style.display = "block";
+                    } else {
+                        driveArea.style.display = "none";
+                    }
+
+                    // Message spécial (ex: délai chaud)
+                    if (d.clientMsg) {
+                        const spec = document.getElementById('special-msg');
+                        spec.style.display = "block";
+                        spec.innerText = d.clientMsg;
                     }
                 }
+            });
+        }
+
+        function signalerDepart() {
+            const btn = document.getElementById('btn-depart');
+            const gpsStatus = document.getElementById('gps-status');
+
+            if (!navigator.geolocation) {
+                alert("La géolocalisation n'est pas supportée par votre navigateur.");
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> ACTIVATION GPS...';
+            
+            // On commence à surveiller la position
+            watchId = navigator.geolocation.watchPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Mise à jour Firebase
+                db.collection("commandes").doc(orderId).update({
+                    clientLocation: { lat: lat, lng: lng },
+                    isEnRoute: true,
+                    lastGpsUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                btn.classList.remove('pulse');
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> VOUS ÊTES EN ROUTE !';
+                gpsStatus.innerText = "Position partagée. La cuisine est prévenue de votre arrivée.";
+
+            }, (error) => {
+                console.error(error);
+                gpsStatus.innerText = "Erreur GPS : Veuillez autoriser la localisation.";
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> GPS DÉSACTIVÉ';
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 30000,
+                timeout: 27000
             });
         }
     </script>
