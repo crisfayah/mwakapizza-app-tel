@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suivi Mwaka Pizza - Drive Intelligent</title>
+    <title>Suivi Mwaka Pizza - Drive Predict</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,7 +11,7 @@
         
         .logo { margin-bottom: 10px; width: 120px; height: 120px; object-fit: contain; }
         
-        .status-box { background: #1a1a1a; border-radius: 25px; padding: 25px; margin: 10px auto; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid #222; }
+        .status-box { background: #1a1a1a; border-radius: 25px; padding: 25px; margin: 10px auto; max-width: 500px; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
         
         /* Jauge de progression */
         .progress-container { position: relative; display: flex; justify-content: space-between; align-items: center; margin: 40px 0 30px 0; padding: 0 10px; }
@@ -21,10 +21,115 @@
         .step { position: relative; z-index: 2; background: #1a1a1a; width: 45px; height: 45px; border-radius: 50%; border: 3px solid var(--gray); display: flex; align-items: center; justify-content: center; transition: 0.4s; color: var(--gray); }
         .step.active { border-color: var(--blue); color: var(--blue); transform: scale(1.15); box-shadow: 0 0 20px rgba(52, 152, 219, 0.3); }
         .step.done { border-color: var(--green); color: var(--green); }
-        .step i { font-size: 18px; }
 
         #status-label { text-transform: uppercase; letter-spacing: 3px; color: var(--blue); font-size: 0.9em; font-weight: 900; margin-bottom: 5px; }
         #msg { font-size: 1.25em; font-weight: 600; margin: 15px 0; min-height: 50px; line-height: 1.4; }
 
         /* Assistant Drive */
-        .drive-assistant { background: #222; border-radius: 20px; padding: 20px; margin-top: 25px; border: 1px solid
+        .drive-assistant { background: #222; border-radius: 20px; padding: 20px; margin-top: 25px; border: 1px solid #333; display: none; }
+        .btn-drive { background: var(--orange); color: #000; border: none; padding: 15px; border-radius: 50px; font-weight: 900; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.1em; }
+        .btn-drive.active { background: #2c3e50; color: #fff; border: 1px solid var(--blue); }
+
+        .advice-box { margin-top: 15px; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 0.95em; display: none; line-height: 1.4; }
+        .advice-wait { background: rgba(52, 152, 219, 0.15); color: var(--blue); border: 1px solid var(--blue); }
+        .advice-go { background: rgba(46, 204, 113, 0.15); color: var(--green); border: 1px solid var(--green); animation: pulse-green 2s infinite; }
+        
+        @keyframes pulse-green { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .time-badge { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin: 0 3px; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <img src="https://crisfayah.github.io/mwakapizza-app-tel/logo.png" class="logo">
+    
+    <div class="status-box">
+        <div id="status-label">ANALYSE...</div>
+        
+        <div class="progress-container">
+            <div class="progress-line"><div id="fill" class="progress-fill"></div></div>
+            <div class="step" id="step1"><i class="fas fa-receipt"></i></div>
+            <div class="step" id="step2"><i class="fas fa-utensils"></i></div>
+            <div class="step" id="step3"><i class="fas fa-fire"></i></div>
+            <div class="step" id="step4"><i class="fas fa-pizza-slice"></i></div>
+        </div>
+
+        <div id="msg">Connexion à la cuisine Mwaka...</div>
+
+        <div id="drive-area" class="drive-assistant">
+            <button id="btn-gps" class="btn-drive" onclick="toggleDrive()">
+                <i class="fas fa-car-side"></i> ACTIVER L'ASSISTANT DRIVE
+            </button>
+            <div id="advice" class="advice-box"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // COORDONNÉES RÉELLES FOURNIES
+        const SHOPS = {
+            "valmeniere": { lat: 14.61695476882242, lng: -61.04030477788083 },
+            "centre-ville": { lat: 14.603509684880667, lng: -61.07018155256442 }
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('id');
+        let driveActive = false;
+        let currentOrder = null;
+
+        if (orderId) {
+            db.collection("commandes").doc(orderId).onSnapshot((doc) => {
+                if (doc.exists) {
+                    currentOrder = doc.data();
+                    const status = (currentOrder.status || "").toLowerCase();
+                    updateUI(status, currentOrder);
+                    if(driveActive) calculateBestDeparture();
+                }
+            });
+        }
+
+        function updateUI(status, data) {
+            const label = document.getElementById('status-label');
+            const msg = document.getElementById('msg');
+            const fill = document.getElementById('fill');
+            const steps = [document.getElementById('step1'), document.getElementById('step2'), document.getElementById('step3'), document.getElementById('step4')];
+            const driveArea = document.getElementById('drive-area');
+            
+            steps.forEach(s => s.classList.remove('active', 'done'));
+            let progress = "0%";
+
+            if (status === "en_attente") {
+                label.innerText = "REÇUE";
+                msg.innerText = "Mwaka a bien reçu votre commande !";
+                steps[0].classList.add('active'); progress = "0%";
+            } else if (status === "production") {
+                label.innerText = "PRÉPARATION";
+                msg.innerText = "Le pizzaiolo prépare vos pizzas... 👩‍🍳";
+                steps[0].classList.add('done'); steps[1].classList.add('active'); progress = "33%";
+            } else if (status === "cuisson") {
+                label.innerText = "CUISSON";
+                msg.innerText = "C'est au four ! 🔥";
+                steps[0].classList.add('done'); steps[1].classList.add('done'); steps[2].classList.add('active'); progress = "66%";
+            } else if (status === "termine" || status === "prete") {
+                label.innerText = "PRÊTE !";
+                msg.innerText = "C'EST PRÊT ! Venez récupérer vos pizzas ! ✅";
+                steps.forEach(s => s.classList.add('done')); steps[3].classList.add('active'); progress = "100%";
+            }
+
+            fill.style.width = progress;
+            
+            const isLivr = (data.type || "").toLowerCase().includes("livraison");
+            driveArea.style.display = (!isLivr && status !== "termine" && status !== "prete") ? "block" : "none";
+        }
+
+        function toggleDrive() {
+            if (!navigator.geolocation) return alert("GPS non supporté");
+            driveActive = true;
+            document.getElementById('btn-gps').innerHTML = '<i class="fas fa-sync fa-spin"></i> CALCUL DU TRAJET...';
+            document.getElementById('btn-gps').classList.add('active');
+            
+            navigator.geolocation.
