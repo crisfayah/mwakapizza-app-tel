@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suivi Mwaka Pizza - Ma Commande</title>
+    <title>Suivi Mwaka Pizza - Drive Intelligent</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --blue: #3498db; --orange: #f39c12; --green: #2ecc71; --dark: #0b0b0b; --gray: #333; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff; text-align: center; padding: 20px; margin: 0; }
         
-        .logo { margin-bottom: 10px; width: 130px; height: 130px; object-fit: contain; }
+        .logo { margin-bottom: 10px; width: 120px; height: 120px; object-fit: contain; }
         
         .status-box { background: #1a1a1a; border-radius: 25px; padding: 25px; margin: 10px auto; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid #222; }
         
@@ -18,157 +18,13 @@
         .progress-line { position: absolute; top: 50%; left: 10%; right: 10%; height: 4px; background: var(--gray); z-index: 1; transform: translateY(-50%); }
         .progress-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--blue); transition: width 1s ease-in-out; box-shadow: 0 0 15px var(--blue); }
         
-        .step { position: relative; z-index: 2; background: #1a1a1a; width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--gray); display: flex; align-items: center; justify-content: center; transition: 0.4s; color: var(--gray); }
-        .step.active { border-color: var(--blue); color: var(--blue); transform: scale(1.2); box-shadow: 0 0 20px rgba(52, 152, 219, 0.4); }
+        .step { position: relative; z-index: 2; background: #1a1a1a; width: 45px; height: 45px; border-radius: 50%; border: 3px solid var(--gray); display: flex; align-items: center; justify-content: center; transition: 0.4s; color: var(--gray); }
+        .step.active { border-color: var(--blue); color: var(--blue); transform: scale(1.15); box-shadow: 0 0 20px rgba(52, 152, 219, 0.3); }
         .step.done { border-color: var(--green); color: var(--green); }
-        .step i { font-size: 20px; }
+        .step i { font-size: 18px; }
 
-        #status-label { text-transform: uppercase; letter-spacing: 3px; color: var(--blue); font-size: 1em; font-weight: 900; margin-bottom: 5px; }
-        #msg { font-size: 1.3em; font-weight: 600; margin: 10px 0; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        
-        /* Drive Section */
-        #drive-area { margin-top: 25px; padding: 20px; background: #222; border-radius: 20px; display: none; border: 1px solid #333; }
-        .btn-drive { background: var(--orange); color: #000; border: none; padding: 18px 25px; border-radius: 50px; font-weight: 900; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s; }
-        .btn-drive.active { background: var(--green); color: #fff; }
-        .pulse { animation: pulse-orange 2s infinite; }
-        @keyframes pulse-orange { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(243, 156, 18, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); } }
+        #status-label { text-transform: uppercase; letter-spacing: 3px; color: var(--blue); font-size: 0.9em; font-weight: 900; margin-bottom: 5px; }
+        #msg { font-size: 1.25em; font-weight: 600; margin: 15px 0; min-height: 50px; line-height: 1.4; }
 
-        .info-speciale { background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 20px; border: 1px dashed var(--blue); }
-        .error-overlay { color: #e74c3c; padding: 10px; font-size: 0.8em; display: none; }
-    </style>
-</head>
-<body>
-
-    <img src="https://crisfayah.github.io/mwakapizza-app-tel/logo.png" class="logo">
-    
-    <div class="status-box">
-        <div id="status-label">Initialisation...</div>
-        
-        <div class="progress-container">
-            <div class="progress-line"><div id="fill" class="progress-fill"></div></div>
-            <div class="step" id="step1"><i class="fas fa-receipt"></i></div>
-            <div class="step" id="step2"><i class="fas fa-utensils"></i></div>
-            <div class="step" id="step3"><i class="fas fa-fire"></i></div>
-            <div class="step" id="step4"><i class="fas fa-pizza-slice"></i></div>
-        </div>
-
-        <div id="msg">Connexion au restaurant Mwaka...</div>
-        
-        <div id="special-msg" class="info-speciale" style="display:none;"></div>
-
-        <div id="drive-area">
-            <button id="btn-depart" class="btn-drive pulse" onclick="signalerDepart()">
-                <i class="fas fa-car"></i> JE PARS CHERCHER MA PIZZA
-            </button>
-            <div id="gps-status" style="font-size: 0.8em; color: #888; margin-top: 10px;">
-                Prévenez la cuisine de votre arrivée pour un service ultra-rapide.
-            </div>
-        </div>
-
-        <div id="error-zone" class="error-overlay"></div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script>
-        const firebaseConfig = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('id');
-
-        if (!orderId) {
-            document.getElementById('msg').innerText = "Lien de suivi invalide. ID manquant.";
-        } else {
-            db.collection("commandes").doc(orderId).onSnapshot((doc) => {
-                if (doc.exists) {
-                    const d = doc.data();
-                    const status = (d.status || "").toLowerCase();
-                    updateUI(status, d);
-                } else {
-                    document.getElementById('msg').innerText = "Commande introuvable sur le KDS.";
-                }
-            }, (err) => {
-                document.getElementById('error-zone').style.display="block";
-                document.getElementById('error-zone').innerText = "Erreur de connexion Firebase.";
-            });
-        }
-
-        function updateUI(status, data) {
-            const label = document.getElementById('status-label');
-            const msg = document.getElementById('msg');
-            const fill = document.getElementById('fill');
-            const steps = [document.getElementById('step1'), document.getElementById('step2'), document.getElementById('step3'), document.getElementById('step4')];
-            const driveArea = document.getElementById('drive-area');
-            const spec = document.getElementById('special-msg');
-
-            // Reset steps
-            steps.forEach(s => s.classList.remove('active', 'done'));
-
-            let progressWidth = "0%";
-
-            if (status === "en_attente") {
-                label.innerText = "Reçue";
-                msg.innerText = "Votre commande est enregistrée et attend sa validation.";
-                steps[0].classList.add('active');
-                progressWidth = "0%";
-            } 
-            else if (status === "production") {
-                label.innerText = "Préparation";
-                msg.innerText = "Le pizzaiolo prépare vos pizzas avec soin... 👩‍🍳";
-                steps[0].classList.add('done');
-                steps[1].classList.add('active');
-                progressWidth = "33%";
-            } 
-            else if (status === "cuisson") {
-                label.innerText = "En cuisson";
-                msg.innerText = "Vos pizzas sont au four ! Elles dorent doucement... 🔥";
-                steps[0].classList.add('done');
-                steps[1].classList.add('done');
-                steps[2].classList.add('active');
-                progressWidth = "66%";
-            } 
-            else if (status === "termine" || status === "prete") {
-                label.innerText = "Prête !";
-                msg.innerText = "C'EST PRÊT ! Venez récupérer vos pizzas toutes chaudes ! ✅";
-                steps.forEach(s => s.classList.add('done'));
-                steps[3].classList.add('active');
-                progressWidth = "100%";
-            }
-
-            fill.style.width = progressWidth;
-
-            // Drive Button Logic
-            const isLivr = (data.type || "").toLowerCase().includes("livraison");
-            driveArea.style.display = (!isLivr && status !== "termine" && status !== "prete") ? "block" : "none";
-
-            // Special Message (Delay etc)
-            if (data.clientMsg || data.delay) {
-                spec.style.display = "block";
-                spec.innerText = data.clientMsg || ("Prévu dans environ : " + data.delay);
-            } else {
-                spec.style.display = "none";
-            }
-        }
-
-        function signalerDepart() {
-            const btn = document.getElementById('btn-depart');
-            if (!navigator.geolocation) return alert("GPS non supporté.");
-            
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> ACTIVATION GPS...';
-            navigator.geolocation.watchPosition((pos) => {
-                db.collection("commandes").doc(orderId).update({
-                    clientLocation: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-                    isEnRoute: true,
-                    lastGpsUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    btn.classList.remove('pulse');
-                    btn.classList.add('active');
-                    btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> VOUS ÊTES EN ROUTE !';
-                });
-            }, null, { enableHighAccuracy: true });
-        }
-    </script>
-</body>
-</html>
+        /* Assistant Drive */
+        .drive-assistant { background: #222; border-radius: 20px; padding: 20px; margin-top: 25px; border: 1px solid
