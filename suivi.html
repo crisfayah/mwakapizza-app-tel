@@ -9,44 +9,50 @@
         :root { --blue: #3498db; --orange: #f39c12; --green: #2ecc71; --dark: #0b0b0b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff; text-align: center; padding: 20px; margin: 0; }
         
-        .logo { margin-bottom: 20px; width: 120px; height: 120px; object-fit: contain; }
+        .logo { margin-bottom: 20px; width: 140px; height: 140px; object-fit: contain; }
         
-        .status-box { background: #1a1a1a; border-radius: 25px; padding: 30px; margin: 10px auto; max-width: 500px; border-top: 6px solid var(--blue); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .status-box { background: #1a1a1a; border-radius: 25px; padding: 30px; margin: 10px auto; max-width: 450px; border-top: 6px solid var(--blue); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        #status-label { text-transform: uppercase; letter-spacing: 3px; color: #777; font-size: 0.9em; margin-bottom: 10px; }
+        #status-label { text-transform: uppercase; letter-spacing: 3px; color: #777; font-size: 0.9em; margin-bottom: 10px; font-weight: bold; }
         #msg { font-size: 1.4em; font-weight: 900; margin: 15px 0; color: #fff; line-height: 1.3; }
         
-        .step-icon { font-size: 60px; margin-bottom: 20px; color: var(--blue); text-shadow: 0 0 20px rgba(52, 152, 219, 0.4); }
+        .step-icon { font-size: 70px; margin-bottom: 20px; color: var(--blue); text-shadow: 0 0 25px rgba(52, 152, 219, 0.5); }
         
-        .drive-section { margin-top: 30px; padding: 20px; background: #222; border-radius: 20px; display: none; border: 1px solid #333; }
-        .btn-drive { background: var(--orange); color: #000; border: none; padding: 15px 25px; border-radius: 50px; font-weight: 900; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s; }
+        /* Section Drive */
+        #drive-area { margin-top: 30px; padding: 20px; background: #222; border-radius: 20px; display: none; border: 1px solid #333; }
+        .btn-drive { background: var(--orange); color: #000; border: none; padding: 18px 25px; border-radius: 50px; font-weight: 900; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: 0.3s; }
         .btn-drive.active { background: var(--green); color: #fff; }
         
         .pulse { animation: pulse-orange 2s infinite; }
         @keyframes pulse-orange { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(243, 156, 18, 0); } 100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); } }
 
-        .location-info { font-size: 0.8em; color: #888; margin-top: 12px; }
-        .info-speciale { background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 20px; border: 1px dashed var(--blue); color: var(--blue); }
+        .location-info { font-size: 0.85em; color: #888; margin-top: 15px; line-height: 1.4; }
+        .info-speciale { background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 10px; font-size: 0.95em; margin-top: 20px; border: 1px dashed var(--blue); color: var(--blue); font-weight: bold; }
+        
+        .error-msg { color: #e74c3c; font-size: 0.9em; margin-top: 20px; display: none; }
     </style>
 </head>
 <body>
+    
     <img src="https://crisfayah.github.io/mwakapizza-app-tel/logo.png" class="logo" alt="Mwaka Pizza">
     
     <div class="status-box">
-        <div id="status-label">CHARGEMENT...</div>
+        <div id="status-label">INITIALISATION</div>
         <div id="icon-container">
             <i id="icon" class="fas fa-circle-notch fa-spin step-icon"></i>
         </div>
-        <div id="msg">Récupération de votre commande...</div>
+        <div id="msg">Connexion au restaurant...</div>
         
         <div id="special-msg" class="info-speciale" style="display:none;"></div>
 
-        <div id="drive-area" class="drive-section">
+        <div id="drive-area">
             <button id="btn-depart" class="btn-drive pulse" onclick="signalerDepart()">
                 <i class="fas fa-car"></i> JE PARS CHERCHER MA PIZZA
             </button>
-            <div id="gps-status" class="location-info">Signalez votre départ pour que Mwaka prépare votre sac à votre arrivée.</div>
+            <div id="gps-status" class="location-info">En signalant votre départ, l'équipe pourra anticiper votre arrivée pour une pizza toujours chaude.</div>
         </div>
+
+        <div id="error-display" class="error-msg"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -59,47 +65,58 @@
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
 
+        // Sécurité : Si pas d'ID, on affiche une aide
         if (!orderId) {
-            document.getElementById('msg').innerText = "Erreur : ID de commande manquant dans le lien.";
-            document.getElementById('icon').className = "fas fa-exclamation-triangle step-icon";
+            document.getElementById('msg').innerText = "Lien de suivi invalide.";
+            document.getElementById('status-label').innerText = "ERREUR";
+            document.getElementById('icon').className = "fas fa-search step-icon";
+            document.getElementById('error-display').style.display = "block";
+            document.getElementById('error-display').innerText = "Il manque l'identifiant de commande dans l'adresse (URL).";
         } else {
-            // Écoute en temps réel de la commande
+            console.log("Tentative de suivi pour l'ID :", orderId);
+            
+            // Timeout de diagnostic
+            const diagnosticTimeout = setTimeout(() => {
+                document.getElementById('error-display').style.display = "block";
+                document.getElementById('error-display').innerText = "La recherche prend du temps... Vérifiez que la commande existe toujours dans le KDS.";
+            }, 6000);
+
+            // Écoute temps réel
             db.collection("commandes").doc(orderId).onSnapshot((doc) => {
+                clearTimeout(diagnosticTimeout);
+                document.getElementById('error-display').style.display = "none";
+
                 if (doc.exists) {
                     const d = doc.data();
+                    const status = (d.status || "").toLowerCase();
                     const msgDiv = document.getElementById('msg');
                     const icon = document.getElementById('icon');
                     const label = document.getElementById('status-label');
                     const driveArea = document.getElementById('drive-area');
                     const specDiv = document.getElementById('special-msg');
 
-                    // Mise à jour de l'affichage selon le statut
-                    const status = d.status ? d.status.toLowerCase() : "";
-
+                    // 1. Mise à jour visuelle du statut
                     if (status === "en_attente") {
-                        label.innerText = "REÇUE";
-                        msgDiv.innerText = "Mwaka a bien reçu votre commande ! Elle va être validée.";
-                        icon.className = "fas fa-clock step-icon";
+                        label.innerText = "COMMANDE REÇUE";
+                        msgDiv.innerText = "Mwaka a bien reçu votre commande ! Elle va être préparée.";
+                        icon.className = "fas fa-receipt step-icon";
                     } else if (status === "production") {
                         label.innerText = "PRÉPARATION";
-                        msgDiv.innerText = "Le pizzaiolo prépare vos pizzas avec amour... 👩‍🍳";
+                        msgDiv.innerText = "Le pizzaiolo garnit vos pizzas... 👩‍🍳";
                         icon.className = "fas fa-utensils step-icon";
                     } else if (status === "cuisson") {
                         label.innerText = "AU FOUR";
-                        msgDiv.innerText = "Vos pizzas sont au four ! Ça dore doucement... 🔥";
+                        msgDiv.innerText = "Vos pizzas sont au four ! Ça croustille... 🔥";
                         icon.className = "fas fa-fire step-icon";
                     } else if (status === "termine" || status === "prete") {
-                        label.innerText = "PRÊTE !";
-                        msgDiv.innerText = "C'EST PRÊT ! VOUS POUVEZ RÉCUPÉRER VOTRE COMMANDE ! ✅";
+                        label.innerText = "C'EST PRÊT !";
+                        msgDiv.innerText = "VOTRE COMMANDE EST DISPONIBLE ! ✅";
                         icon.className = "fas fa-check-circle step-icon";
                         icon.style.color = "#2ecc71";
-                    } else {
-                        label.innerText = "EN COURS";
-                        msgDiv.innerText = "Nous traitons votre commande...";
-                        icon.className = "fas fa-sync fa-spin step-icon";
+                        icon.style.textShadow = "0 0 25px rgba(46, 204, 113, 0.5)";
                     }
 
-                    // Bouton Drive : visible si emporté et non terminé
+                    // 2. Gestion du Drive
                     const isLivr = (d.type || "").toLowerCase().includes("livraison");
                     if (!isLivr && status !== "termine" && status !== "prete") {
                         driveArea.style.display = "block";
@@ -107,20 +124,20 @@
                         driveArea.style.display = "none";
                     }
 
-                    // Message spécial (délai ou message direct de la cuisine)
+                    // 3. Message de la cuisine (Délai / Info)
                     if (d.clientMsg || d.delay) {
                         specDiv.style.display = "block";
-                        specDiv.innerText = d.clientMsg || ("Estimation : " + d.delay);
+                        specDiv.innerText = d.clientMsg || ("Prévu dans : " + d.delay);
                     } else {
                         specDiv.style.display = "none";
                     }
                 } else {
-                    document.getElementById('msg').innerText = "Commande introuvable. Vérifiez votre lien.";
-                    document.getElementById('icon').className = "fas fa-search step-icon";
+                    document.getElementById('msg').innerText = "Commande introuvable.";
+                    document.getElementById('icon').className = "fas fa-times-circle step-icon";
                 }
-            }, (error) => {
-                console.error("Erreur Firebase:", error);
-                document.getElementById('msg').innerText = "Erreur de connexion au serveur.";
+            }, (err) => {
+                console.error("Erreur Firebase:", err);
+                document.getElementById('msg').innerText = "Erreur de connexion.";
             });
         }
 
@@ -129,26 +146,26 @@
             const gpsStatus = document.getElementById('gps-status');
 
             if (!navigator.geolocation) {
-                alert("GPS non supporté.");
+                alert("Votre appareil ne supporte pas la géolocalisation.");
                 return;
             }
 
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> ACTIVATION...';
+            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> ACTIVATION GPS...';
             
-            navigator.geolocation.watchPosition((position) => {
+            navigator.geolocation.watchPosition((pos) => {
                 db.collection("commandes").doc(orderId).update({
-                    clientLocation: { lat: position.coords.latitude, lng: position.coords.longitude },
+                    clientLocation: { lat: pos.coords.latitude, lng: pos.coords.longitude },
                     isEnRoute: true,
                     lastGpsUpdate: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     btn.classList.remove('pulse');
                     btn.classList.add('active');
                     btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> VOUS ÊTES EN ROUTE !';
-                    gpsStatus.innerText = "Position partagée. Mwaka prépare votre arrivée.";
+                    gpsStatus.innerText = "Votre position est partagée. Mwaka prépare votre arrivée.";
                 });
             }, (err) => {
-                gpsStatus.innerText = "Veuillez autoriser la localisation pour le Drive.";
-                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> GPS REQUIS';
+                gpsStatus.innerText = "Veuillez autoriser l'accès GPS pour utiliser le Drive.";
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ACCÈS REFUSÉ';
             }, { enableHighAccuracy: true });
         }
     </script>
