@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Console Commande - Mwaka Pizza</title>
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --green: #22c55e;
+            --green-dark: #15803d;
+            --green-glow: rgba(34, 197, 94, 0.25);
+            --red: #ef4444;
+            --red-dark: #b91c1c;
+            --orange: #f59e0b;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+            --bg: #0a0a0a;
+            --card: #141414;
+            --card-hover: #1a1a1a;
+            --border: #262626;
+            --border-light: #333;
+            --text: #f5f5f5;
+            --text-muted: #737373;
+            --text-dim: #525252;
+            --radius: 14px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 110px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAV TABS ===== */
+        .nav-tabs {
+            display: flex;
+            background: #0a0a0a;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 16px 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            position: relative;
+        }
+        .nav-btn.active {
+            color: var(--text);
+        }
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 3px;
+            background: var(--green);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* ===== HEADER FLUX ===== */
+        .header {
+            background: var(--card);
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .header h1 {
+            font-size: 1em;
+            font-weight: 800;
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+        }
+
+        .header-flux {
+            display: flex;
+            gap: 8px;
+        }
+        .header-flux-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.04);
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+        }
+        .header-flux-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .header-flux-value {
+            font-size: 12px;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+        .status-ok { color: var(--green); }
+        .status-warn { color: var(--orange); }
+        .status-full { color: var(--red); }
+
+        .fs-toggle {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* ===== TYPE SELECTOR ===== */
+        .type-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: var(--card);
+            padding: 5px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .type-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.25s;
+            text-align: center;
+        }
+        .type-btn.selected {
+            background: var(--red);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+
+        /* ===== RESTAURANT CHOICE ===== */
+        .form-group { margin-bottom: 16px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .restaurant-choice { display: flex; gap: 8px; }
+        .res-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center;
+        }
+        .res-btn.active {
+            background: var(--green-dark);
+            border-color: var(--green);
+            color: white;
+            box-shadow: 0 0 20px var(--green-glow);
+        }
+
+        /* ===== INPUTS ===== */
+        input, textarea, select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px var(--green-glow);
+        }
+        input::placeholder, textarea::placeholder {
+            color: var(--text-dim);
+        }
+
+        /* ===== ORDER ITEMS ===== */
+        .order-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            position: relative;
+            border-left: 5px solid var(--green);
+        }
+        .dessert-item { border-left-color: var(--purple); }
+        .drink-item { border-left-color: var(--blue); }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--red);
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 22px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .delete-btn:hover { opacity: 1; }
+
+        /* ===== SUPPLEMENTS ===== */
+        .supp-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .supp-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.03);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: 0.15s;
+            color: var(--text);
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .supp-label:active { transform: scale(0.97); }
+        .supp-label[data-on="1"] { border-color: var(--green); background: rgba(34,197,94,0.15); }
+        .supp-check {
+            width: 22px; height: 22px; min-width: 22px;
+            border-radius: 5px; border: 2px solid #555;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: transparent; transition: 0.15s;
+            background: rgba(255,255,255,0.05);
+        }
+        .supp-label[data-on="1"] .supp-check {
+            border-color: var(--green); background: var(--green); color: #000; font-weight: 900;
+        }
+        .supp-price { color: var(--text-dim); font-size: 10px; margin-left: auto; white-space: nowrap; }
+
+        .supp-grid.hidden { display: none; }
+        .btn-supp-toggle {
+            background: none;
+            border: 1px dashed var(--border-light);
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            margin-top: 8px;
+            width: 100%;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .btn-supp-toggle:hover { border-color: var(--green); color: var(--green); }
+
+        /* ===== ADD BUTTONS ===== */
+        .btn-add {
+            width: 100%;
+            padding: 14px;
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            margin: 8px 0 20px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-add:active { transform: scale(0.98); }
+        .btn-pizza { background: var(--green-dark); }
+        .btn-dessert { background: #7c3aed; }
+        .btn-drink { background: #2563eb; }
+
+        /* ===== DIVIDER ===== */
+        .divider {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        /* ===== FORM ROW ===== */
+        .form-row { display: flex; flex-direction: column; gap: 0; }
+
+        /* ===== CRÉNEAU BUTTONS ===== */
+        .slot-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        .slot-btn {
+            flex: 1;
+            padding: 12px 4px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.2;
+        }
+        .slot-btn:active { transform: scale(0.96); }
+        .slot-btn.selected {
+            border-color: var(--green);
+            background: var(--green-dark);
+            color: white;
+            box-shadow: 0 0 12px var(--green-glow);
+        }
+        .slot-btn .slot-time {
+            display: block;
+            font-size: 16px;
+            font-weight: 900;
+            margin-bottom: 2px;
+        }
+        .slot-btn .slot-label {
+            display: block;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+        }
+
+        /* ===== TOTAL BOX ===== */
+        .total-box {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+        }
+        .total-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .total-amount { font-size: 26px; font-weight: 900; color: var(--green); font-variant-numeric: tabular-nums; }
+        .mini-btn {
+            padding: 14px 28px;
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .mini-btn:active { transform: scale(0.97); background: var(--red-dark); }
+
+        /* ===== AUTOCOMPLETE ===== */
+        .autocomplete-list {
+            background: #1c1c1c;
+            border: 1px solid var(--border-light);
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            width: 100%;
+            z-index: 50;
+            top: 100%;
+            left: 0;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .autocomplete-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.1s;
+        }
+        .autocomplete-item:hover, .autocomplete-item:active { background: rgba(255,255,255,0.08); }
+
+        /* ===== SUIVI ===== */
+        .suivi-card {
+            background: var(--card);
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--border);
+        }
+
+        /* ===== HABITUEL BTN ===== */
+        .btn-habituel {
+            display: none;
+            width: 100%;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: pulse-gold 2s infinite;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        #smartNote {
+            display: none;
+            background: var(--card);
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--orange);
+            margin-bottom: 14px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* ===== RESPONSIVE PC ===== */
+        @media (min-width: 768px) {
+            .container { max-width: 900px; padding: 30px; }
+            .nav-btn { font-size: 15px; padding: 18px; }
+            .header h1 { font-size: 1.3em; }
+            .header-flux-label { font-size: 11px; }
+            .header-flux-value { font-size: 14px; }
+            .form-row { flex-direction: row; gap: 12px; }
+            .form-row > .form-group { flex: 1; }
+            .supp-grid { grid-template-columns: repeat(3, 1fr); }
+            .total-box { padding: 18px 40px; }
+            .total-amount { font-size: 30px; }
+            .mini-btn { padding: 16px 40px; font-size: 16px; }
+        }
+
+        @media (min-width: 1100px) {
+            .container { max-width: 1100px; }
+            .supp-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* ===== COMMANDE VOCALE ===== */
+        .voice-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 18px;
+            z-index: 1000;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--green-dark), var(--green));
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(34,197,94,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .voice-btn:active { transform: scale(0.93); }
+        .voice-btn.recording {
+            background: linear-gradient(135deg, var(--red-dark), var(--red));
+            box-shadow: 0 0 0 0 rgba(239,68,68,0.6);
+            animation: pulse-rec 1.2s infinite;
+        }
+        @keyframes pulse-rec {
+            0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+            70% { box-shadow: 0 0 0 18px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+
+        .voice-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            gap: 20px;
+        }
+        .voice-overlay.active { display: flex; }
+        .voice-wave {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 4px solid var(--red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: pulse-rec 1.2s infinite;
+        }
+        .voice-status {
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .voice-transcript {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            max-width: 500px;
+            width: 100%;
+            min-height: 60px;
+            font-size: 15px;
+            color: var(--text);
+            line-height: 1.6;
+            text-align: center;
+        }
+        .voice-transcript .interim { color: var(--text-dim); font-style: italic; }
+        .voice-result {
+            display: none;
+            background: var(--card);
+            border: 1px solid var(--green);
+            border-radius: var(--radius);
+            padding: 16px;
+            max-width: 500px;
+            width: 100%;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .voice-result.show { display: block; }
+        .voice-result .vr-line { display: flex; align-items: center; gap: 8px; }
+        .voice-result .vr-icon { font-size: 16px; }
+        .voice-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        .voice-actions button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-voice-ok { background: var(--green); color: #000; }
+        .btn-voice-redo { background: var(--border); color: var(--text); }
+        .btn-voice-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border) !important; }
+    </style>
+</head>
+<body onclick="enableWakeLock()">
+
+    <div class="nav-tabs">
+        <button class="nav-btn active" onclick="showSection('orderSection', this)">Prise de Commande</button>
+        <button class="nav-btn" onclick="showSection('suiviSection', this)">Suivi / Historique</button>
+    </div>
+
+    <div class="header">
+        <h1>🍕 Console Mwaka</h1>
+        <div class="header-flux">
+            <div class="header-flux-item">
+                <span class="header-flux-label">VALM</span>
+                <span id="fluxValm" class="header-flux-value status-ok">--</span>
+            </div>
+            <div class="header-flux-item">
+                <span class="header-flux-label">CENTRE</span>
+                <span id="fluxCentre" class="header-flux-value status-ok">--</span>
+            </div>
+        </div>
+        <button class="fs-toggle" onclick="toggleFullScreen()"><i class="fas fa-expand"></i></button>
+    </div>
+
+    <div class="container">
+        <div id="orderSection" class="section active">
+
+            <div id="smartNote">
+                <span id="badgeClient" style="font-weight: bold; color: #f59e0b;">VIP</span>
+                <p id="suggestionText" style="font-size: 13px; margin-top: 5px; color: #a3a3a3;"></p>
+            </div>
+
+            <button type="button" id="btnHabituel" class="btn-habituel" onclick="applyFavoris()">
+                ♻️ CHARGER "LE HABITUEL"
+            </button>
+
+            <form id="orderForm">
+                <!-- 1. TYPE DE COMMANDE -->
+                <div class="type-selector">
+                    <div class="type-btn selected" id="btnEmporter" onclick="setType('Emporter')">👜 EMPORTER</div>
+                    <div class="type-btn" id="btnLivraison" onclick="setType('Livraison')">🛵 LIVRAISON</div>
+                </div>
+
+                <!-- 2. CHOIX DU RESTAURANT -->
+                <div id="resGroup" class="form-group">
+                    <label>📍 Restaurant</label>
+                    <div class="restaurant-choice">
+                        <div id="btnValm" class="res-btn active" onclick="setRes('Valmenière')">Valmenière</div>
+                        <div id="btnCentre" class="res-btn" onclick="setRes('Centre-ville')">Centre-ville</div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- 3. PRODUITS -->
+                <label>🍕 Pizzas</label>
+                <div id="pizzasList"></div>
+                <button type="button" class="btn-add btn-pizza" onclick="addPizza()">+ Ajouter Pizza</button>
+
+                <label>🍰 Desserts</label>
+                <div id="dessertsList"></div>
+                <button type="button" class="btn-add btn-dessert" onclick="addDessert()">+ Ajouter Dessert</button>
+
+                <label>🥤 Boissons</label>
+                <div id="drinksList"></div>
+                <button type="button" class="btn-add btn-drink" onclick="addDrink()">+ Ajouter Boisson</button>
+
+                <hr class="divider">
+
+                <!-- 4. INFOS CLIENT -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 Nom du client</label>
+                        <input type="text" id="clientName" required placeholder="Nom / Prénom">
+                    </div>
+                    <div class="form-group">
+                        <label>📞 Téléphone</label>
+                        <input type="tel" id="phone" placeholder="0696...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>🕒 Créneau récupération</label>
+                    <input type="hidden" id="slotTime" value="">
+                    <div class="slot-buttons" id="slotButtons"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" id="paymentGroup" style="display:none;">
+                        <label>💳 Règlement</label>
+                        <select id="payment">
+                            <option value="Espèces">Espèces</option>
+                            <option value="Carte Bancaire">Carte Bancaire</option>
+                            <option value="Ticket Restaurant">Ticket Restaurant</option>
+                            <option value="Offert">Offert</option>
+                            <option value="Tout">Tout</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 5. ADRESSE (Livraison) -->
+                <div id="livraisonInfo" style="display:none;">
+                    <div class="form-group" style="position:relative;">
+                        <label>🏠 Adresse</label>
+                        <input type="text" id="address" placeholder="N° et rue..." autocomplete="off" oninput="searchAddress(this)">
+                        <div class="autocomplete-list" id="addressSuggestions"></div>
+                    </div>
+                    <div class="form-group" style="position:relative;">
+                        <label>🏘️ Commune</label>
+                        <input type="text" id="commune" placeholder="Commune..." autocomplete="off" oninput="searchCommune(this)">
+                        <div class="autocomplete-list" id="communeSuggestions"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="suiviSection" class="section">
+            <h2 style="margin-bottom: 16px; color: var(--green); font-size: 18px;">Dernières commandes</h2>
+            <div id="suiviList"></div>
+        </div>
+    </div>
+
+    <!-- BOUTON MICRO VOCAL -->
+    <button type="button" class="voice-btn" id="voiceBtn" onclick="startVoice()">
+        <i class="fas fa-microphone"></i>
+    </button>
+
+    <!-- OVERLAY ÉCOUTE VOCALE -->
+    <div class="voice-overlay" id="voiceOverlay">
+        <div class="voice-wave" id="voiceWave">🎙️</div>
+        <div class="voice-status" id="voiceStatus">Écoute en cours...</div>
+        <div class="voice-transcript" id="voiceTranscript">
+            <span class="interim">Parlez maintenant...</span>
+        </div>
+        <div class="voice-result" id="voiceResult"></div>
+        <div class="voice-actions" id="voiceActions" style="display:none;">
+            <button class="btn-voice-ok" onclick="applyVoiceOrder()">✅ Valider</button>
+            <button class="btn-voice-redo" onclick="appendVoice()">🎙️ + Compléter</button>
+            <button class="btn-voice-redo" onclick="startVoice()">🔄 Refaire</button>
+            <button class="btn-voice-cancel" onclick="closeVoice()">✕</button>
+        </div>
+    </div>
+
+    <div class="total-box" id="footerBox">
+        <div>
+            <div class="total-label">Total</div>
+            <div class="total-amount" id="totalDisplay">0.00 €</div>
+        </div>
+        <button type="button" class="mini-btn" id="submitBtn" onclick="submitOrder()">VALIDER ✅</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <script>
+        const config = { 
+            apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", 
+            authDomain: "mwakaphone-e8c5b.firebaseapp.com", 
+            projectId: "mwakaphone-e8c5b", 
+            storageBucket: "mwakaphone-e8c5b.firebasestorage.app", 
+            messagingSenderId: "258049374795", 
+            appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce",
+            databaseURL: "https://mwakaphone-e8c5b-default-rtdb.europe-west1.firebasedatabase.app/" 
+        };
+        firebase.initializeApp(config); 
+        const db = firebase.firestore();
+        const rtdb = firebase.database();
+
+        firebase.auth().signInAnonymously().catch(err => {
+            console.warn("Auth anonyme échouée:", err.message);
+        });
+
+        let currentType = 'Emporter';
+        let currentShop = 'Valmenière';
+        let storedFavoris = null;
+        let activeOrders = [];
+
+        // ===== STOCKAGE DU FLUX EN TEMPS RÉEL =====
+        let fluxData = {
+            valmeniere: { delay: '0 min', count: 0, minutes: 0 },
+            'centre-ville': { delay: '0 min', count: 0, minutes: 0 }
+        };
+
+        function parseFluxMinutes(delayStr) {
+            const match = (delayStr || '').match(/(\d+)/);
+            return match ? parseInt(match[1]) : 15;
+        }
+
+        // ===== ANTI-VEILLE =====
+        let wakeLock = null;
+        async function enableWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    if(!wakeLock) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    }
+                } catch (err) { console.error(`${err.name}, ${err.message}`); }
+            }
+        }
+
+        // ===== FULLSCREEN =====
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+            }
+        }
+
+        // ===== ECOUTEUR FLUX TEMPS RÉEL DEPUIS RTDB =====
+        function processFluxData(data) {
+            if (!data) return { delay: '0 min', count: 0, minutes: 0 };
+            const count = data.count || 0;
+            // Si la donnée date de plus de 5 min → considérer périmée
+            const age = Date.now() - (data.updatedAt || 0);
+            const isStale = age > 5 * 60 * 1000;
+            if (isStale || count === 0) {
+                return { delay: '0 min', count: 0, minutes: 0 };
+            }
+            return { delay: data.delay || '0 min', count, minutes: parseFluxMinutes(data.delay) };
+        }
+
+        rtdb.ref('flux/valmeniere').on('value', (snapshot) => {
+            const flux = processFluxData(snapshot.val());
+            const vEl = document.getElementById('fluxValm');
+            vEl.innerText = flux.delay;
+            vEl.className = `header-flux-value ${flux.count >= 8 ? 'status-full' : (flux.count >= 5 ? 'status-warn' : 'status-ok')}`;
+            fluxData.valmeniere = flux;
+            updateSmartSlot();
+        });
+
+        rtdb.ref('flux/centre-ville').on('value', (snapshot) => {
+            const flux = processFluxData(snapshot.val());
+            const cEl = document.getElementById('fluxCentre');
+            cEl.innerText = flux.delay;
+            cEl.className = `header-flux-value ${flux.count >= 8 ? 'status-full' : (flux.count >= 5 ? 'status-warn' : 'status-ok')}`;
+            fluxData['centre-ville'] = flux;
+            updateSmartSlot();
+        });
+
+        // ===== ECOUTEUR COMMANDES ACTIVES =====
+        db.collection("commandes")
+          .where("status", "in", ["en_attente", "production", "cuisson"])
+          .onSnapshot(snap => {
+            activeOrders = [];
+            snap.forEach(doc => activeOrders.push(doc.data()));
+        });
+
+        // ===== ECOUTEUR APPEL ENTRANT =====
+        rtdb.ref('interface_live/appel_actuel').on('value', (snapshot) => {
+            const data = snapshot.val();
+            const btnHabituel = document.getElementById('btnHabituel');
+            const smartNote = document.getElementById('smartNote');
+            
+            let hasActiveCall = false;
+            if (data && data.telephone && data.telephone.trim() !== '') {
+                const now = Date.now();
+                const callTime = data.timestamp || 0;
+                const twoMinutes = 2 * 60 * 1000;
+                hasActiveCall = (now - callTime) < twoMinutes;
+            }
+            
+            if (hasActiveCall) {
+                document.getElementById('phone').value = data.telephone;
+                if(data.nom || data.prenom) {
+                    document.getElementById('clientName').value = ((data.prenom || "") + " " + (data.nom || "")).trim();
+                }
+                if(data.adresse) document.getElementById('address').value = data.adresse;
+                if (data.statut) {
+                    smartNote.style.display = "block";
+                    document.getElementById('badgeClient').innerText = data.statut;
+                    document.getElementById('suggestionText').innerText = (data.total_depense > 100) ? "Client VIP !" : "N'oubliez pas les boissons !";
+                } else {
+                    smartNote.style.display = "none";
+                }
+                if (data.favoris) {
+                    try {
+                        storedFavoris = (typeof data.favoris === 'string') ? JSON.parse(data.favoris) : data.favoris;
+                        let resume = storedFavoris.map(i => `${i.qty}x ${i.name}`).join(', ');
+                        btnHabituel.innerHTML = `♻️ REPRENDRE : ${resume}`;
+                        btnHabituel.style.display = "flex";
+                    } catch(e) { 
+                        btnHabituel.style.display = "none"; 
+                        storedFavoris = null;
+                    }
+                } else {
+                    btnHabituel.style.display = "none";
+                    storedFavoris = null;
+                }
+            } else {
+                document.getElementById('phone').value = '';
+                document.getElementById('clientName').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('commune').value = '';
+                smartNote.style.display = "none";
+                btnHabituel.style.display = "none";
+                storedFavoris = null;
+            }
+        });
+
+        // ===== REPRENDRE FAVORIS =====
+        function applyFavoris() {
+            if (!storedFavoris) return;
+            document.getElementById('pizzasList').innerHTML = '';
+            document.getElementById('drinksList').innerHTML = '';
+            document.getElementById('dessertsList').innerHTML = '';
+
+            storedFavoris.forEach(item => {
+                const name = item.name.trim();
+                if (item.type === 'pizza') {
+                    addPizza();
+                    const last = document.getElementById('pizzasList').lastElementChild;
+                    const input = last.querySelector('.p-name');
+                    input.value = name;
+                    input.dataset.price = getPriceByName(name, menuPizzas);
+                    last.querySelector('.p-qty').value = item.qty || 1;
+                    if(item.supps) last.querySelector('.p-notes').value = "Supp: " + item.supps.join(', ');
+                } else if (item.type === 'drink' || item.type === 'boisson') {
+                    addDrink();
+                    const last = document.getElementById('drinksList').lastElementChild;
+                    last.querySelector('.dr-name').value = name;
+                    last.querySelector('.dr-qty').value = item.qty || 1;
+                } else if (item.type === 'dessert') {
+                    addDessert();
+                    const last = document.getElementById('dessertsList').lastElementChild;
+                    last.querySelector('.d-name').value = name;
+                    last.querySelector('.d-qty').value = item.qty || 1;
+                }
+            });
+            calcTotal();
+            document.getElementById('btnHabituel').style.display = "none";
+        }
+
+        // ===== SMART SLOT : 4 boutons (suggéré, now+10, now+20, now+30) =====
+        let selectedSlotMinutes = null;
+
+        function updateSmartSlot() {
+            let shopKey = currentShop.toLowerCase().includes('valm') ? 'valmeniere' : 'centre-ville';
+            let fluxMinutes = fluxData[shopKey] ? fluxData[shopKey].minutes : 0;
+            let extraDelay = (currentType === 'Livraison') ? 30 : 5;
+            let suggestedDelay = fluxMinutes + extraDelay;
+
+            const options = [
+                { label: 'Suggéré', minutes: suggestedDelay },
+                { label: '+10 min', minutes: 10 },
+                { label: '+20 min', minutes: 20 },
+                { label: '+30 min', minutes: 30 }
+            ];
+
+            const container = document.getElementById('slotButtons');
+            container.innerHTML = '';
+
+            options.forEach((opt, i) => {
+                const t = new Date();
+                t.setMinutes(t.getMinutes() + opt.minutes);
+                const timeStr = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+
+                const btn = document.createElement('div');
+                btn.className = 'slot-btn' + (i === 0 ? ' selected' : '');
+                btn.innerHTML = `<span class="slot-time">${timeStr}</span><span class="slot-label">${opt.label}</span>`;
+                btn.onclick = () => {
+                    container.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    document.getElementById('slotTime').value = timeStr;
+                };
+                container.appendChild(btn);
+            });
+
+            // Sélectionner le premier par défaut
+            const dt = new Date();
+            dt.setMinutes(dt.getMinutes() + suggestedDelay);
+            document.getElementById('slotTime').value = `${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        // ===== DONNÉES MENU =====
+        const menuPizzas = [
+            // Classiques
+            {n:'MARIA', p:11}, {n:'MAMA', p:13}, {n:'OCHAN', p:14}, {n:'SALAM', p:14}, {n:'DIAMOND', p:14},
+            {n:'4 CROISÉES', p:16}, {n:'JAH', p:15}, {n:'NOSSA', p:16}, {n:'GWO MODEL', p:16},
+            // Signatures
+            {n:'TAKEN', p:14}, {n:'BAD GYAL', p:15}, {n:'POUDRIÈRE', p:16}, {n:'DANJE', p:17.9},
+            {n:'SIRÈNE', p:17.9}, {n:'MWAKA MOON', p:15}, {n:'YA KOI ICI', p:16}, {n:'OULA', p:17.9},
+            {n:'TOMBOLO', p:18.9}, {n:'MADA', p:16},
+            // Spéciales
+            {n:'BIG MACHINE', p:19}, {n:'TENESSE', p:18.9}, {n:'GOAT', p:17}, {n:'OFFRE FAMILY', p:45}
+        ];
+
+        const supplements = [
+            {n:'Base TOMATE', p:0}, {n:'Base CREME', p:0},
+            {n:'ANANAS', p:1}, {n:'OEUF', p:1}, {n:'CREVETTES', p:4}, {n:'CREME FRAICHE', p:1},
+            {n:'MERGUEZ', p:2.5}, {n:'BACON', p:2.5}, {n:'MARLIN FUME', p:4}, {n:'SAUMON FUME', p:4},
+            {n:'SAUCE TOMATE', p:1}, {n:'SAUCE BBQ', p:1}, {n:'MIEL', p:1}, {n:'JAMBON', p:2.5},
+            {n:'POULET', p:2.5}, {n:'VIANDE HACHÉE', p:2.5}, {n:'CHAMPIGNONS', p:2.5}, {n:'POIVRONS', p:1}, {n:'OIGNONS', p:1},
+            {n:'CBD', p:3}, {n:'LARDON', p:2}, {n:'PDT', p:1}
+        ];
+
+        const menuDesserts = [
+            {n:'Glace B&J Vanila Pecan', p:8.9}, {n:'Glace B&J Caramel Brownie', p:8.9},
+            {n:'Beignet Choco Noisette', p:2.9}, {n:'Beignet Pomme', p:2.9},
+            {n:'Tiramisu Speculos', p:3.9}, {n:'Tiramisu', p:3.9}, {n:'Muffin Chocolat', p:3.9},
+            {n:"Bom'Bom Nutella", p:4.9}, {n:"Bom'Bom Cannelle", p:4.9}, {n:'Sweet Pizza', p:9.9}
+        ];
+
+        const menuDrinks = [
+            {n:'Coca 50cl', p:2.5}, {n:'Coca 2L', p:5},
+            {n:'Fanta 50cl', p:2.5}, {n:'Fanta 2L', p:5},
+            {n:'Orangina 50cl', p:2.5}, {n:'Orangina 2L', p:5},
+            {n:'Pomme Poire 50cl', p:2.5}, {n:'Pomme Poire 2L', p:5},
+            {n:'Tropical 50cl', p:2.5}, {n:'Tropical 2L', p:5},
+            {n:'Fruit Rouge 50cl', p:2.5}, {n:'Fruit Rouge 2L', p:5},
+            {n:'Soda Grenadine', p:2.5}, {n:'Soda Kampagne', p:2.5},
+            {n:'Didier 50cl', p:2.5}, {n:'Didier Citron 50cl', p:2.5},
+            {n:'Chanflor 50cl', p:2}, {n:'Chanflor 1,5L', p:3.5},
+            {n:'Jus Local 50cl', p:3.2},
+            {n:'Heineken 25cl', p:3}, {n:'Lorraine 33cl', p:3},
+            {n:'Despe Classic', p:4}, {n:'Despe Red', p:4},
+            {n:'Champagne 75cl', p:45}
+        ];
+
+        function getPriceByName(name, menu) { const item = menu.find(i => i.n === name); return item ? item.p : 0; }
+
+        // ===== COMMUNES MARTINIQUE =====
+        const communesMQ = [
+            {nom:'Fort-de-France', cp:'97200', quartiers:['Didier','Bellevue','Cluny','Redoute','Trénelle','Citron','Terres Sainville','Sainte-Thérèse','Dillon','La Meynard','Ravine Vilaine','Châteauboeuf','Morne Calebasse','Morne Pichevin','Route de Balata','Pont de Chaînes']},
+            {nom:'Schoelcher', cp:'97233', quartiers:['Terreville','Fond Lahayé','Batelière','Case Navire','Plateau Fofo','Madiana','Ozanam']},
+            {nom:'Le Lamentin', cp:'97232', quartiers:['Acajou','Bois Rouge','Place d\'Armes','Petit Manoir','La Lézarde','Californie','Long Pré','Pelletier','Mahault']},
+            {nom:'Le Robert', cp:'97231', quartiers:['Pointe Lynch','Mansarde','Bourg du Robert','Vert-Pré','Chapelle']},
+            {nom:'Le François', cp:'97240', quartiers:['Bourg du François','Simon','Frégate','Dostaly']},
+            {nom:'Ducos', cp:'97224', quartiers:['Bourg de Ducos','La Marie','Lestrade','Champigny','Génipa']},
+            {nom:'Rivière-Salée', cp:'97215', quartiers:['Bourg Rivière-Salée','Grand-Bourg','Petit-Bourg','Desmarinières']},
+            {nom:'Les Trois-Îlets', cp:'97229', quartiers:['Bourg des Trois-Îlets','Anse Mitan','Pointe du Bout','Anse à l\'Âne','La Pagerie']},
+            {nom:'Sainte-Luce', cp:'97228', quartiers:['Bourg Sainte-Luce','Gros Raisins','Trois Rivières','Montravail']},
+            {nom:'Le Marin', cp:'97290', quartiers:['Bourg du Marin','Marina','Morne Aca']},
+            {nom:'Sainte-Anne', cp:'97227', quartiers:['Bourg Sainte-Anne','Les Salines','Anse Caritan','Cap Chevalier','Morne Belfond']},
+            {nom:'Le Vauclin', cp:'97280', quartiers:['Bourg du Vauclin','Pointe Faula','Château Paille','Macabou']},
+            {nom:'Saint-Esprit', cp:'97270', quartiers:['Bourg Saint-Esprit','Bois Lézard','Dumaine']},
+            {nom:'Rivière-Pilote', cp:'97211', quartiers:['Bourg Rivière-Pilote','Anse Figuier','Josseaud']},
+            {nom:'Saint-Joseph', cp:'97212', quartiers:['Bourg Saint-Joseph','Fonds Masson','Morne des Olives']},
+            {nom:'Le Gros-Morne', cp:'97213', quartiers:['Bourg du Gros-Morne','Saint-Pierre','La Fraîcheur']},
+            {nom:'Trinité', cp:'97220', quartiers:['Bourg de Trinité','Tartane','Caravelle','Beauséjour']},
+            {nom:'Sainte-Marie', cp:'97230', quartiers:['Bourg Sainte-Marie','Fond Saint-Jacques','Bezaudin','La Démarche']},
+            {nom:'Le Lorrain', cp:'97214', quartiers:['Bourg du Lorrain']},
+            {nom:'Case-Pilote', cp:'97222', quartiers:['Bourg Case-Pilote','Fond Bourlet','Fond Laillet']},
+            {nom:'Bellefontaine', cp:'97222', quartiers:['Bourg Bellefontaine']},
+            {nom:'Le Carbet', cp:'97221', quartiers:['Bourg du Carbet','Anse Turin']},
+            {nom:'Saint-Pierre', cp:'97250', quartiers:['Bourg Saint-Pierre','Fond Coré','Le Prêcheur']},
+            {nom:'Le Prêcheur', cp:'97250', quartiers:['Bourg du Prêcheur','Anse Couleuvre']},
+            {nom:'Le Morne-Rouge', cp:'97260', quartiers:['Bourg du Morne-Rouge','Champflore']},
+            {nom:'Le Morne-Vert', cp:'97226', quartiers:['Bourg du Morne-Vert']},
+            {nom:'Le Marigot', cp:'97225', quartiers:['Bourg du Marigot']},
+            {nom:'Basse-Pointe', cp:'97218', quartiers:['Bourg de Basse-Pointe','Plantation Leyritz']},
+            {nom:'Le Diamant', cp:'97223', quartiers:['Bourg du Diamant','Anse Cafard','Dizac']},
+            {nom:'Les Anses-d\'Arlet', cp:'97217', quartiers:['Grande Anse','Petite Anse','Anse Dufour','Anse Noire','Bourg des Anses-d\'Arlet']},
+            {nom:'Fonds-Saint-Denis', cp:'97250', quartiers:['Bourg Fonds-Saint-Denis']},
+            {nom:'L\'Ajoupa-Bouillon', cp:'97216', quartiers:['Bourg Ajoupa-Bouillon']},
+            {nom:'Grand\'Rivière', cp:'97218', quartiers:['Bourg Grand\'Rivière']},
+            {nom:'Macouba', cp:'97218', quartiers:['Bourg de Macouba']}
+        ];
+
+        // Construire une liste plate pour la recherche
+        const allLieux = [];
+        communesMQ.forEach(c => {
+            allLieux.push({ display: `${c.nom} (${c.cp})`, commune: c.nom, cp: c.cp });
+            c.quartiers.forEach(q => {
+                allLieux.push({ display: `${q}, ${c.nom} (${c.cp})`, commune: c.nom, cp: c.cp, quartier: q });
+            });
+        });
+
+        // Alias vocaux pour communes (ce que Google Speech entend → vrai nom)
+        const communeAliases = {
+            'fort de france':'Fort-de-France','fort-de-france':'Fort-de-France','fdf':'Fort-de-France',
+            'schoelcher':'Schoelcher','scelchère':'Schoelcher','choelcher':'Schoelcher','chelcher':'Schoelcher',
+            'le lamentin':'Le Lamentin','lamentin':'Le Lamentin','la mentin':'Le Lamentin',
+            'le robert':'Le Robert','robert':'Le Robert',
+            'le francois':'Le François','françois':'Le François','francois':'Le François',
+            'ducos':'Ducos','du cos':'Ducos',
+            'riviere salee':'Rivière-Salée','rivière-salée':'Rivière-Salée','rivière salée':'Rivière-Salée',
+            'les trois ilets':'Les Trois-Îlets','trois ilets':'Les Trois-Îlets','trois-îlets':'Les Trois-Îlets','trois îlets':'Les Trois-Îlets',
+            'sainte luce':'Sainte-Luce','sainte-luce':'Sainte-Luce',
+            'le marin':'Le Marin','marin':'Le Marin',
+            'sainte anne':'Sainte-Anne','sainte-anne':'Sainte-Anne','saint anne':'Sainte-Anne',
+            'le vauclin':'Le Vauclin','vauclin':'Le Vauclin',
+            'saint esprit':'Saint-Esprit','saint-esprit':'Saint-Esprit',
+            'riviere pilote':'Rivière-Pilote','rivière-pilote':'Rivière-Pilote',
+            'saint joseph':'Saint-Joseph','saint-joseph':'Saint-Joseph',
+            'le gros morne':'Le Gros-Morne','gros morne':'Le Gros-Morne','gros-morne':'Le Gros-Morne',
+            'trinite':'Trinité','trinité':'Trinité','la trinité':'Trinité',
+            'sainte marie':'Sainte-Marie','sainte-marie':'Sainte-Marie',
+            'le lorrain':'Le Lorrain','lorrain':'Le Lorrain',
+            'case pilote':'Case-Pilote','case-pilote':'Case-Pilote',
+            'bellefontaine':'Bellefontaine',
+            'le carbet':'Le Carbet','carbet':'Le Carbet',
+            'saint pierre':'Saint-Pierre','saint-pierre':'Saint-Pierre',
+            'le precheur':'Le Prêcheur','prêcheur':'Le Prêcheur','precheur':'Le Prêcheur',
+            'le morne rouge':'Le Morne-Rouge','morne rouge':'Le Morne-Rouge','morne-rouge':'Le Morne-Rouge',
+            'le morne vert':'Le Morne-Vert','morne vert':'Le Morne-Vert',
+            'le marigot':'Le Marigot','marigot':'Le Marigot',
+            'basse pointe':'Basse-Pointe','basse-pointe':'Basse-Pointe',
+            'le diamant':'Le Diamant','diamant':'Le Diamant',
+            'les anses d arlet':'Les Anses-d\'Arlet','anses d\'arlet':'Les Anses-d\'Arlet','anse d\'arlet':'Les Anses-d\'Arlet',
+            'grand riviere':'Grand\'Rivière','grand\'riviere':'Grand\'Rivière',
+            'macouba':'Macouba',
+            'ajoupa bouillon':'L\'Ajoupa-Bouillon','ajoupa-bouillon':'L\'Ajoupa-Bouillon',
+            'fonds saint denis':'Fonds-Saint-Denis','fonds-saint-denis':'Fonds-Saint-Denis',
+            // Quartiers courants
+            'didier':'Didier, Fort-de-France','terreville':'Terreville, Schoelcher',
+            'acajou':'Acajou, Le Lamentin','place d armes':'Place d\'Armes, Le Lamentin',
+            'anse mitan':'Anse Mitan, Les Trois-Îlets','pointe du bout':'Pointe du Bout, Les Trois-Îlets',
+            'tartane':'Tartane, Trinité','les salines':'Les Salines, Sainte-Anne',
+            'dillon':'Dillon, Fort-de-France','cluny':'Cluny, Fort-de-France',
+            'redoute':'Redoute, Fort-de-France','bellevue':'Bellevue, Fort-de-France',
+            'chateauboeuf':'Châteauboeuf, Fort-de-France','châteauboeuf':'Châteauboeuf, Fort-de-France',
+            'trénelle':'Trénelle, Fort-de-France','trenelle':'Trénelle, Fort-de-France',
+            'sainte therese':'Sainte-Thérèse, Fort-de-France','sainte-therese':'Sainte-Thérèse, Fort-de-France',
+            'route de balata':'Route de Balata, Fort-de-France','balata':'Route de Balata, Fort-de-France',
+        };
+
+        // Recherche commune (autocomplete clavier)
+        function searchCommune(input) {
+            const list = document.getElementById('communeSuggestions');
+            list.innerHTML = '';
+            const val = input.value.toLowerCase().trim();
+            if (!val || val.length < 2) return;
+
+            const results = allLieux.filter(l =>
+                l.display.toLowerCase().includes(val) ||
+                l.commune.toLowerCase().includes(val) ||
+                l.cp.includes(val) ||
+                (l.quartier && l.quartier.toLowerCase().includes(val))
+            ).slice(0, 8);
+
+            results.forEach(r => {
+                const d = document.createElement('div');
+                d.className = 'autocomplete-item';
+                d.innerText = r.display;
+                d.onclick = () => {
+                    input.value = r.display;
+                    list.innerHTML = '';
+                };
+                list.appendChild(d);
+            });
+        }
+
+        // Rues et lieux-dits fréquents en Martinique pour autocomplete adresse
+        const ruesMQ = [
+            'Rue Victor Hugo','Rue de la Liberté','Rue Ernest Deproge','Rue Lamartine','Rue Antoine Siger',
+            'Rue Blénac','Rue Moreau de Jonnès','Rue Perrinon','Rue Schoelcher','Rue de la République',
+            'Boulevard du Général de Gaulle','Boulevard Alfassa','Route de la Folie','Route de Cluny',
+            'Route de Didier','Route de Balata','Route de la Trace','Route de Redoute','Route de Moutte',
+            'Route des Religieuses','Rue des Rameaux','Rue Garnier Pagès','Rue François Arago',
+            'Rue Isambert','Rue Lazare Carnot','Lotissement','Résidence','Impasse','Cité','Chemin',
+            'Voie Principale','Route Nationale','Route Départementale','Lieu-dit','Quartier',
+            'Avenue des Arawaks','Avenue Condorcet','Avenue Maurice Bishop',
+            'Place de la Savane','Place de l\'Abbé Grégoire','Place Stalingrad',
+        ];
+
+        function searchAddress(input) {
+            const list = document.getElementById('addressSuggestions');
+            if (!list) return;
+            list.innerHTML = '';
+            const val = input.value.toLowerCase().trim();
+            if (!val || val.length < 2) return;
+
+            // Chercher dans les rues
+            const results = ruesMQ.filter(r => r.toLowerCase().includes(val)).slice(0, 6);
+            results.forEach(r => {
+                const d = document.createElement('div');
+                d.className = 'autocomplete-item';
+                d.innerText = r;
+                d.onclick = () => { input.value = r; list.innerHTML = ''; };
+                list.appendChild(d);
+            });
+        }
+
+        // ===== UI =====
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            document.getElementById('footerBox').style.display = (id === 'orderSection') ? 'flex' : 'none';
+            if(id === 'suiviSection') loadHistory();
+        }
+
+        function setType(t) {
+            currentType = t;
+            document.getElementById('btnEmporter').classList.toggle('selected', t==='Emporter');
+            document.getElementById('btnLivraison').classList.toggle('selected', t==='Livraison');
+            document.getElementById('livraisonInfo').style.display = t==='Livraison' ? 'block' : 'none';
+            document.getElementById('resGroup').style.display = t==='Emporter' ? 'block' : 'none';
+            document.getElementById('paymentGroup').style.display = t==='Livraison' ? 'block' : 'none';
+            updateSmartSlot();
+        }
+
+        function setRes(r) {
+            currentShop = r;
+            document.getElementById('btnValm').classList.toggle('active', r==='Valmenière');
+            document.getElementById('btnCentre').classList.toggle('active', r==='Centre-ville');
+            updateSmartSlot();
+        }
+
+        function toggleSupps(btn) {
+            const grid = btn.previousElementSibling;
+            grid.classList.toggle('hidden');
+            btn.innerText = grid.classList.contains('hidden') ? '+ Suppléments' : '− Masquer suppléments';
+        }
+
+        // ===== AJOUT PRODUITS =====
+        let _suppLock = false;
+        function toggleSupp(el) {
+            if (_suppLock) return;
+            _suppLock = true;
+            setTimeout(() => _suppLock = false, 300);
+            const on = el.getAttribute('data-on') === '1' ? '0' : '1';
+            el.setAttribute('data-on', on);
+            calcTotal();
+        }
+
+        function addPizza() {
+            const div = document.createElement('div');
+            div.className = 'order-item';
+            div.innerHTML = `<button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">×</button>
+                <div style="display:flex; gap:8px; margin-bottom:8px; position:relative;">
+                    <select class="p-qty" style="width:60px" onchange="calcTotal()">${[1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join('')}</select>
+                    <div style="flex:1;position:relative;"><input type="text" class="p-name" placeholder="Pizza..." oninput="search(this)" required><div class="autocomplete-list"></div></div>
+                </div>
+                <textarea class="p-notes" rows="1" placeholder="Notes"></textarea>
+                <div class="supp-grid hidden">${supplements.map(s => `<div class="supp-label" data-on="0" data-price="${s.p}" data-name="${s.n}" onclick="toggleSupp(this)"><span class="supp-check">✓</span> ${s.n} <span class="supp-price">${s.p > 0 ? s.p.toFixed(2)+'€' : 'GRATUIT'}</span></div>`).join('')}</div>
+                <button type="button" class="btn-supp-toggle" onclick="toggleSupps(this)">+ Suppléments</button>`;
+            document.getElementById('pizzasList').appendChild(div);
+        }
+
+        function addDessert() {
+            const div = document.createElement('div');
+            div.className = 'order-item dessert-item';
+            div.innerHTML = `<button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">×</button>
+                <div style="display:flex; gap:8px;"><select class="d-qty" style="width:60px" onchange="calcTotal()">${[1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join('')}</select>
+                <select class="d-name" style="flex:1" onchange="calcTotal()" required><option value="" data-price="0">-- Dessert --</option>${menuDesserts.map(d => `<option value="${d.n}" data-price="${d.p}">${d.n}</option>`).join('')}</select></div>`;
+            document.getElementById('dessertsList').appendChild(div);
+        }
+
+        function addDrink() {
+            const div = document.createElement('div');
+            div.className = 'order-item drink-item';
+            div.innerHTML = `<button type="button" class="delete-btn" onclick="this.parentElement.remove(); calcTotal()">×</button>
+                <div style="display:flex; gap:8px;"><select class="dr-qty" style="width:60px" onchange="calcTotal()">${[1,2,3,4,5].map(v => `<option value="${v}">${v}</option>`).join('')}</select>
+                <select class="dr-name" style="flex:1" onchange="calcTotal()" required><option value="" data-price="0">-- Boisson --</option>${menuDrinks.map(dr => `<option value="${dr.n}" data-price="${dr.p}">${dr.n}</option>`).join('')}</select></div>`;
+            document.getElementById('drinksList').appendChild(div);
+        }
+
+        function search(input) {
+            const list = input.nextElementSibling; list.innerHTML = '';
+            const val = input.value.toLowerCase(); if(!val) return;
+            menuPizzas.filter(m => m.n.toLowerCase().includes(val)).forEach(m => {
+                const d = document.createElement('div'); d.className = 'autocomplete-item'; d.innerText = m.n;
+                d.onclick = () => { input.value = m.n; input.dataset.price = m.p; list.innerHTML = ''; calcTotal(); };
+                list.appendChild(d);
+            });
+        }
+
+        function calcTotal() {
+            let total = 0;
+            document.querySelectorAll('.order-item:not(.dessert-item):not(.drink-item)').forEach(p => {
+                const q = parseInt(p.querySelector('.p-qty').value) || 1;
+                const pr = parseFloat(p.querySelector('.p-name').dataset.price || 0);
+                let sp = 0; p.querySelectorAll('.supp-label[data-on="1"]').forEach(s => sp += parseFloat(s.dataset.price));
+                total += q * (pr + sp);
+            });
+            document.querySelectorAll('.dessert-item, .drink-item').forEach(i => {
+                const s = i.querySelector('select[class$="-name"]');
+                total += parseInt(i.querySelector('select[class$="-qty"]').value) * parseFloat(s.options[s.selectedIndex].dataset.price || 0);
+            });
+            document.getElementById('totalDisplay').innerText = total.toFixed(2) + " €";
+            return total;
+        }
+
+        // ===== ENVOI COMMANDE =====
+        async function submitOrder() {
+            const clientName = document.getElementById('clientName').value.trim();
+            if (!clientName) {
+                alert("⚠️ Le nom du client est obligatoire !");
+                document.getElementById('clientName').focus();
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+
+            const items = [];
+
+            document.querySelectorAll('.order-item:not(.dessert-item):not(.drink-item)').forEach(p => {
+                const s = []; p.querySelectorAll('.supp-label[data-on="1"]').forEach(x => s.push(x.dataset.name));
+                const name = p.querySelector('.p-name').value;
+                if(name) items.push({ name: name, qty: parseInt(p.querySelector('.p-qty').value), notes: p.querySelector('.p-notes').value, supps: s });
+            });
+
+            document.querySelectorAll('.dessert-item, .drink-item').forEach(i => {
+                const sel = i.querySelector('select[class$="-name"]');
+                const qtySel = i.querySelector('select[class$="-qty"]');
+                const name = sel ? sel.value : '';
+                if(name) items.push({ name: name, qty: parseInt(qtySel.value), supps: [], notes: '' });
+            });
+
+            const shopNormal = currentShop.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const payVal = document.getElementById('payment').value;
+
+            const data = {
+                clientName: clientName,
+                phone: document.getElementById('phone').value,
+                address: (currentType === 'Livraison') ? document.getElementById('address').value : '',
+                commune: (currentType === 'Livraison') ? document.getElementById('commune').value : '',
+                type: currentType.toUpperCase(),
+                shop: shopNormal,
+                source: "TEL",
+                slotTime: document.getElementById('slotTime').value || "ASAP",
+                paymentMethod: payVal,
+                total: document.getElementById('totalDisplay').innerText,
+                status: 'en_attente',
+                items: items,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try { await db.collection("commandes").add(data); location.reload(); } 
+            catch (e) { alert("Erreur: " + e.message); console.error(e); btn.disabled = false; }
+        }
+
+        // OFFRE FAMILY & FRIENDS = 1 MAMA + 1 GWO MODEL + 1 OULA + 1 COCA 2L (45€ tout compris)
+        function addFamilyOffer() {
+            // Nettoyer et ajouter les 4 produits
+            const familyItems = [
+                {n:'MAMA', p:13},
+                {n:'GWO MODEL', p:16},
+                {n:'OULA', p:17.9}
+            ];
+            familyItems.forEach(item => addPizza(item.n, item.p));
+            // Ajouter COCA 2L dans les boissons si la fonction existe
+            if (typeof addDrink === 'function') {
+                addDrink('COCA 2L', 4);
+            } else if (typeof addPizza === 'function') {
+                addPizza('COCA 2L', 4);
+            }
+            // Appliquer une remise pour ramener au prix de l'offre 45€
+            // Total normal = 13 + 16 + 17.9 + 4 = 50.9 → remise = 5.9€
+            if (typeof applyDiscount === 'function') applyDiscount(5.9);
+            setTimeout(updateTotal, 100);
+        }
+
+        function loadHistory() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            db.collection("commandes")
+              .where("createdAt", ">=", today)
+              .orderBy("createdAt", "desc")
+              .onSnapshot(snap => {
+                const list = document.getElementById('suiviList'); 
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const borderColor = d.status === 'termine' ? 'var(--green)' : 
+                                       d.status === 'en_attente' ? 'var(--red)' :
+                                       d.status === 'cuisson' ? 'var(--orange)' : 'var(--text-dim)';
+                    const createdTime = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Martinique'}) : '—';
+                    const isLivraison = d.type === 'livraison' || d.deliveryType === 'livraison';
+                    const deliveryTime = d.deliveryTime || d.creneauLivraison || '';
+                    const tel = d.phone || d.telephone || '';
+                    const adresse = d.address || d.adresse || '';
+                    const isTest = (d.clientName||'').toUpperCase().includes('TEST');
+                    const totalDisplay = isTest ? '<span style="color:#f59e0b">🧪 TEST (non comptabilisé)</span>' : d.total;
+                    list.innerHTML += `<div class="suivi-card" style="border-left: 4px solid ${borderColor};${isTest?'opacity:0.6':''}">
+                      <div style="flex:1">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                          <div>
+                            <b>${d.clientName}</b>
+                            ${isTest?'<span style="background:#f59e0b;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:6px">TEST</span>':''}
+                            <span style="color:var(--text-dim);font-size:12px;"> · ${d.shop}</span>
+                          </div>
+                          <span style="font-size:11px;color:var(--text-dim);white-space:nowrap">🕐 ${createdTime}</span>
+                        </div>
+                        <div style="font-size:12px;margin-top:4px;color:var(--text-muted)">
+                          ${isLivraison ? '<span style="color:#f59e0b">🛵 Livraison</span>' : '🏠 À emporter'}
+                          ${deliveryTime ? ' · <b>'+deliveryTime+'</b>' : ''}
+                        </div>
+                        ${adresse ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px">📍 ${adresse}</div>` : ''}
+                        ${tel ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px">📞 ${tel}</div>` : ''}
+                        <div style="margin-top:4px;font-size:12px">${totalDisplay}</div>
+                      </div>
+                      <span class="status-badge" style="flex-shrink:0">${d.status}</span>
+                    </div>`;
+                });
+                if(list.innerHTML === "") {
+                    list.innerHTML = '<p style="color:var(--text-dim); text-align:center; padding: 40px 0;">Aucune commande aujourd\'hui</p>';
+                }
+            });
+        }
+
+        // ===================================================================
+        // COMMANDE VOCALE — Reconnaissance et parsing automatique
+        // ===================================================================
+        let voiceRecognition = null;
+        let parsedVoice = null;
+        let voiceAccumulated = '';
+
+        // Correspondance mots → chiffres
+        const wordToNum = {
+            'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,
+            'six':6,'sept':7,'huit':8,'neuf':9,'dix':10
+        };
+
+        // Normaliser un texte (minuscule, sans accents)
+        function norm(str) {
+            return (str||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        }
+
+        function startVoice() {
+            voiceAccumulated = '';
+            parsedVoice = null;
+            document.getElementById('voiceResult').className = 'voice-result';
+            document.getElementById('voiceResult').innerHTML = '';
+            launchCapture();
+        }
+
+        function appendVoice() {
+            launchCapture();
+        }
+
+        function launchCapture() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) { alert("Reconnaissance vocale indisponible."); return; }
+
+            const overlay = document.getElementById('voiceOverlay');
+            const btn = document.getElementById('voiceBtn');
+            overlay.classList.add('active');
+            btn.classList.add('recording');
+            document.getElementById('voiceActions').style.display = 'none';
+            document.getElementById('voiceStatus').innerText = '🔴 Parlez...';
+            document.getElementById('voiceWave').style.borderColor = 'var(--red)';
+            document.getElementById('voiceTranscript').innerHTML =
+                (voiceAccumulated ? `<span>${voiceAccumulated} </span>` : '') +
+                '<span class="interim">Parlez maintenant...</span>';
+
+            if (voiceRecognition) { try { voiceRecognition.abort(); } catch(e){} }
+
+            voiceRecognition = new SR();
+            voiceRecognition.lang = 'fr-FR';
+            voiceRecognition.continuous = true;
+            voiceRecognition.interimResults = true;
+
+            let allFinal = '';
+
+            voiceRecognition.onresult = (e) => {
+                let interim = '';
+                allFinal = '';
+                for (let i = 0; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) {
+                        allFinal += e.results[i][0].transcript + ' ';
+                    } else {
+                        interim += e.results[i][0].transcript;
+                    }
+                }
+                document.getElementById('voiceTranscript').innerHTML =
+                    (voiceAccumulated ? `<span>${voiceAccumulated} </span>` : '') +
+                    (allFinal ? `<span>${allFinal}</span>` : '') +
+                    (interim ? `<span class="interim">${interim}</span>` : '');
+            };
+
+            // Quand Android coupe → on prend ce qu'on a, SANS relancer
+            voiceRecognition.onend = () => {
+                btn.classList.remove('recording');
+                if (allFinal.trim()) {
+                    voiceAccumulated = (voiceAccumulated + ' ' + allFinal).trim();
+                }
+                document.getElementById('voiceTranscript').innerHTML =
+                    voiceAccumulated ? `<span>${voiceAccumulated}</span>` : '<span class="interim">Rien entendu</span>';
+                if (voiceAccumulated) {
+                    processVoice(voiceAccumulated);
+                } else {
+                    document.getElementById('voiceStatus').innerText = 'Rien entendu';
+                    document.getElementById('voiceWave').style.borderColor = 'var(--orange)';
+                }
+            };
+
+            voiceRecognition.onerror = (e) => {
+                btn.classList.remove('recording');
+                if (e.error === 'aborted') return;
+                if (e.error === 'no-speech') {
+                    document.getElementById('voiceStatus').innerText = 'Rien entendu';
+                    if (voiceAccumulated) processVoice(voiceAccumulated);
+                    return;
+                }
+                document.getElementById('voiceStatus').innerText = 'Erreur : ' + e.error;
+            };
+
+            voiceRecognition.start();
+        }
+
+        function closeVoice() {
+            document.getElementById('voiceOverlay').classList.remove('active');
+            document.getElementById('voiceBtn').classList.remove('recording');
+            if (voiceRecognition) { try { voiceRecognition.abort(); } catch(e){} }
+        }
+
+        // ===== PARSING DE LA COMMANDE VOCALE =====
+        function processVoice(text) {
+            document.getElementById('voiceStatus').innerText = 'Analyse...';
+            document.getElementById('voiceWave').style.borderColor = 'var(--green)';
+
+            const raw = text;
+            const t = norm(text);
+
+            parsedVoice = { pizzas: [], drinks: [], desserts: [], supps: [], phone: '', name: '', address: '', type: null, shop: null };
+
+            // 1. Détecter livraison
+            if (t.includes('livr') || t.includes('a livrer') || t.includes('en livraison')) {
+                parsedVoice.type = 'Livraison';
+            }
+            if (t.includes('emporter') || t.includes('a emporter') || t.includes('sur place')) {
+                parsedVoice.type = 'Emporter';
+            }
+
+            // 2. Détecter magasin
+            if (t.includes('valmeniere') || t.includes('valm')) {
+                parsedVoice.shop = 'Valmenière';
+            } else if (t.includes('centre') || t.includes('centreville') || t.includes('centre-ville') || t.includes('centre ville')) {
+                parsedVoice.shop = 'Centre-ville';
+            }
+
+            // 3. Extraire téléphone (06/07 suivi de 8 chiffres)
+            const phoneMatch = raw.match(/0[67]\s*[\d\s]{8,}/);
+            if (phoneMatch) {
+                parsedVoice.phone = phoneMatch[0].replace(/\s+/g, '').substring(0, 10);
+            } else {
+                // Essayer avec des mots : "zero six neuf six..."
+                const phoneWords = t.match(/(?:telephone|numero|tel)[^]*$/);
+                if (phoneWords) {
+                    const digits = extractDigitsFromWords(phoneWords[0]);
+                    if (digits.length >= 10) parsedVoice.phone = '0' + digits.substring(digits.length - 9);
+                }
+            }
+
+            // 4. Extraire adresse + commune
+            const addrPatterns = [
+                /(?:livrer? (?:au|a|à)|adresse[: ]+|au)\s+(.+?)(?:\s+(?:telephone|numero|tel|nom|pour|client)|$)/i,
+                /(?:livraison)\s+(.+?)(?:\s+(?:telephone|numero|tel|nom|pour|client)|$)/i
+            ];
+            for (const pat of addrPatterns) {
+                const m = raw.match(pat);
+                if (m && m[1]) {
+                    let addr = m[1].trim();
+                    if (addr.length > 3) {
+                        parsedVoice.address = addr;
+                        break;
+                    }
+                }
+            }
+
+            // Détecter la commune dans tout le texte (vocalement)
+            parsedVoice.commune = '';
+            const tNorm = norm(raw);
+            const communeKeys = Object.keys(communeAliases).sort((a, b) => b.length - a.length);
+            for (const alias of communeKeys) {
+                if (tNorm.includes(norm(alias))) {
+                    parsedVoice.commune = communeAliases[alias];
+                    // Retirer la commune de l'adresse si elle y est
+                    if (parsedVoice.address) {
+                        const communeInAddr = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                        parsedVoice.address = parsedVoice.address.replace(communeInAddr, '').trim().replace(/[,\s]+$/, '');
+                    }
+                    break;
+                }
+            }
+
+            // 5. Extraire nom client
+            const namePatterns = [
+                /(?:nom|pour|client)\s+(?:c'est\s+)?(.+?)(?:\s+(?:telephone|numero|tel|adresse|livr)|[,.]|$)/i
+            ];
+            for (const pat of namePatterns) {
+                const m = raw.match(pat);
+                if (m && m[1] && m[1].trim().length > 1) {
+                    parsedVoice.name = m[1].trim();
+                    break;
+                }
+            }
+
+            // 6. Extraire produits (pizzas, boissons, desserts)
+            // Alias phonétiques : ce que Google Speech entend → vrai nom
+            const phoneticAliases = {
+                'danger': 'DANJE', 'dangé': 'DANJE', 'dange': 'DANJE', 'dans j': 'DANJE', 'dan j': 'DANJE',
+                'maman': 'MAMA', 'mama': 'MAMA',
+                'maria': 'MARIA', 'marie a': 'MARIA',
+                'sirene': 'SIRÈNE', 'sirène': 'SIRÈNE', 'siren': 'SIRÈNE',
+                'ou la': 'OULA', 'oula': 'OULA', 'houla': 'OULA',
+                'ochan': 'OCHAN', 'au champ': 'OCHAN', 'auchan': 'OCHAN', 'au chan': 'OCHAN',
+                'taken': 'TAKEN', 'taquene': 'TAKEN',
+                'bad girl': 'BAD GYAL', 'bad gal': 'BAD GYAL', 'bad gyal': 'BAD GYAL',
+                'poudriere': 'POUDRIÈRE', 'poudrière': 'POUDRIÈRE',
+                'tombolo': 'TOMBOLO',
+                'nossa': 'NOSSA', 'nosa': 'NOSSA',
+                'gros modele': 'GWO MODEL', 'gros model': 'GWO MODEL', 'gwo model': 'GWO MODEL',
+                'mwaka moon': 'MWAKA MOON', 'mwaka mou': 'MWAKA MOON', 'maka moon': 'MWAKA MOON',
+                'ya quoi ici': 'YA KOI ICI', 'ya koi ici': 'YA KOI ICI', 'il y a quoi ici': 'YA KOI ICI',
+                'big machine': 'BIG MACHINE', 'big machina': 'BIG MACHINE',
+                'quatre croisees': '4 CROISÉES', '4 croisees': '4 CROISÉES', 'quatre croisée': '4 CROISÉES',
+                'jah': 'JAH', 'ja': 'JAH',
+                'salam': 'SALAM', 'salame': 'SALAM',
+                'diamond': 'DIAMOND', 'diamant': 'DIAMOND', 'diaman': 'DIAMOND',
+                'mada': 'MADA', 'madame': 'MADA',
+                'family': 'OFFRE FAMILY', 'offre familiale': 'OFFRE FAMILY', 'offre family': 'OFFRE FAMILY',
+                'sweet pizza': 'Sweet Pizza', 'suites pizza': 'Sweet Pizza',
+                'tiramisu': 'Tiramisu', 'tiramissou': 'Tiramisu',
+                'tiramisu speculos': 'Tiramisu Speculos', 'tiramissou speculos': 'Tiramisu Speculos',
+                'muffin': 'Muffin Chocolat', 'muffin chocolat': 'Muffin Chocolat',
+                'beignet chocolat': 'Beignet Choco Noisette', 'beignet choco': 'Beignet Choco Noisette',
+                'beignet pomme': 'Beignet Pomme',
+                'bombe nutella': "Bom'Bom Nutella", 'bom bom nutella': "Bom'Bom Nutella", 'bonbon nutella': "Bom'Bom Nutella",
+                'bombe cannelle': "Bom'Bom Cannelle", 'bom bom cannelle': "Bom'Bom Cannelle", 'bonbon cannelle': "Bom'Bom Cannelle",
+            };
+
+            // Construire un mapping normalisé → item original
+            const allProducts = [
+                ...menuPizzas.map(p => ({...p, cat: 'pizza'})),
+                ...menuDrinks.map(p => ({...p, cat: 'drink'})),
+                ...menuDesserts.map(p => ({...p, cat: 'dessert'}))
+            ];
+
+            // Trier par longueur de nom décroissante (matcher les noms longs d'abord)
+            allProducts.sort((a, b) => b.n.length - a.n.length);
+
+            let searchText = t;
+
+            // D'abord, chercher les alias phonétiques (les mots mal reconnus)
+            const aliasKeys = Object.keys(phoneticAliases).sort((a, b) => b.length - a.length);
+            for (const alias of aliasKeys) {
+                const idx = searchText.indexOf(alias);
+                if (idx !== -1) {
+                    const realName = phoneticAliases[alias];
+                    const prod = allProducts.find(p => p.n === realName);
+                    if (prod) {
+                        // Vérifier qu'on n'a pas déjà ajouté ce produit
+                        const alreadyAdded = [...parsedVoice.pizzas, ...parsedVoice.drinks, ...parsedVoice.desserts].some(p => p.name === realName);
+                        if (!alreadyAdded) {
+                            let qty = 1;
+                            const before = searchText.substring(Math.max(0, idx - 15), idx).trim();
+                            const words = before.split(/\s+/);
+                            const lastWord = words[words.length - 1];
+                            if (lastWord && wordToNum[lastWord]) qty = wordToNum[lastWord];
+                            else if (/^\d+$/.test(lastWord)) qty = parseInt(lastWord);
+
+                            if (prod.cat === 'pizza') parsedVoice.pizzas.push({ name: prod.n, qty, price: prod.p });
+                            else if (prod.cat === 'drink') parsedVoice.drinks.push({ name: prod.n, qty, price: prod.p });
+                            else parsedVoice.desserts.push({ name: prod.n, qty, price: prod.p });
+
+                            searchText = searchText.substring(0, idx) + ' '.repeat(alias.length) + searchText.substring(idx + alias.length);
+                        }
+                    }
+                }
+            }
+
+            // Ensuite chercher les noms exacts dans le menu
+            for (const prod of allProducts) {
+                const prodNorm = norm(prod.n);
+                const variants = [prodNorm];
+                variants.push(prodNorm.replace(/(\d)\s*(cl|l)\b/g, '$1$2'));
+                variants.push(prodNorm.replace(/(\d)(cl|l)\b/g, '$1 $2'));
+                const clVariant = prodNorm.replace('cl', ' centilitres').replace('2l', '2 litres').replace('1,5l', '1,5 litres');
+                if (clVariant !== prodNorm) variants.push(clVariant);
+
+                for (const v of variants) {
+                    const idx = searchText.indexOf(v);
+                    if (idx !== -1) {
+                        // Vérifier pas déjà ajouté
+                        const alreadyAdded = [...parsedVoice.pizzas, ...parsedVoice.drinks, ...parsedVoice.desserts].some(p => p.name === prod.n);
+                        if (alreadyAdded) break;
+
+                        let qty = 1;
+                        const before = searchText.substring(Math.max(0, idx - 15), idx).trim();
+                        const words = before.split(/\s+/);
+                        const lastWord = words[words.length - 1];
+                        if (lastWord && wordToNum[lastWord]) qty = wordToNum[lastWord];
+                        else if (/^\d+$/.test(lastWord)) qty = parseInt(lastWord);
+
+                        if (prod.cat === 'pizza') parsedVoice.pizzas.push({ name: prod.n, qty, price: prod.p });
+                        else if (prod.cat === 'drink') parsedVoice.drinks.push({ name: prod.n, qty, price: prod.p });
+                        else parsedVoice.desserts.push({ name: prod.n, qty, price: prod.p });
+
+                        searchText = searchText.substring(0, idx) + ' '.repeat(v.length) + searchText.substring(idx + v.length);
+                        break;
+                    }
+                }
+            }
+
+            // Afficher le résultat
+            showVoiceResult();
+        }
+
+        function extractDigitsFromWords(text) {
+            const map = {'zero':'0','un':'1','une':'1','deux':'2','trois':'3','quatre':'4','cinq':'5','six':'6','sept':'7','huit':'8','neuf':'9'};
+            let digits = '';
+            text.split(/\s+/).forEach(w => {
+                if (map[w] !== undefined) digits += map[w];
+                else if (/^\d+$/.test(w)) digits += w;
+            });
+            return digits;
+        }
+
+        function showVoiceResult() {
+            const r = parsedVoice;
+            let html = '';
+
+            if (r.pizzas.length) html += r.pizzas.map(p => `<div class="vr-line"><span class="vr-icon">🍕</span> <b>${p.qty}x ${p.name}</b></div>`).join('');
+            if (r.drinks.length) html += r.drinks.map(d => `<div class="vr-line"><span class="vr-icon">🥤</span> <b>${d.qty}x ${d.name}</b></div>`).join('');
+            if (r.desserts.length) html += r.desserts.map(d => `<div class="vr-line"><span class="vr-icon">🍰</span> <b>${d.qty}x ${d.name}</b></div>`).join('');
+            if (r.type) html += `<div class="vr-line"><span class="vr-icon">${r.type==='Livraison'?'🛵':'👜'}</span> ${r.type}</div>`;
+            if (r.shop) html += `<div class="vr-line"><span class="vr-icon">📍</span> ${r.shop}</div>`;
+            if (r.address) html += `<div class="vr-line"><span class="vr-icon">🏠</span> ${r.address}</div>`;
+            if (r.commune) html += `<div class="vr-line"><span class="vr-icon">🏘️</span> ${r.commune}</div>`;
+            if (r.phone) html += `<div class="vr-line"><span class="vr-icon">📞</span> ${r.phone}</div>`;
+            if (r.name) html += `<div class="vr-line"><span class="vr-icon">👤</span> ${r.name}</div>`;
+
+            if (!html) html = '<div style="color:var(--text-dim); text-align:center;">Aucun produit reconnu — réessayez en articulant bien</div>';
+
+            document.getElementById('voiceResult').innerHTML = html;
+            document.getElementById('voiceResult').className = 'voice-result show';
+            document.getElementById('voiceActions').style.display = 'flex';
+            document.getElementById('voiceStatus').innerText = 'Commande détectée';
+        }
+
+        // ===== APPLIQUER LA COMMANDE VOCALE AU FORMULAIRE =====
+        function applyVoiceOrder() {
+            if (!parsedVoice) return;
+            const r = parsedVoice;
+
+            // Type de commande
+            if (r.type) setType(r.type);
+
+            // Magasin
+            if (r.shop) setRes(r.shop);
+
+            // Vider les listes actuelles
+            document.getElementById('pizzasList').innerHTML = '';
+            document.getElementById('drinksList').innerHTML = '';
+            document.getElementById('dessertsList').innerHTML = '';
+
+            // Ajouter les pizzas
+            r.pizzas.forEach(p => {
+                addPizza();
+                const last = document.getElementById('pizzasList').lastElementChild;
+                const input = last.querySelector('.p-name');
+                input.value = p.name;
+                input.dataset.price = p.price;
+                last.querySelector('.p-qty').value = Math.min(p.qty, 5);
+            });
+
+            // Ajouter les boissons
+            r.drinks.forEach(d => {
+                addDrink();
+                const last = document.getElementById('drinksList').lastElementChild;
+                const sel = last.querySelector('.dr-name');
+                for (let i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === d.name) { sel.selectedIndex = i; break; }
+                }
+                last.querySelector('.dr-qty').value = Math.min(d.qty, 5);
+            });
+
+            // Ajouter les desserts
+            r.desserts.forEach(d => {
+                addDessert();
+                const last = document.getElementById('dessertsList').lastElementChild;
+                const sel = last.querySelector('.d-name');
+                for (let i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === d.name) { sel.selectedIndex = i; break; }
+                }
+                last.querySelector('.d-qty').value = Math.min(d.qty, 5);
+            });
+
+            // Si aucun produit, ajouter une pizza vide
+            if (r.pizzas.length === 0 && r.drinks.length === 0 && r.desserts.length === 0) {
+                addPizza();
+            }
+
+            // Infos client
+            if (r.name) document.getElementById('clientName').value = r.name;
+            if (r.phone) document.getElementById('phone').value = r.phone;
+            if (r.address) document.getElementById('address').value = r.address;
+            if (r.commune) document.getElementById('commune').value = r.commune;
+
+            // Recalculer
+            calcTotal();
+            updateSmartSlot();
+
+            // Fermer l'overlay
+            closeVoice();
+        }
+
+        window.onload = () => { addPizza(); updateSmartSlot(); };
+
+        // Recalculer les créneaux quand l'app revient au premier plan
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) updateSmartSlot();
+        });
+        window.addEventListener('focus', () => updateSmartSlot());
+        window.addEventListener('pageshow', () => updateSmartSlot());
+
+        // Recalculer toutes les 60 secondes
+        setInterval(updateSmartSlot, 60000);
+    </script>
+</body>
+</html>

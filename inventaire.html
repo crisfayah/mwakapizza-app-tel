@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mwaka — Inventaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --bg:#0a0a0a;--card:#151515;--card2:#1c1c1c;--border:#2a2a2a;
+  --tx:#f0ece6;--tx2:#9c8e80;--tx3:#5a5048;
+  --accent:#e76f51;--accent-lt:rgba(231,111,81,.15);
+  --green:#16a34a;--green-lt:rgba(22,163,74,.15);
+  --yellow:#f59e0b;--yellow-lt:rgba(245,158,11,.15);
+  --blue:#3b82f6;--blue-lt:rgba(59,130,246,.15);
+  --red:#ef4444;--purple:#8b5cf6;
+  --congel:#38bdf8;--congel-lt:rgba(56,189,248,.12);
+  --frigo:#34d399;--frigo-lt:rgba(52,211,153,.12);
+  --sec:#fbbf24;--sec-lt:rgba(251,191,36,.12);
+  --boisson:#a78bfa;--boisson-lt:rgba(167,139,250,.12);
+  --hygiene:#f472b6;--hygiene-lt:rgba(244,114,182,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+
+/* ── Splash ── */
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .5s}
+#splash.hide{opacity:0;pointer-events:none}
+#splash img{width:120px;margin-bottom:20px;filter:drop-shadow(0 0 30px rgba(231,111,81,.3))}
+#splash h1{font-size:22px;font-weight:800;letter-spacing:-.5px}
+#splash h1 span{color:var(--accent)}
+#splash p{color:var(--tx2);font-size:13px;margin-top:6px}
+
+/* ── Name input ── */
+#nameScreen{display:none;padding:40px 20px;text-align:center}
+#nameScreen h2{font-size:20px;font-weight:700;margin-bottom:6px}
+#nameScreen p{color:var(--tx2);font-size:13px;margin-bottom:24px}
+#nameInput{width:100%;max-width:320px;padding:14px 18px;border-radius:14px;border:2px solid var(--border);background:var(--card);color:var(--tx);font-size:16px;font-family:inherit;text-align:center;outline:none;transition:border .2s}
+#nameInput:focus{border-color:var(--accent)}
+#startBtn{margin-top:18px;padding:14px 40px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:700;font-family:inherit;opacity:.4;pointer-events:none;transition:all .25s}
+#startBtn.ready{opacity:1;pointer-events:auto}
+
+/* ── Header ── */
+#header{position:sticky;top:0;z-index:50;background:var(--bg);padding:12px 16px 0;border-bottom:1px solid var(--border)}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.header-top h2{font-size:16px;font-weight:700}
+.header-top span{font-size:12px;color:var(--tx2)}
+.progress-wrap{background:var(--card);border-radius:10px;height:8px;overflow:hidden;margin-bottom:10px}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),#f97316);border-radius:10px;transition:width .4s ease;width:0}
+.progress-text{font-size:11px;color:var(--tx2);margin-bottom:8px;display:flex;justify-content:space-between}
+
+/* ── Zone tabs ── */
+.zone-tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.zone-tabs::-webkit-scrollbar{display:none}
+.zone-tab{flex-shrink:0;padding:7px 14px;border-radius:10px;font-size:12px;font-weight:600;border:none;background:var(--card);color:var(--tx2);transition:all .2s;white-space:nowrap;position:relative}
+.zone-tab.active{color:#fff}
+.zone-tab[data-zone="CONGEL"].active{background:var(--congel);color:#000}
+.zone-tab[data-zone="FRIGO"].active{background:var(--frigo);color:#000}
+.zone-tab[data-zone="SEC"].active{background:var(--sec);color:#000}
+.zone-tab[data-zone="BOISSONS"].active{background:var(--boisson);color:#000}
+.zone-tab[data-zone="HYGIENE"].active{background:var(--hygiene);color:#000}
+.zone-tab[data-zone="ALL"].active{background:var(--accent)}
+.zone-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;background:var(--green);color:#fff}
+
+/* ── Items list ── */
+#itemsList{padding:12px 16px 120px}
+.zone-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3);margin:18px 0 10px;padding-left:4px}
+.zone-header:first-child{margin-top:6px}
+
+.item-card{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:8px;border:2px solid transparent;transition:all .25s}
+.item-card.counted{border-color:var(--green);background:var(--green-lt)}
+.item-card.zero{border-color:var(--red);background:rgba(239,68,68,.08)}
+.item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.item-name{font-size:14px;font-weight:600;flex:1}
+.item-info{display:flex;gap:6px;align-items:center}
+.item-tag{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px}
+.tag-congel{background:var(--congel-lt);color:var(--congel)}
+.tag-frigo{background:var(--frigo-lt);color:var(--frigo)}
+.tag-sec{background:var(--sec-lt);color:var(--sec)}
+.tag-boisson{background:var(--boisson-lt);color:var(--boisson)}
+.tag-hygiene{background:var(--hygiene-lt);color:var(--hygiene)}
+.item-stock{font-size:10px;color:var(--tx3)}
+.item-stock b{color:var(--tx2)}
+
+.input-row{display:flex;align-items:center;gap:10px}
+.qty-btn{width:44px;height:44px;border-radius:12px;border:2px solid var(--border);background:var(--card2);color:var(--tx);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+.qty-btn:active{transform:scale(.92);background:var(--accent);border-color:var(--accent);color:#fff}
+.qty-input{flex:1;height:44px;border-radius:12px;border:2px solid var(--border);background:var(--card2);color:var(--tx);font-size:18px;font-weight:700;text-align:center;font-family:inherit;outline:none;transition:border .2s;-moz-appearance:textfield}
+.qty-input::-webkit-inner-spin-button,.qty-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.qty-input:focus{border-color:var(--accent)}
+.item-unit{font-size:12px;color:var(--tx2);font-weight:600;min-width:30px}
+.check-done{width:28px;height:28px;border-radius:8px;background:var(--green);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;flex-shrink:0}
+.item-card.counted .check-done,.item-card.zero .check-done{display:flex}
+
+/* ── Submit bar ── */
+#submitBar{position:fixed;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(to top,var(--bg) 80%,transparent);z-index:40;display:none}
+#submitBtn{width:100%;padding:16px;border-radius:16px;border:none;background:var(--accent);color:#fff;font-size:17px;font-weight:700;font-family:inherit;opacity:.4;pointer-events:none;transition:all .3s}
+#submitBtn.ready{opacity:1;pointer-events:auto;animation:pulse-btn 2s infinite}
+@keyframes pulse-btn{0%,100%{box-shadow:0 0 0 0 rgba(231,111,81,.4)}50%{box-shadow:0 0 0 12px rgba(231,111,81,0)}}
+
+/* ── Success overlay ── */
+#successOverlay{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+#successOverlay.show{display:flex}
+.success-icon{font-size:80px;margin-bottom:20px;animation:bounce-in .6s cubic-bezier(.36,1.5,.5,1)}
+@keyframes bounce-in{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.success-title{font-size:24px;font-weight:800;margin-bottom:8px}
+.success-sub{color:var(--tx2);font-size:14px;margin-bottom:30px;max-width:300px;line-height:1.5}
+.success-stats{display:flex;gap:16px;margin-bottom:30px}
+.success-stat{background:var(--card);border-radius:14px;padding:16px 22px;text-align:center}
+.success-stat .val{font-size:28px;font-weight:800;color:var(--accent)}
+.success-stat .lbl{font-size:11px;color:var(--tx2);margin-top:2px}
+
+/* ── Confetti ── */
+.confetti-container{position:fixed;inset:0;pointer-events:none;z-index:300;overflow:hidden}
+.confetti{position:absolute;width:10px;height:10px;top:-10px;animation:confetti-fall 3s ease-in forwards}
+@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ── Search ── */
+#searchWrap{padding:0 16px;margin-bottom:4px}
+#searchInput{width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--tx);font-size:14px;font-family:inherit;outline:none;transition:border .2s}
+#searchInput:focus{border-color:var(--accent)}
+#searchWrap{position:relative}
+#searchWrap::before{content:"🔍";position:absolute;left:30px;top:50%;transform:translateY(-50%);font-size:14px}
+
+/* ── Shop selector ── */
+.shop-selector{display:flex;gap:8px;margin:16px 16px 0}
+.shop-btn{flex:1;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--tx2);font-size:13px;font-weight:600;text-align:center;transition:all .2s}
+.shop-btn.active{border-color:var(--accent);background:var(--accent-lt);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img src="https://offres.mwakapizza.fr/logo-mwaka-pizza-blanc.png" alt="Mwaka" onerror="this.style.display='none'">
+  <h1>MWAKA <span>INVENTAIRE</span></h1>
+  <p>Comptez, validez, c'est envoyé !</p>
+</div>
+
+<!-- NAME SCREEN -->
+<div id="nameScreen">
+  <h2>Qui fait l'inventaire ?</h2>
+  <p>Entre ton prénom pour commencer</p>
+  <input type="text" id="nameInput" placeholder="Ton prénom (ex: Marco)" maxlength="30" autocomplete="off">
+  <br>
+  <div class="shop-selector" id="shopSelector">
+    <button class="shop-btn" data-shop="valmeniere" onclick="selectShop(this)">📍 Valmenière</button>
+    <button class="shop-btn" data-shop="centreville" onclick="selectShop(this)">📍 Centre-Ville</button>
+  </div>
+  <br>
+  <button id="startBtn" onclick="startInventory()">C'est parti ! 🍕</button>
+</div>
+
+<!-- MAIN -->
+<div id="mainApp" style="display:none">
+  <div id="header">
+    <div class="header-top">
+      <h2 id="headerName">Inventaire</h2>
+      <span id="headerShop"></span>
+    </div>
+    <div class="progress-text">
+      <span id="progressLabel">0 / 0 comptés</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="zone-tabs" id="zoneTabs"></div>
+  </div>
+
+  <div id="searchWrap">
+    <input type="text" id="searchInput" placeholder="Rechercher un produit..." oninput="filterItems()">
+  </div>
+
+  <div id="itemsList"></div>
+
+  <div id="submitBar">
+    <button id="submitBtn" onclick="submitInventory()">📤 Envoyer l'inventaire</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="successOverlay">
+  <div class="success-icon">🎉</div>
+  <div class="success-title" id="successTitle">Bravo !</div>
+  <div class="success-sub" id="successSub">Inventaire envoyé avec succès</div>
+  <div class="success-stats" id="successStats"></div>
+</div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ══════════════════════════════════════════
+// FIREBASE CONFIG
+// ══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0",
+  authDomain: "mwakaphone-e8c5b.firebaseapp.com",
+  databaseURL: "https://mwakaphone-e8c5b-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mwakaphone-e8c5b",
+  storageBucket: "mwakaphone-e8c5b.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
+firebase.auth().signInAnonymously().catch(e => console.warn("Auth:", e.message));
+
+// ══════════════════════════════════════════
+// PRODUITS — Fallback local + Firebase sync
+// ══════════════════════════════════════════
+let ALL_PRODUCTS = [
+  // ─── CONGELÉS ───────────────────────────
+  {id:"p02", name:"Mozzarella", zone:"CONGEL", unit:"unité", stockMini:28, fournisseur:"PROMO", code:"4254824", pizzappId:"ing05"},
+  {id:"p03", name:"Merguez", zone:"CONGEL", unit:"unité", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing32"},
+  {id:"p04", name:"Lardons", zone:"CONGEL", unit:"unité", stockMini:5, fournisseur:"PROMO", code:"4430757", pizzappId:"ing33"},
+  {id:"p05", name:"Steak", zone:"CONGEL", unit:"unité", stockMini:13, fournisseur:"PROMO", code:"", pizzappId:"ing34"},
+  {id:"p06", name:"Bacon", zone:"CONGEL", unit:"unité", stockMini:5, fournisseur:"PROMO", code:"4225980", pizzappId:"ing35"},
+  {id:"p07", name:"Pepperoni", zone:"CONGEL", unit:"unité", stockMini:4, fournisseur:"PROMO", code:"4420396", pizzappId:"ing36"},
+  {id:"p08", name:"Poulet", zone:"CONGEL", unit:"unité", stockMini:10, fournisseur:"PROMO", code:"4619874", pizzappId:"ing37"},
+  {id:"p09", name:"Marlin fumé (congel)", zone:"CONGEL", unit:"unité", stockMini:10, fournisseur:"CAP CREOLE", code:"", pizzappId:"ing41"},
+  {id:"p10", name:"Crevettes", zone:"CONGEL", unit:"unité", stockMini:15, fournisseur:"SOCOPRIM", code:"", pizzappId:"ing43"},
+  {id:"p11", name:"Saumon", zone:"CONGEL", unit:"unité", stockMini:7, fournisseur:"PROMO", code:"4830149", pizzappId:"ing42"},
+  {id:"p12", name:"Saucisse fumée", zone:"CONGEL", unit:"unité", stockMini:5, fournisseur:"PROMO", code:"4420981", pizzappId:"ing38"},
+
+  // ─── FRIGO ──────────────────────────────
+  {id:"p13", name:"Basilic", zone:"FRIGO", unit:"botte", stockMini:2, fournisseur:"PROMO", code:"", pizzappId:"ing17"},
+  {id:"p14", name:"Jambon", zone:"FRIGO", unit:"unité", stockMini:3, fournisseur:"PROMO", code:"4426351", pizzappId:"ing31"},
+  {id:"p15", name:"Champignons frais", zone:"FRIGO", unit:"barq.", stockMini:2, fournisseur:"CHAMPIMAR", code:"", pizzappId:"ing18"},
+  {id:"p16", name:"Fromage bleu", zone:"FRIGO", unit:"unité", stockMini:2, fournisseur:"PROMO", code:"4292410", pizzappId:"ing06"},
+  {id:"p17", name:"Fromage de chèvre", zone:"FRIGO", unit:"unité", stockMini:24, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing07"},
+  {id:"p18", name:"Poivrons", zone:"FRIGO", unit:"unité", stockMini:5, fournisseur:"PROMO", code:"4312070", pizzappId:"ing20"},
+  {id:"p19", name:"Oeufs", zone:"FRIGO", unit:"plaq.", stockMini:6, fournisseur:"PRO A PRO", code:"4250262", pizzappId:"ing29"},
+  {id:"p20", name:"Oignons rouges", zone:"FRIGO", unit:"unité", stockMini:2, fournisseur:"PROMO", code:"4342489", pizzappId:"ing22"},
+  {id:"p21", name:"Pomme de terre", zone:"FRIGO", unit:"kg", stockMini:2, fournisseur:"PROMO", code:"2501162", pizzappId:"ing21"},
+  {id:"p22", name:"Aubergines", zone:"FRIGO", unit:"unité", stockMini:2, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing23"},
+  {id:"p23", name:"Cives", zone:"FRIGO", unit:"botte", stockMini:3, fournisseur:"PROMO", code:"4341095", pizzappId:"ing25"},
+  {id:"p24", name:"Crème liquide", zone:"FRIGO", unit:"L", stockMini:6, fournisseur:"PRO A PRO", code:"", pizzappId:"ing10"},
+  {id:"p25", name:"Feta", zone:"FRIGO", unit:"unité", stockMini:2, fournisseur:"PROMO", code:"4225417", pizzappId:""},
+  {id:"p26", name:"Levure fraîche", zone:"FRIGO", unit:"bloc", stockMini:9, fournisseur:"PROMO", code:"4300161", pizzappId:"ing54"},
+  {id:"p27", name:"Piment végétarien", zone:"FRIGO", unit:"unité", stockMini:1, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p28", name:"Piment fort", zone:"FRIGO", unit:"unité", stockMini:1, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p29", name:"Tiramisu", zone:"FRIGO", unit:"pièce", stockMini:1, fournisseur:"PROMO", code:"", pizzappId:""},
+  {id:"p30", name:"Poudre spéculoos", zone:"FRIGO", unit:"sachet", stockMini:1, fournisseur:"PROMO", code:"", pizzappId:""},
+  {id:"p31", name:"Citron vert", zone:"FRIGO", unit:"unité", stockMini:8, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p32", name:"Roquette", zone:"FRIGO", unit:"sachet", stockMini:8, fournisseur:"PROMO", code:"4347220", pizzappId:"ing24"},
+  {id:"p33", name:"Marlin fumé (frigo)", zone:"FRIGO", unit:"unité", stockMini:12, fournisseur:"CAP CREOLE", code:"", pizzappId:"ing41"},
+  {id:"p34", name:"Oignon frit", zone:"FRIGO", unit:"sachet", stockMini:2, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing26"},
+
+  // ─── SEC (ingrédients) ──────────────────
+  {id:"p35", name:"Sauce tomate", zone:"SEC", unit:"boîte", stockMini:9, fournisseur:"PRO A PRO", code:"", pizzappId:"ing02"},
+  {id:"p36", name:"Olives", zone:"SEC", unit:"boîte", stockMini:5, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing16"},
+  {id:"p37", name:"Ananas", zone:"SEC", unit:"boîte", stockMini:8, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing19"},
+  {id:"p38", name:"Poivre", zone:"SEC", unit:"pot", stockMini:2, fournisseur:"PRO A PRO", code:"", pizzappId:""},
+  {id:"p39", name:"Sauce BBQ", zone:"SEC", unit:"bout.", stockMini:6, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing11"},
+  {id:"p40", name:"Vodka", zone:"SEC", unit:"bout.", stockMini:2, fournisseur:"PROMO", code:"3771278", pizzappId:"ing12"},
+  {id:"p41", name:"Sauce sriracha", zone:"SEC", unit:"bout.", stockMini:4, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing13"},
+  {id:"p42", name:"Miel", zone:"SEC", unit:"pot", stockMini:3, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing30"},
+  {id:"p43", name:"Pesto", zone:"SEC", unit:"pot", stockMini:3, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing14"},
+  {id:"p44", name:"Farine (sachet 25kg)", zone:"SEC", unit:"sac", stockMini:52, fournisseur:"PROMO", code:"3030", pizzappId:"ing50"},
+  {id:"p45", name:"Sel", zone:"SEC", unit:"kg", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing51"},
+  {id:"p46", name:"Sucre", zone:"SEC", unit:"kg", stockMini:10, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing52"},
+  {id:"p47", name:"Lait", zone:"SEC", unit:"L", stockMini:49, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing53"},
+  {id:"p48", name:"Épice Caraïbes", zone:"SEC", unit:"pot", stockMini:7, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p49", name:"Moutarde", zone:"SEC", unit:"pot", stockMini:3, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p50", name:"Huile d'olive", zone:"SEC", unit:"L", stockMini:18, fournisseur:"MEGA STOCK", code:"170780", pizzappId:"ing56"},
+  {id:"p51", name:"Huile neutre", zone:"SEC", unit:"L", stockMini:15, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p52", name:"CBD", zone:"SEC", unit:"flacon", stockMini:3, fournisseur:"CBD SHOP", code:"", pizzappId:""},
+  {id:"p53", name:"Vinaigre", zone:"SEC", unit:"L", stockMini:8, fournisseur:"MEGA STOCK", code:"", pizzappId:"ing55"},
+  {id:"p54", name:"Épice Ras el hanout", zone:"SEC", unit:"pot", stockMini:2, fournisseur:"PROMO", code:"1520945", pizzappId:""},
+  {id:"p55", name:"Sauce créoline", zone:"SEC", unit:"bout.", stockMini:2, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  // ─── SEC (consommables) → HYGIENE ───────
+  {id:"p60", name:"Film étirable", zone:"HYGIENE", unit:"roul.", stockMini:2, fournisseur:"PRO A PRO", code:"", pizzappId:""},
+  {id:"p61", name:"Papier essuie-tout", zone:"HYGIENE", unit:"paq.", stockMini:5, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p62", name:"Sopalin client", zone:"HYGIENE", unit:"paq.", stockMini:10, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p63", name:"Pot à sauce", zone:"HYGIENE", unit:"paq.", stockMini:3, fournisseur:"PROMO", code:"", pizzappId:""},
+  {id:"p64", name:"Boîte à pizza", zone:"HYGIENE", unit:"paq.", stockMini:5, fournisseur:"NATHANAEL", code:"", pizzappId:""},
+  {id:"p65", name:"Gants L", zone:"HYGIENE", unit:"boîte", stockMini:3, fournisseur:"F CARE", code:"", pizzappId:""},
+  {id:"p66", name:"Gants XL", zone:"HYGIENE", unit:"boîte", stockMini:3, fournisseur:"F CARE", code:"", pizzappId:""},
+  {id:"p67", name:"Sanitol", zone:"HYGIENE", unit:"bout.", stockMini:3, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p68", name:"Liquide vaisselle", zone:"HYGIENE", unit:"bout.", stockMini:3, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p69", name:"Produit sol", zone:"HYGIENE", unit:"bout.", stockMini:3, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p70", name:"Sac poubelle 130L", zone:"HYGIENE", unit:"roul.", stockMini:2, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"p71", name:"Papier toilettes", zone:"HYGIENE", unit:"paq.", stockMini:6, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+
+  // ─── BOISSONS ───────────────────────────
+  {id:"b01", name:"Coca 33cl", zone:"BOISSONS", unit:"unit.", stockMini:24, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b02", name:"Coca 50cl", zone:"BOISSONS", unit:"unit.", stockMini:72, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b03", name:"Coca 2L", zone:"BOISSONS", unit:"unit.", stockMini:20, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b04", name:"Coca Zéro 50cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b05", name:"Fanta Orange 50cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b06", name:"Fanta Orange 2L", zone:"BOISSONS", unit:"unit.", stockMini:6, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b07", name:"Chanflor 50cl", zone:"BOISSONS", unit:"unit.", stockMini:48, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b08", name:"Chanflor 1L", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b09", name:"Chanflor Fruit Rouge 50cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b10", name:"Didier Nature 50cl", zone:"BOISSONS", unit:"unit.", stockMini:24, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b11", name:"Didier Citron 50cl", zone:"BOISSONS", unit:"unit.", stockMini:24, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b12", name:"Orangina 2L", zone:"BOISSONS", unit:"unit.", stockMini:6, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b13", name:"Royal Soda Grenadine 50cl", zone:"BOISSONS", unit:"unit.", stockMini:24, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b14", name:"Royal Soda Kampagne 50cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b15", name:"Montpelé Thé Glacé 50cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b16", name:"Montpelé Fruit Rouge 50cl", zone:"BOISSONS", unit:"unit.", stockMini:30, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b17", name:"Montpelé Pomme Poire 50cl", zone:"BOISSONS", unit:"unit.", stockMini:48, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b18", name:"Amigo Orange 50cl", zone:"BOISSONS", unit:"unit.", stockMini:6, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b19", name:"Minute Maid Orange 25cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b20", name:"Joker ACE 25cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b21", name:"Red Bull 25cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b22", name:"Heineken 25cl", zone:"BOISSONS", unit:"unit.", stockMini:48, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b23", name:"Despé Classic 33cl", zone:"BOISSONS", unit:"unit.", stockMini:48, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b24", name:"Despé Mojito 33cl", zone:"BOISSONS", unit:"unit.", stockMini:24, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b25", name:"Despé RED 33cl", zone:"BOISSONS", unit:"unit.", stockMini:48, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b26", name:"JP Chenet Cabernet 25cl", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b27", name:"Champagne 75cl", zone:"BOISSONS", unit:"unit.", stockMini:2, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+  {id:"b28", name:"Eau de Source 1,5L", zone:"BOISSONS", unit:"unit.", stockMini:12, fournisseur:"MEGA STOCK", code:"", pizzappId:""},
+];
+
+// ══════════════════════════════════════════
+// SYNC DEPUIS PIZZAPP (Firebase RTDB)
+// Lit shop_config/pizzapp_recipes/ingredients
+// Met à jour stocks mini + conditionnements
+// ══════════════════════════════════════════
+let firebaseSynced = false;
+
+function syncFromPizzApp() {
+  rtdb.ref("shop_config/pizzapp_recipes/ingredients").once("value", function(snap) {
+    const data = snap.val();
+    if (!data || !Array.isArray(data)) { console.log("Pas de données PizzApp"); return; }
+
+    data.forEach(function(ing) {
+      if (!ing || !ing.id) return;
+      const local = ALL_PRODUCTS.find(function(p) { return p.pizzappId === ing.id; });
+      if (local) {
+        if (ing.condUnit) local.unit = ing.condUnit;
+        if (ing.condMini > 0) local.stockMini = ing.condMini;
+        if (ing.condFournisseur) local.fournisseur = ing.condFournisseur;
+        if (ing.condZone) local.zone = ing.condZone;
+        if (ing.condQty > 0) local.condQty = ing.condQty;
+        local.recipeUnit = ing.unit || "g";
+        local.minStockRecipe = ing.minStock || 0;
+      }
+    });
+
+    firebaseSynced = true;
+    console.log("✅ Sync PizzApp OK — " + data.length + " ingrédients");
+
+    if (document.getElementById("mainApp").style.display !== "none") {
+      renderZoneTabs();
+      renderItems();
+      updateProgress();
+    }
+  }, function(err) {
+    console.warn("Sync PizzApp erreur:", err.message);
+  });
+}
+
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) syncFromPizzApp();
+});
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let personName = "";
+let selectedShop = "";
+let quantities = {};  // {productId: number}
+let activeZone = "ALL";
+const ZONES = ["ALL","CONGEL","FRIGO","SEC","BOISSONS","HYGIENE"];
+const ZONE_EMOJI = {CONGEL:"❄️",FRIGO:"🧊",SEC:"📦",BOISSONS:"🥤",HYGIENE:"🧹",ALL:"📋"};
+const ZONE_COLORS = {CONGEL:"var(--congel)",FRIGO:"var(--frigo)",SEC:"var(--sec)",BOISSONS:"var(--boisson)",HYGIENE:"var(--hygiene)"};
+
+// ══════════════════════════════════════════
+// SPLASH → NAME
+// ══════════════════════════════════════════
+// Restauration automatique si session en cours
+setTimeout(() => {
+  document.getElementById("splash").classList.add("hide");
+  if (restoreSession()) {
+    // Session trouvée → reprendre directement
+    document.getElementById("nameScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    document.getElementById("submitBar").style.display = "block";
+    document.getElementById("headerName").textContent = personName;
+    document.getElementById("headerShop").textContent = selectedShop === "valmeniere" ? "📍 Valmenière" : "📍 Centre-Ville";
+    renderZoneTabs();
+    renderItems();
+    updateProgress();
+  } else {
+    document.getElementById("nameScreen").style.display = "block";
+  }
+}, 1800);
+
+// Empêcher la fermeture/rafraîchissement accidentel
+window.addEventListener("beforeunload", function(e) {
+  if (getCounted() > 0) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+document.getElementById("nameInput").addEventListener("input", function() {
+  checkReady();
+});
+
+function selectShop(btn) {
+  document.querySelectorAll(".shop-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  selectedShop = btn.dataset.shop;
+  checkReady();
+}
+
+function checkReady() {
+  const name = document.getElementById("nameInput").value.trim();
+  const btn = document.getElementById("startBtn");
+  if (name.length >= 2 && selectedShop) {
+    btn.classList.add("ready");
+  } else {
+    btn.classList.remove("ready");
+  }
+}
+
+function startInventory() {
+  personName = document.getElementById("nameInput").value.trim();
+  if (!personName || !selectedShop) return;
+
+  document.getElementById("nameScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  document.getElementById("submitBar").style.display = "block";
+  document.getElementById("headerName").textContent = personName;
+  document.getElementById("headerShop").textContent = selectedShop === "valmeniere" ? "📍 Valmenière" : "📍 Centre-Ville";
+
+  renderZoneTabs();
+  renderItems();
+  updateProgress();
+}
+
+// ══════════════════════════════════════════
+// ZONE TABS
+// ══════════════════════════════════════════
+function renderZoneTabs() {
+  const el = document.getElementById("zoneTabs");
+  el.innerHTML = ZONES.map(z => {
+    const count = z === "ALL" ? getCounted() : getCounted(z);
+    const total = z === "ALL" ? ALL_PRODUCTS.length : ALL_PRODUCTS.filter(p => p.zone === z).length;
+    return `<button class="zone-tab ${z===activeZone?'active':''}" data-zone="${z}" onclick="setZone('${z}')">
+      ${ZONE_EMOJI[z]||""} ${z==="ALL"?"Tout":z}
+      ${count>0?`<span class="zone-badge">${count}</span>`:""}
+    </button>`;
+  }).join("");
+}
+
+function setZone(z) {
+  activeZone = z;
+  renderZoneTabs();
+  renderItems();
+}
+
+function getCounted(zone) {
+  return ALL_PRODUCTS.filter(p => {
+    if (zone && p.zone !== zone) return false;
+    return quantities[p.id] !== undefined;
+  }).length;
+}
+
+// ══════════════════════════════════════════
+// RENDER ITEMS
+// ══════════════════════════════════════════
+function renderItems() {
+  const el = document.getElementById("itemsList");
+  const search = (document.getElementById("searchInput")?.value || "").toLowerCase();
+  let items = ALL_PRODUCTS;
+
+  if (activeZone !== "ALL") items = items.filter(p => p.zone === activeZone);
+  if (search) items = items.filter(p => p.name.toLowerCase().includes(search));
+
+  // Group by zone
+  const groups = {};
+  items.forEach(p => {
+    if (!groups[p.zone]) groups[p.zone] = [];
+    groups[p.zone].push(p);
+  });
+
+  let html = "";
+  const zoneOrder = ["CONGEL","FRIGO","SEC","BOISSONS","HYGIENE"];
+  for (const z of zoneOrder) {
+    if (!groups[z]) continue;
+    if (activeZone === "ALL") {
+      html += `<div class="zone-header">${ZONE_EMOJI[z]} ${z} (${groups[z].length})</div>`;
+    }
+    groups[z].forEach(p => {
+      const val = quantities[p.id];
+      const isCounted = val !== undefined;
+      const isZero = isCounted && val === 0;
+      const cls = isZero ? "zero" : isCounted ? "counted" : "";
+      const tagCls = "tag-" + p.zone.toLowerCase();
+
+      html += `<div class="item-card ${cls}" id="card-${p.id}">
+        <div class="item-top">
+          <div class="item-name">${p.name}</div>
+          <div class="item-info">
+            <span class="item-tag ${tagCls}">${p.zone}</span>
+            <div class="item-stock">mini: <b>${p.stockMini}</b> ${p.unit}</div>
+          </div>
+        </div>
+        <div class="input-row">
+          <button class="qty-btn" onclick="adjust('${p.id}',-1)" aria-label="Moins">−</button>
+          <input class="qty-input" type="number" inputmode="numeric" step="1" min="0"
+            id="input-${p.id}" value="${isCounted ? val : ''}"
+            placeholder="—"
+            oninput="setQty('${p.id}',this.value)"
+            onfocus="this.select()">
+          <span class="item-unit">${p.unit}</span>
+          <button class="qty-btn" onclick="adjust('${p.id}',1)" aria-label="Plus">+</button>
+          <div class="check-done">${isZero ? '⚠️' : '✓'}</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (!html) html = '<div style="text-align:center;padding:60px 20px;color:var(--tx3)"><div style="font-size:40px;margin-bottom:12px">🔍</div>Aucun produit trouvé</div>';
+  el.innerHTML = html;
+}
+
+function filterItems() { renderItems(); }
+
+// ══════════════════════════════════════════
+// QUANTITIES
+// ══════════════════════════════════════════
+function saveSession() {
+  try {
+    sessionStorage.setItem("mwaka-inv-qty", JSON.stringify(quantities));
+    sessionStorage.setItem("mwaka-inv-name", personName);
+    sessionStorage.setItem("mwaka-inv-shop", selectedShop);
+    sessionStorage.setItem("mwaka-inv-zone", activeZone);
+  } catch(e) {}
+}
+
+function restoreSession() {
+  try {
+    const saved = sessionStorage.getItem("mwaka-inv-qty");
+    const name = sessionStorage.getItem("mwaka-inv-name");
+    const shop = sessionStorage.getItem("mwaka-inv-shop");
+    const zone = sessionStorage.getItem("mwaka-inv-zone");
+    if (saved && name) {
+      quantities = JSON.parse(saved);
+      personName = name;
+      selectedShop = shop || "";
+      activeZone = zone || "ALL";
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function clearSession() {
+  sessionStorage.removeItem("mwaka-inv-qty");
+  sessionStorage.removeItem("mwaka-inv-name");
+  sessionStorage.removeItem("mwaka-inv-shop");
+  sessionStorage.removeItem("mwaka-inv-zone");
+}
+
+function setQty(id, val) {
+  if (val === "" || val === undefined) {
+    delete quantities[id];
+  } else {
+    quantities[id] = Math.max(0, parseFloat(val) || 0);
+  }
+  updateCard(id);
+  updateProgress();
+  saveSession();
+}
+
+function adjust(id, delta) {
+  const current = quantities[id] !== undefined ? quantities[id] : 0;
+  const next = Math.max(0, current + delta);
+  quantities[id] = next;
+  const inp = document.getElementById("input-" + id);
+  if (inp) inp.value = next;
+  updateCard(id);
+  updateProgress();
+  saveSession();
+  // Haptic
+  if (navigator.vibrate) navigator.vibrate(20);
+}
+
+function updateCard(id) {
+  const card = document.getElementById("card-" + id);
+  if (!card) return;
+  const val = quantities[id];
+  const isCounted = val !== undefined;
+  const isZero = isCounted && val === 0;
+  card.className = "item-card " + (isZero ? "zero" : isCounted ? "counted" : "");
+  const check = card.querySelector(".check-done");
+  if (check) {
+    check.style.display = isCounted ? "flex" : "none";
+    check.textContent = isZero ? "⚠️" : "✓";
+  }
+}
+
+function updateProgress() {
+  const total = ALL_PRODUCTS.length;
+  const counted = getCounted();
+  const pct = Math.round((counted / total) * 100);
+
+  document.getElementById("progressLabel").textContent = `${counted} / ${total} comptés`;
+  document.getElementById("progressPct").textContent = pct + "%";
+  document.getElementById("progressBar").style.width = pct + "%";
+
+  const btn = document.getElementById("submitBtn");
+  if (counted >= 1) {
+    btn.classList.add("ready");
+    btn.textContent = `📤 Envoyer (${counted} produits)`;
+  } else {
+    btn.classList.remove("ready");
+    btn.textContent = `📤 Comptez au moins 1 produit`;
+  }
+
+  renderZoneTabs();
+}
+
+// ══════════════════════════════════════════
+// SUBMIT → FIREBASE
+// ══════════════════════════════════════════
+function submitInventory() {
+  const counted = getCounted();
+  if (counted < 1) return;
+  if (!confirm(`Envoyer l'inventaire de ${counted} produits ?`)) return;
+
+  const now = new Date();
+  const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const timestamp = now.getTime();
+
+  // Construire les données
+  const items = {};
+  const pizzappItems = [];
+  let alertCount = 0;
+
+  ALL_PRODUCTS.forEach(p => {
+    if (quantities[p.id] === undefined) return;
+    const qty = quantities[p.id];
+    items[p.id] = {
+      name: p.name,
+      zone: p.zone,
+      qty: qty,
+      unit: p.unit,
+      stockMini: p.stockMini,
+      fournisseur: p.fournisseur,
+      needOrder: qty < p.stockMini,
+      orderQty: qty < p.stockMini ? p.stockMini - qty : 0
+    };
+    if (qty < p.stockMini) alertCount++;
+
+    // Mapper vers pizzapp si lien existe
+    if (p.pizzappId) {
+      // Convertir la quantité conditionnement en grammes si condQty est renseigné
+      const realQtyGrams = p.condQty > 0 ? qty * p.condQty : qty;
+      pizzappItems.push({
+        ingredientId: p.pizzappId,
+        productId: p.id,
+        name: p.name,
+        realQty: realQtyGrams,
+        realQtyCond: qty,
+        condUnit: p.unit,
+        condQty: p.condQty || 0,
+        unit: p.recipeUnit || p.unit,
+        date: dateStr
+      });
+    }
+  });
+
+  const inventoryData = {
+    person: personName,
+    shop: selectedShop,
+    date: dateStr,
+    submittedAt: timestamp,
+    totalProducts: counted,
+    alertCount: alertCount,
+    items: items
+  };
+
+  // Écrire dans Firebase RTDB
+  const invRef = rtdb.ref("inventaires/" + dateStr + "/" + selectedShop + "_" + timestamp);
+  invRef.set(inventoryData).then(() => {
+    console.log("✅ Inventaire envoyé vers Firebase RTDB");
+
+    // Écrire aussi les données compatibles PizzApp
+    // Format attendu par PizzApp : inventaires_pizzapp/{date}/{ingredientId} → realQty
+    if (pizzappItems.length > 0) {
+      const pizzappRef = rtdb.ref("inventaires_pizzapp/" + dateStr);
+      const pizzappData = {};
+      pizzappItems.forEach(item => {
+        pizzappData[item.ingredientId] = {
+          realQty: item.realQty,
+          realQtyCond: item.realQtyCond,
+          condUnit: item.condUnit,
+          condQty: item.condQty,
+          unit: item.unit,
+          name: item.name,
+          productId: item.productId,
+          shop: selectedShop,
+          person: personName
+        };
+      });
+      pizzappRef.update(pizzappData).then(() => {
+        console.log("✅ Données PizzApp sync OK");
+      }).catch(e => console.warn("PizzApp sync error:", e));
+    }
+
+    showSuccess(counted, alertCount);
+  }).catch(err => {
+    console.error("❌ Erreur Firebase:", err);
+    // Fallback: sauvegarder en local
+    const local = JSON.parse(localStorage.getItem("mwaka-inventaires") || "[]");
+    local.push(inventoryData);
+    localStorage.setItem("mwaka-inventaires", JSON.stringify(local));
+    showSuccess(counted, alertCount, true);
+  });
+}
+
+// ══════════════════════════════════════════
+// SUCCESS + CONFETTI
+// ══════════════════════════════════════════
+function showSuccess(counted, alerts, isLocal) {
+  clearSession(); // Nettoyer la session après envoi réussi
+  const overlay = document.getElementById("successOverlay");
+  document.getElementById("successTitle").textContent = `Merci ${personName} ! 🎉`;
+  document.getElementById("successSub").textContent = isLocal
+    ? "Inventaire sauvegardé en local (pas de connexion internet). Il sera synchronisé plus tard."
+    : "L'inventaire a été envoyé avec succès !";
+
+  document.getElementById("successStats").innerHTML = `
+    <div class="success-stat"><div class="val">${counted}</div><div class="lbl">Produits comptés</div></div>
+    <div class="success-stat"><div class="val" style="color:${alerts>0?'var(--red)':'var(--green)'}">${alerts}</div><div class="lbl">À commander</div></div>
+  `;
+
+  overlay.classList.add("show");
+  document.getElementById("mainApp").style.display = "none";
+  document.getElementById("submitBar").style.display = "none";
+
+  // CONFETTI !
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const container = document.getElementById("confettiContainer");
+  const colors = ["#e76f51","#f97316","#fbbf24","#34d399","#38bdf8","#a78bfa","#f472b6","#fff"];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti";
+    el.style.left = Math.random() * 100 + "%";
+    el.style.animationDelay = Math.random() * 2 + "s";
+    el.style.animationDuration = (2 + Math.random() * 2) + "s";
+    el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    el.style.width = (6 + Math.random() * 8) + "px";
+    el.style.height = (6 + Math.random() * 8) + "px";
+    el.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    container.appendChild(el);
+  }
+}
+</script>
+</body>
+</html>

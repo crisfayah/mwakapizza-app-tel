@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mwaka KDS PRO - VALMENIERE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" href="https://moniresto.com/mwakapizza/img/favicon.ico">
+    <link rel="apple-touch-icon" href="https://moniresto.com/mwakapizza/img/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --red: #e74c3c; --blue: #3498db; --green: #2ecc71; --orange: #f39c12; --dark: #000; --card: #111; --danger: #4a0404; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: #fff; margin:0; padding: 0; overflow: hidden; }
+        
+        .header-top { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px 20px; border-bottom: 2px solid #333; height: 65px; gap: 20px; }
+        .search-box { flex-grow: 1; position: relative; max-width: 500px; }
+        .search-box input { width: 100%; background: #1a1a1a; border: 2px solid var(--blue); padding: 10px 40px 10px 15px; border-radius: 8px; color: #fff; font-size: 16px; outline: none; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--blue); }
+        .flux-info { background: #1a1a1a; padding: 8px 15px; border-radius: 30px; border: 1px solid var(--orange); color: var(--orange); font-weight: 900; font-size: 16px; white-space: nowrap; }
+
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        .fullscreen-btn { background: #222; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 18px; }
+        #wake-status { font-size: 10px; color: var(--green); opacity: 0.7; }
+        
+        .bt-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .bt-btn.connected { color: var(--green); border-color: var(--green); background: rgba(46, 204, 113, 0.1); }
+
+        .tabs { display: flex; background: #000; position: sticky; top: 0; z-index: 2000; height: 90px; gap: 8px; padding: 10px; }
+        .tab-btn { flex: 1; border: 1px solid #333; border-radius: 12px; font-size: 11px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.4; color: #fff; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { opacity: 1; border: 2px solid #fff; transform: translateY(-2px); }
+        #tab-afaire { background: #641e16; } #tab-encours { background: #1b4f72; } #tab-aufour { background: #7e5109; } #tab-termine { background: #145a32; }
+        .badge { background: #fff; color: #000; padding: 2px 10px; border-radius: 10px; font-size: 14px; margin-top: 5px; }
+
+        .kds-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 15px; height: calc(100vh - 170px); overflow-y: auto; align-content: start; }
+        .order-card { background: var(--card); border-radius: 15px; border: 1px solid #fff; border-left: 12px solid var(--blue); min-height: 520px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .order-card.is-web { border-color: var(--blue); border-width: 2px; }
+        .order-card.danger-mode { background: var(--danger) !important; animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 5px var(--red); } 50% { box-shadow: 0 0 20px var(--red); } }
+
+        .card-header { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: flex-start; }
+        .client-name { font-size: 14px; color: #aaa; text-transform: uppercase; margin: 0; font-weight: bold; }
+        .phone-text { color: var(--orange); font-weight: 900; font-size: 16px; }
+        .status-indicators { display: flex; gap: 12px; align-items: center; }
+        .timer-badge { background: #fff; color: #000; padding: 5px 12px; border-radius: 8px; font-weight: 900; font-size: 20px; font-family: monospace; border: 2px solid var(--orange); }
+        .slot-badge { background: var(--orange); color: #000; padding: 5px 12px; border-radius: 8px; font-weight: 900; font-size: 18px; border: 2px solid #fff; }
+
+        .drive-picto { font-size: 30px; color: #333; }
+        .drive-enroute { color: var(--blue); animation: car-move 2s infinite; }
+        .drive-arrived { color: var(--green); animation: blink 1s infinite; font-size: 38px; }
+
+        .source-tag { padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 11px; margin-bottom: 5px; display: inline-block; text-transform: uppercase; }
+        .source-web { background: var(--blue); color: #fff; }
+        .source-tel { background: var(--green); color: #000; }
+        .type-tag { padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 11px; margin-bottom: 5px; display: inline-block; text-transform: uppercase; border: 1px solid #fff; }
+        .type-livraison { background: var(--red); color: #fff; }
+
+        .card-body { padding: 15px; flex-grow: 1; }
+        .delivery-box { background: rgba(231, 76, 60, 0.15); padding: 10px; border-radius: 8px; border-left: 5px solid var(--red); margin-bottom: 12px; }
+        .addr-text { font-weight: 900; color: #fff; text-transform: uppercase; font-size: 14px; display: block; }
+        .pay-tag { display: inline-block; background: var(--orange); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 11px; margin-top: 5px; }
+
+        .item-line { border-bottom: 1px solid #222; padding: 12px 0; }
+        .pizza-title { font-size: 1.8em; font-weight: 900; display: block; line-height: 1.1; }
+        .matching-pizza { color: var(--orange); animation: match-blink 1.5s infinite; }
+        @keyframes match-blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        
+        .dress-icon { color: var(--green); font-size: 0.9em; margin-left: 5px; }
+        .note-tag { background: var(--red); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 900; display: inline-block; margin-top: 6px; }
+        .supp-tag { color: var(--orange); font-size: 14px; font-weight: bold; display: block; padding-left: 15px; }
+        .extras-area { margin-top: 15px; padding: 10px; border: 1px dashed #555; border-radius: 8px; background: #000; font-size: 14px; }
+
+        .card-footer { padding: 15px; background: rgba(0,0,0,0.4); border-top: 1px solid #333; display: flex; gap: 10px; margin-top: auto; }
+        .btn { height: 65px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-print { background: #222; color: #fff; border: 1px solid #fff; width: 75px; font-size: 24px; transition: 0.3s; }
+        .btn-print.printed { background: var(--green) !important; color: #000 !important; }
+        .btn-action { background: var(--blue); color: #fff; flex-grow: 1; font-size: 18px; }
+        .btn-green { background: var(--green); color: #000; }
+
+        .list-section { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .detailed-row { display: flex; align-items: center; background: #111; border-radius: 12px; padding: 15px 20px; border: 1px solid #fff; border-left: 12px solid var(--blue); gap: 25px; }
+        .row-info { width: 250px; flex-shrink: 0; }
+        .row-items { flex-grow: 1; font-size: 1.2em; font-weight: bold; }
+        .row-actions { display: flex; gap: 12px; align-items: center; }
+
+        #oven-alert { position: fixed; top: 110px; left: 50%; transform: translateX(-50%); background: var(--red); color: #fff; padding: 15px 40px; border-radius: 50px; font-weight: 900; z-index: 9999; display: none; border: 2px solid #fff; animation: blink 0.5s infinite; }
+
+        /* Print debug toast */
+        .print-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a1a2e;
+            border: 1px solid var(--blue);
+            border-radius: 12px;
+            padding: 15px 20px;
+            max-width: 400px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 99999;
+            font-family: monospace;
+            font-size: 12px;
+            color: #ccc;
+            display: none;
+        }
+        .print-toast.visible { display: block; }
+        .print-toast .log-ok { color: var(--green); }
+        .print-toast .log-err { color: var(--red); }
+        .print-toast .log-info { color: var(--blue); }
+    </style>
+</head>
+<body onclick="enableWakeLock()">
+
+    <div id="oven-alert">⚠️ FOUR SATURE : CAPACITE MAXIMALE !</div>
+
+    <div class="header-top">
+        <div style="font-weight: 900; font-size: 20px; letter-spacing: 1px;">MWAKA VALMENIERE</div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Recherche Nom, Tel, Pizza, Adresse..." onkeyup="searchOrders()">
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="header-controls">
+            <button id="bt-connect" class="bt-btn" onclick="connectPrinter()">
+                <i class="fas fa-print"></i> IMPRIMER
+            </button>
+            <div id="wake-status"><i class="fas fa-sun"></i> ACTIVE</div>
+            <div class="flux-info" id="flux-tracker">Flux : -- min</div>
+            <button class="fullscreen-btn" onclick="toggleFullScreen()"><i class="fas fa-expand"></i></button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab-btn active" id="tab-afaire" onclick="switchTab('en_attente')">A FAIRE <span id="c-afaire" class="badge">0</span></div>
+        <div class="tab-btn" id="tab-encours" onclick="switchTab('production')">EN COURS <span id="c-encours" class="badge">0</span></div>
+        <div class="tab-btn" id="tab-aufour" onclick="switchTab('cuisson')">AU FOUR <span id="c-aufour" class="badge">0</span></div>
+        <div class="tab-btn" id="tab-termine" onclick="switchTab('termine')">FINI <span id="c-termine" class="badge">0</span></div>
+    </div>
+
+    <div id="ordersContainer" class="kds-grid"></div>
+
+    <!-- Debug toast for print -->
+    <div id="printToast" class="print-toast"></div>
+
+    <audio id="alertSound" loop src="https://assets.mixkit.co/active_storage/sfx/2855/2855-preview.mp3"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script>
+        // ====================================================
+        // STATE — use var for hoisting safety
+        // ====================================================
+        var db = null;
+        var sound = null;
+        var MY_SHOP = "valmeniere";
+        var DRESSING_LIST = ['DANJE', 'SIRENE', 'OU LA', 'TOMBOLO'];
+        var currentTab = 'en_attente';
+        var allOrders = [];
+        var searchQuery = "";
+
+        // ====================================================
+        // PRINT ENGINE V5 — TRIPLE MODE
+        // Mode 1: RawBT Intent (Android tablette + BT Classic) — PRINCIPAL
+        // Mode 2: Web Serial (PC/Mac + BT Classic SPP)
+        // Mode 3: Web Bluetooth BLE — FALLBACK
+        // ====================================================
+        var serialPort = null;
+        var serialWriter = null;
+        var printMode = null; // 'rawbt', 'serial', or 'ble'
+        
+        // BLE fallback vars
+        var printCharacteristic = null;
+        var printDevice = null;
+        var allWritableChars = [];
+
+        // Detect Android
+        var isAndroid = /android/i.test(navigator.userAgent);
+
+        // Debug logger
+        function printLog(msg, type) {
+            type = type || 'info';
+            // En mode RawBT on n'affiche pas le toast debug
+            if (printMode === 'rawbt' || isAndroid) return;
+            var toast = document.getElementById('printToast');
+            if (!toast) return;
+            var cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
+            toast.innerHTML += '<div class="' + cls + '">[' + new Date().toLocaleTimeString() + '] ' + msg + '</div>';
+            toast.scrollTop = toast.scrollHeight;
+            toast.classList.add('visible');
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(function() { toast.classList.remove('visible'); }, 15000);
+        }
+
+        /**
+         * Main connect button — auto-detect best mode
+         */
+        async function connectPrinter() {
+            if (isAndroid) {
+                // On Android: use RawBT (no connect step needed)
+                printMode = 'rawbt';
+                document.getElementById('bt-connect').classList.add('connected');
+                document.getElementById('bt-connect').innerHTML = '<i class="fas fa-print"></i> RAWBT OK';
+                printLog('Mode RawBT (Android). Assurez-vous que RawBT est installe et connecte a la JoliMark.', 'ok');
+                // Send a quick test via plain text mode
+                sendViaRawBT("TEST JOLIMARK\n\n\n");
+                return;
+            }
+
+            // On Desktop: try Web Serial first
+            if ('serial' in navigator) {
+                try {
+                    await connectSerial();
+                    return;
+                } catch(e) {
+                    if (e.message.indexOf('cancelled') === -1 && e.message.indexOf('No port') === -1) {
+                        printLog('Serial echoue: ' + e.message, 'err');
+                    }
+                }
+            }
+
+            // Last fallback: BLE
+            if ('bluetooth' in navigator) {
+                try {
+                    await connectBLE();
+                } catch(e) {
+                    if (e.message.indexOf('cancelled') === -1) {
+                        printLog('BLE echoue: ' + e.message, 'err');
+                    }
+                }
+            } else {
+                printLog('Aucune methode d\'impression disponible!', 'err');
+                alert("Installez RawBT depuis le Play Store pour imprimer via Bluetooth.");
+            }
+        }
+
+        // ====================================================
+        // MODE 1: RAWBT INTENT (Android — Bluetooth Classic)
+        // ====================================================
+        function sendViaRawBT(textContent) {
+            // Direct rawbt: scheme — bypasses Chrome app chooser
+            window.location.href = "rawbt:" + encodeURI(textContent);
+            printLog('Envoi texte via RawBT...', 'ok');
+            return true;
+        }
+
+        /**
+         * Send raw ESC/POS bytes via RawBT using base64 raw mode
+         * Direct scheme: rawbt:base64,{b64data}
+         */
+        function sendBytesViaRawBT(data) {
+            var binary = '';
+            for (var i = 0; i < data.length; i++) {
+                binary += String.fromCharCode(data[i]);
+            }
+            var base64 = btoa(binary);
+            window.location.href = "rawbt:base64," + base64;
+            printLog('Envoi ESC/POS brut via RawBT (' + data.length + ' octets)', 'ok');
+            return true;
+        }
+
+        // ====================================================
+        // MODE 2: WEB SERIAL (Desktop — Bluetooth Classic SPP)
+        // ====================================================
+        async function connectSerial() {
+            printLog('Ouverture du port serie (Bluetooth SPP)...');
+            serialPort = await navigator.serial.requestPort();
+            await serialPort.open({ baudRate: 9600 });
+            printLog('Port serie ouvert a 9600 baud', 'ok');
+            
+            serialWriter = serialPort.writable.getWriter();
+            printMode = 'serial';
+            
+            document.getElementById('bt-connect').classList.add('connected');
+            document.getElementById('bt-connect').innerHTML = '<i class="fas fa-print"></i> SERIAL OK';
+            
+            var testData = new Uint8Array([0x1B, 0x40, 0x1B, 0x61, 0x01, 
+                0x54, 0x45, 0x53, 0x54, 0x0A,
+                0x1B, 0x64, 0x03, 0x1D, 0x56, 0x41, 0x03]);
+            try {
+                await serialWriter.write(testData);
+                printLog('Test impression envoye!', 'ok');
+            } catch(e) {
+                printLog('Test echoue: ' + e.message, 'err');
+            }
+        }
+
+        // ====================================================
+        // MODE 3: WEB BLUETOOTH BLE — FALLBACK
+        // ====================================================
+        async function connectBLE() {
+            printLog('Recherche imprimante BLE...');
+            allWritableChars = [];
+            
+            var device = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: [
+                    '0000ff00-0000-1000-8000-00805f9b34fb',
+                    '000018f0-0000-1000-8000-00805f9b34fb',
+                    '49535056-fe7d-4ae5-8fa9-9fafd205e455',
+                    '0000ffe0-0000-1000-8000-00805f9b34fb',
+                    'e7810a71-73ae-499d-8c15-faa9aef0c3f2'
+                ]
+            });
+            
+            printDevice = device;
+            printLog('Appareil: ' + (device.name || 'inconnu'), 'ok');
+
+            device.addEventListener('gattserverdisconnected', function() {
+                printLog('BLE deconnecte', 'err');
+                allWritableChars = [];
+                printMode = null;
+                document.getElementById('bt-connect').classList.remove('connected');
+                document.getElementById('bt-connect').innerHTML = '<i class="fas fa-print"></i> IMPRIMER';
+            });
+
+            var server = await device.gatt.connect();
+            var services = await server.getPrimaryServices();
+
+            for (var si = 0; si < services.length; si++) {
+                var chars = await services[si].getCharacteristics();
+                for (var ci = 0; ci < chars.length; ci++) {
+                    var c = chars[ci];
+                    if (c.properties.write || c.properties.writeWithoutResponse) {
+                        allWritableChars.push({
+                            char: c, uuid: c.uuid,
+                            canWrite: c.properties.write,
+                            canWriteNoResp: c.properties.writeWithoutResponse
+                        });
+                    }
+                }
+            }
+
+            if (allWritableChars.length > 0) {
+                printMode = 'ble';
+                document.getElementById('bt-connect').classList.add('connected');
+                document.getElementById('bt-connect').innerHTML = '<i class="fab fa-bluetooth-b"></i> BLE (' + allWritableChars.length + ')';
+                printLog('BLE connecte. Note: JoliMark utilise BT Classic — preferez RawBT ou Serial.', 'ok');
+            }
+        }
+
+        // ====================================================
+        // ENCODING — ASCII for thermal printers
+        // ====================================================
+        function stringToBytes(str) {
+            var charMap = {
+                '\u00e9': 'e', '\u00e8': 'e', '\u00ea': 'e', '\u00eb': 'e',
+                '\u00e0': 'a', '\u00e2': 'a', '\u00e4': 'a',
+                '\u00f9': 'u', '\u00fb': 'u', '\u00fc': 'u',
+                '\u00f4': 'o', '\u00f6': 'o',
+                '\u00ee': 'i', '\u00ef': 'i',
+                '\u00e7': 'c',
+                '\u00c9': 'E', '\u00c8': 'E', '\u00ca': 'E', '\u00cb': 'E',
+                '\u00c0': 'A', '\u00c2': 'A', '\u00c4': 'A',
+                '\u00d9': 'U', '\u00db': 'U', '\u00dc': 'U',
+                '\u00d4': 'O', '\u00d6': 'O',
+                '\u00ce': 'I', '\u00cf': 'I',
+                '\u00c7': 'C'
+            };
+            var cleaned = '';
+            for (var i = 0; i < str.length; i++) {
+                var ch = str[i];
+                var code = ch.charCodeAt(0);
+                if (charMap[ch] !== undefined) cleaned += charMap[ch];
+                else if (code < 128) cleaned += ch;
+                else cleaned += ' ';
+            }
+            var bytes = new Uint8Array(cleaned.length);
+            for (var i = 0; i < cleaned.length; i++) {
+                bytes[i] = cleaned.charCodeAt(i) & 0xFF;
+            }
+            return bytes;
+        }
+
+        /**
+         * Convert string to clean ASCII (for RawBT plain text mode)
+         */
+        function cleanText(str) {
+            var charMap = {
+                '\u00e9': 'e', '\u00e8': 'e', '\u00ea': 'e', '\u00eb': 'e',
+                '\u00e0': 'a', '\u00e2': 'a', '\u00e4': 'a',
+                '\u00f9': 'u', '\u00fb': 'u', '\u00fc': 'u',
+                '\u00f4': 'o', '\u00f6': 'o',
+                '\u00ee': 'i', '\u00ef': 'i',
+                '\u00e7': 'c',
+                '\u00c9': 'E', '\u00c8': 'E', '\u00ca': 'E', '\u00cb': 'E',
+                '\u00c0': 'A', '\u00c2': 'A', '\u00c4': 'A',
+                '\u00d9': 'U', '\u00db': 'U', '\u00dc': 'U',
+                '\u00d4': 'O', '\u00d6': 'O',
+                '\u00ce': 'I', '\u00cf': 'I',
+                '\u00c7': 'C'
+            };
+            var result = '';
+            for (var i = 0; i < str.length; i++) {
+                var ch = str[i];
+                if (charMap[ch] !== undefined) result += charMap[ch];
+                else if (ch.charCodeAt(0) < 128) result += ch;
+                else result += ' ';
+            }
+            return result;
+        }
+
+        // ====================================================
+        // SEND DATA — routes to RawBT, Serial or BLE
+        // ====================================================
+        async function sendToPrinter(data) {
+            if (printMode === 'rawbt') {
+                return sendBytesViaRawBT(data);
+            } else if (printMode === 'serial') {
+                return await sendViaSerial(data);
+            } else if (printMode === 'ble') {
+                return await sendViaBLE(data);
+            } else {
+                // Auto-detect: if Android, use RawBT directly
+                if (isAndroid) {
+                    printMode = 'rawbt';
+                    document.getElementById('bt-connect').classList.add('connected');
+                    document.getElementById('bt-connect').innerHTML = '<i class="fas fa-print"></i> RAWBT';
+                    return sendBytesViaRawBT(data);
+                }
+                printLog('Imprimante non connectee', 'err');
+                alert("Cliquez sur IMPRIMER pour connecter l'imprimante d'abord.");
+                return false;
+            }
+        }
+
+        async function sendViaSerial(data) {
+            if (!serialWriter) return false;
+            try {
+                await serialWriter.write(data);
+                printLog('Serial OK (' + data.length + ' octets)', 'ok');
+                return true;
+            } catch(e) {
+                printLog('Erreur Serial: ' + e.message, 'err');
+                try {
+                    serialWriter.releaseLock();
+                    serialWriter = serialPort.writable.getWriter();
+                    await serialWriter.write(data);
+                    return true;
+                } catch(e2) {
+                    printMode = null;
+                    document.getElementById('bt-connect').classList.remove('connected');
+                    document.getElementById('bt-connect').innerHTML = '<i class="fas fa-print"></i> IMPRIMER';
+                    return false;
+                }
+            }
+        }
+
+        async function sendViaBLE(data) {
+            if (allWritableChars.length === 0) return false;
+            if (printDevice && !printDevice.gatt.connected) {
+                try { await printDevice.gatt.connect(); } 
+                catch(e) { return false; }
+            }
+            for (var i = 0; i < allWritableChars.length; i++) {
+                var wc = allWritableChars[i];
+                try {
+                    var CHUNK = 100, DELAY = 50;
+                    for (var j = 0; j < data.length; j += CHUNK) {
+                        var chunk = data.slice(j, Math.min(j + CHUNK, data.length));
+                        if (wc.canWriteNoResp) await wc.char.writeValueWithoutResponse(chunk.buffer);
+                        else await wc.char.writeValue(chunk.buffer);
+                        if (j + CHUNK < data.length) await new Promise(function(r) { setTimeout(r, DELAY); });
+                    }
+                    printLog('BLE OK via ' + wc.uuid, 'ok');
+                    return true;
+                } catch(e) { printLog('BLE echec ' + wc.uuid, 'err'); }
+            }
+            return false;
+        }
+
+        // ====================================================
+        // FIREBASE INIT — direct inline (same as original)
+        // ====================================================
+        var config = { apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0", authDomain: "mwakaphone-e8c5b.firebaseapp.com", databaseURL: "https://mwakaphone-e8c5b-default-rtdb.europe-west1.firebasedatabase.app", projectId: "mwakaphone-e8c5b", storageBucket: "mwakaphone-e8c5b.firebasestorage.app", messagingSenderId: "258049374795", appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce" };
+        firebase.initializeApp(config);
+        db = firebase.firestore();
+        var rtdb = firebase.database();   // ← RTDB pour stocks
+        sound = document.getElementById('alertSound');
+
+        // Authentification anonyme puis écoute des commandes
+        firebase.auth().signInAnonymously().catch(function(err) {
+            console.error("Auth anonyme échouée:", err.message);
+        });
+
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (!user) return;
+
+        db.collection("commandes").onSnapshot(function(snap) {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            allOrders = snap.docs.map(function(doc) {
+                return Object.assign({ id: doc.id }, doc.data());
+            }).filter(function(o) {
+                var isMyShop = (o.shop || "").toLowerCase().indexOf(MY_SHOP) !== -1;
+                var isToday = false;
+                if (o.createdAt && o.createdAt.seconds) {
+                    var orderDate = new Date(o.createdAt.seconds * 1000);
+                    orderDate.setHours(0, 0, 0, 0);
+                    isToday = (orderDate.getTime() === today.getTime());
+                }
+                return isMyShop && isToday;
+            });
+            updateUI();
+            if (allOrders.some(function(o) { return o.status === 'en_attente'; })) {
+                sound.play().catch(function() {});
+            } else {
+                sound.pause();
+                sound.currentTime = 0;
+            }
+        });
+
+        }); // fin onAuthStateChanged
+
+        /**
+         * Build ESC/POS receipt and send to printer
+         */
+        async function printDirect(id) {
+            const o = allOrders.find(x => x.id === id);
+            if (!o) { printLog('Commande introuvable: ' + id, 'err'); return; }
+
+            printLog(`Impression commande: ${o.clientName || 'INCONNU'}`);
+
+            // ESC/POS commands as raw bytes
+            const ESC = 0x1B;
+            const GS = 0x1D;
+
+            // Build receipt as byte arrays
+            const parts = [];
+
+            // Initialize printer
+            parts.push(new Uint8Array([ESC, 0x40])); // ESC @ — Initialize
+
+            // === HEADER ===
+            const isLivrTicket = (o.type || "").toUpperCase().includes("LIVRAISON");
+            parts.push(new Uint8Array([ESC, 0x61, 0x01])); // Center align
+            
+            if (isLivrTicket) {
+                // LIVRAISON en gros
+                parts.push(new Uint8Array([GS, 0x21, 0x11]));   // Double width+height
+                parts.push(new Uint8Array([ESC, 0x45, 0x01]));  // Bold ON
+                parts.push(stringToBytes("LIVRAISON\n"));
+                parts.push(new Uint8Array([GS, 0x21, 0x00]));   // Normal size
+                parts.push(new Uint8Array([ESC, 0x45, 0x00]));  // Bold OFF
+                // Nom en petit
+                parts.push(stringToBytes((o.clientName || "INCONNU").toUpperCase() + "\n"));
+            } else {
+                // NOM en gros (emporter)
+                parts.push(new Uint8Array([GS, 0x21, 0x11]));   // Double width+height
+                parts.push(new Uint8Array([ESC, 0x45, 0x01]));  // Bold ON
+                parts.push(stringToBytes((o.clientName || "INCONNU").toUpperCase() + "\n"));
+                parts.push(new Uint8Array([GS, 0x21, 0x00]));   // Normal size
+                parts.push(new Uint8Array([ESC, 0x45, 0x00]));  // Bold OFF
+            }
+
+            // === CRENEAU ===
+            parts.push(new Uint8Array([GS, 0x21, 0x01]));   // Double height
+            parts.push(new Uint8Array([ESC, 0x45, 0x01]));  // Bold ON
+            parts.push(stringToBytes((o.slotTime || "ASAP") + "\n"));
+            parts.push(new Uint8Array([GS, 0x21, 0x00]));   // Normal size
+            parts.push(new Uint8Array([ESC, 0x45, 0x00]));  // Bold OFF
+            parts.push(stringToBytes("================================\n"));
+
+            // === INFOS === (left align)
+            parts.push(new Uint8Array([ESC, 0x61, 0x00])); // Left align
+            parts.push(stringToBytes("TEL: " + (o.phone || "") + "\n"));
+            
+            if (o.address) {
+                parts.push(stringToBytes("ADR: " + o.address.toUpperCase() + "\n"));
+            }
+            
+            // Payment method + total — uniquement pour commandes TEL en livraison
+            const isTel = !o.source || (o.source !== "WEB" && o.source !== "PRESTASHOP");
+            if (isTel && isLivrTicket) {
+                parts.push(new Uint8Array([ESC, 0x61, 0x01])); // Center
+                parts.push(new Uint8Array([GS, 0x21, 0x11]));   // Double width+height
+                parts.push(new Uint8Array([ESC, 0x45, 0x01]));  // Bold ON
+                if (o.paymentMethod) {
+                    parts.push(stringToBytes("A PAYER: " + o.paymentMethod.toUpperCase() + "\n"));
+                }
+                if (o.total) {
+                    parts.push(stringToBytes("TOTAL: " + o.total + " EUR\n"));
+                }
+                parts.push(new Uint8Array([GS, 0x21, 0x00]));   // Normal size
+                parts.push(new Uint8Array([ESC, 0x45, 0x00]));  // Bold OFF
+                parts.push(new Uint8Array([ESC, 0x61, 0x00])); // Left align
+            }
+
+            parts.push(stringToBytes("================================\n\n"));
+
+            // === ITEMS ===
+            (o.items || []).forEach(p => {
+                // Item name in double size
+                parts.push(new Uint8Array([GS, 0x21, 0x11]));   // Double size
+                parts.push(stringToBytes(p.qty + "x " + (p.name || "").toUpperCase() + "\n"));
+                parts.push(new Uint8Array([GS, 0x21, 0x00]));   // Normal size
+
+                // Notes
+                if (p.notes) {
+                    parts.push(new Uint8Array([ESC, 0x45, 0x01])); // Bold ON
+                    parts.push(stringToBytes("  ! " + p.notes.toUpperCase() + "\n"));
+                    parts.push(new Uint8Array([ESC, 0x45, 0x00])); // Bold OFF
+                }
+
+                // Supplements
+                (p.supps || []).forEach(s => {
+                    if (typeof s === 'string') {
+                        parts.push(stringToBytes("  + " + s.toUpperCase() + "\n"));
+                    }
+                });
+
+                parts.push(stringToBytes("\n"));
+            });
+
+            // === DRINKS & DESSERTS ===
+            if ((o.drinks && o.drinks.length > 0) || (o.desserts && o.desserts.length > 0)) {
+                parts.push(stringToBytes("--- BOISSONS/DESSERTS ---\n"));
+                (o.drinks || []).forEach(d => {
+                    parts.push(stringToBytes(d.qty + "x " + (d.name || "").toUpperCase() + "\n"));
+                });
+                (o.desserts || []).forEach(ds => {
+                    parts.push(stringToBytes(ds.qty + "x " + (ds.name || "").toUpperCase() + "\n"));
+                });
+                parts.push(stringToBytes("\n"));
+            }
+
+            // === FOOTER ===
+            parts.push(stringToBytes("================================\n"));
+            parts.push(new Uint8Array([ESC, 0x61, 0x01])); // Center
+            parts.push(stringToBytes("BON SERVICE !\n"));
+            parts.push(new Uint8Array([ESC, 0x61, 0x00])); // Left
+
+            // Feed paper and cut
+            parts.push(new Uint8Array([ESC, 0x64, 0x06])); // Feed 6 lines
+            parts.push(new Uint8Array([GS, 0x56, 0x41, 0x03])); // Partial cut
+
+            // Concatenate all parts into one big Uint8Array
+            let totalLen = 0;
+            for (const p of parts) totalLen += p.length;
+            const fullData = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const p of parts) {
+                fullData.set(p, offset);
+                offset += p.length;
+            }
+
+            printLog(`Ticket: ${fullData.length} octets`);
+            await sendToPrinter(fullData);
+        }
+
+        // --- UI LOGIC ---
+        function enableWakeLock() { if ('wakeLock' in navigator) { navigator.wakeLock.request('screen').catch(function(){}); } }
+        function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+
+        function updateUI() {
+            document.getElementById('c-afaire').innerText = allOrders.filter(o => o.status === 'en_attente').length;
+            document.getElementById('c-encours').innerText = allOrders.filter(o => o.status === 'production').length;
+            document.getElementById('c-aufour').innerText = allOrders.filter(o => o.status === 'cuisson').length;
+            document.getElementById('c-termine').innerText = allOrders.filter(o => o.status === 'termine').length;
+            const active = allOrders.filter(o => o.status === 'en_attente' || o.status === 'production').reduce((acc, o) => acc + (o.items ? o.items.length : 0), 0);
+            document.getElementById('flux-tracker').innerText = `Flux : ${active > 0 ? Math.ceil(5 + (active * 0.75)) : 0} min`;
+            const ovenCount = allOrders.filter(o => o.status === 'cuisson').reduce((acc, o) => acc + (o.items ? o.items.length : 0), 0);
+            document.getElementById('oven-alert').style.display = ovenCount >= 8 ? 'block' : 'none';
+            render();
+        }
+
+        function searchOrders() { searchQuery = document.getElementById('searchInput').value.toLowerCase(); render(); }
+        function switchTab(t) { currentTab = t; searchQuery = ""; document.getElementById('searchInput').value = ""; render(); }
+
+        function createItemsHTML(o, counts) {
+            return (o.items || []).map(p => {
+                const name = (p.name || "").toUpperCase();
+                const isMatch = counts && counts[name] > 1;
+                return `<div class="item-line"><span class="pizza-title ${isMatch?'matching-pizza':''}">
+                        ${p.qty}x ${name} ${DRESSING_LIST.includes(name)?'<span class="dress-icon">🥗</span>':''}</span>
+                        ${p.notes ? `<span class="note-tag">📝 ${p.notes.toUpperCase()}</span>` : ''}
+                        ${(p.supps || []).map(s => typeof s === 'string' ? `<span class="supp-tag">+ ${s.toUpperCase()}</span>` : "").join('')}</div>`;
+            }).join('');
+        }
+
+        function createExtrasHTML(o) {
+            let html = "";
+            if (o.drinks && o.drinks.length > 0) html += o.drinks.map(d => `🥤 <strong>${d.qty}x ${d.name.toUpperCase()}</strong>`).join('<br>');
+            if (o.desserts && o.desserts.length > 0) html += o.desserts.map(ds => `🍰 <strong>${ds.qty}x ${ds.name.toUpperCase()}</strong>`).join('<br>');
+            return html ? `<div class="extras-area">${html}</div>` : "";
+        }
+
+        function getDrivePicto(o) {
+            let cls = "drive-none"; if (o.isEnRoute) cls = "drive-enroute"; if (o.isArrived) cls = "drive-arrived";
+            return `<i class="fas fa-car drive-picto ${cls}"></i>`;
+        }
+
+        function createCard(o, counts) {
+            const timeRef = o.createdAt?.seconds ? o.createdAt.seconds * 1000 : Date.now();
+            const diff = Math.floor((Date.now() - timeRef) / 60000);
+            const isLivr = (o.type || "").toUpperCase().includes("LIVRAISON");
+            const isWeb = o.source === "WEB" || o.source === "PRESTASHOP";
+            return `<div class="order-card status-${o.status} ${isWeb?'is-web':''} ${diff >= 15 && o.status !== 'termine' ? 'danger-mode' : ''}">
+                    <div class="card-header"><div class="client-info"><div>
+                        <span class="source-tag ${isWeb ? 'source-web' : 'source-tel'}">${isWeb ? 'WEB' : 'TEL'}</span>
+                        <span class="type-tag ${isLivr ? 'type-livraison' : ''}">${isLivr ? 'LIVRAISON' : 'EMPORTER'}</span></div>
+                        <p class="client-name">${o.clientName}</p><span class="phone-text">${o.phone || ''}</span></div>
+                        <div class="status-indicators">${getDrivePicto(o)}
+                        ${o.slotTime ? `<div class="slot-badge">${o.slotTime}</div>` : ''}
+                        <div class="timer-badge">${diff}m</div></div></div>
+                    <div class="card-body">${isLivr ? `<div class="delivery-box"><span class="addr-text">📍 ${(o.address || "").toUpperCase()}</span>${!isWeb?`<span class="pay-tag">💳 ${o.paymentMethod || 'A VOIR'}</span>`:''}</div>` : ''}
+                        <div class="items-area">${createItemsHTML(o, counts)}</div>${createExtrasHTML(o)}</div>
+                    <div class="card-footer"><button class="btn btn-print" onclick="handlePrint(this, '${o.id}')"><i class="fas fa-print"></i></button>${getActionBtn(o)}</div></div>`;
+        }
+
+        function createDetailedRow(o) {
+            const timeRef = o.createdAt?.seconds ? o.createdAt.seconds * 1000 : Date.now();
+            const diff = Math.floor((Date.now() - timeRef) / 60000);
+            const isLivr = (o.type || "").toUpperCase().includes("LIVRAISON");
+            const isWeb = o.source === "WEB" || o.source === "PRESTASHOP";
+            return `<div class="detailed-row status-${o.status} ${diff >= 15 && o.status !== 'termine' ? 'danger-mode' : ''}">
+                    <div class="row-info"><span class="source-tag ${isWeb ? 'source-web' : 'source-tel'}">${isWeb ? 'WEB' : 'TEL'}</span>
+                        <span class="type-tag ${isLivr ? 'type-livraison' : ''}" style="border:1px solid #555;">${isLivr ? 'LIVR' : 'EMP'}</span>
+                        <div style="font-weight:900; text-transform:uppercase; font-size:18px;">${o.clientName}</div>
+                        <div style="color:var(--orange); font-size:14px; font-weight:bold;">${o.phone || ''} | ${getDrivePicto(o)} 
+                        ${o.slotTime ? `<span style="color:#fff; background:var(--orange); padding:2px 6px; border-radius:4px; margin-right:5px;">${o.slotTime}</span>` : ''}
+                        <span class="timer-badge" style="font-size:14px; padding:2px 8px;">${diff}m</span></div>
+                        ${isLivr ? `<div style="margin-top:5px;"><span style="font-size:11px; color:#aaa; display:block;">📍 ${o.address || ""}</span></div>` : ''}</div>
+                    <div class="row-items">${(o.items||[]).map(p => `${p.qty}x ${p.name.toUpperCase()}`).join(', ')}</div>
+                    <div class="row-actions"><button class="btn btn-print" style="height:50px; width:60px;" onclick="handlePrint(this, '${o.id}')"><i class="fas fa-print"></i></button>${getActionBtn(o, true)}</div></div>`;
+        }
+
+        function getActionBtn(o, mini = false) {
+            const h = mini ? 'style="height:50px; font-size:14px; padding:0 20px;"' : '';
+            if (o.status === 'en_attente') return `<button class="btn btn-action" ${h} onclick="acceptOrder(this, '${o.id}')">ACCEPTER</button>`;
+            if (o.status === 'production') return `<button class="btn btn-action" ${h} onclick="upd('${o.id}', 'cuisson', true)">AU FOUR !</button>`;
+            if (o.status === 'cuisson') return `<button class="btn btn-action btn-green" ${h} onclick="upd('${o.id}', 'termine')">PRETE !</button>`;
+            return `<button class="btn btn-action" ${h} onclick="upd('${o.id}', 'en_attente')">RELANCER</button>`;
+        }
+
+        function acceptOrder(btn, id) { 
+            const pb = btn.parentElement.querySelector('.btn-print'); 
+            handlePrint(pb, id); 
+            upd(id, 'production'); 
+        }
+        
+        function handlePrint(btn, id) {
+            if (!btn) return;
+            printDirect(id);
+            const old = btn.innerHTML; 
+            btn.innerHTML = '<i class="fas fa-check"></i>'; 
+            btn.classList.add('printed');
+            setTimeout(() => { btn.innerHTML = '<i class="fas fa-print"></i>'; btn.classList.remove('printed'); }, 3000);
+        }
+
+        // Cache des recettes PizzApp (chargé une fois depuis RTDB)
+        var pizzappRecipes = null;
+        var pizzappIngredients = null;
+
+        function loadPizzappRecipes(callback) {
+            if (pizzappRecipes) { callback(); return; }
+            rtdb.ref('shop_config/pizzapp_recipes').once('value').then(function(snap) {
+                var data = snap.val();
+                if (data && data.recipes) {
+                    pizzappRecipes    = data.recipes;      // [{id, name, items:[{ingredientId, qty, unit}]}]
+                    pizzappIngredients = data.ingredients; // [{id, name, unit, minStock}]
+                }
+                callback();
+            }).catch(function() { callback(); });
+        }
+
+        // Convertit qty + unit en kg (même logique que PizzApp)
+        function toKg(qty, unit) {
+            if (unit === 'kg' || unit === 'L') return qty;
+            if (unit === 'g'  || unit === 'ml') return qty / 1000;
+            return qty; // unité → on traite comme 1 unité
+        }
+
+        // Déduit les stocks pour une commande terminée
+        function deduireStocks(orderId, orderItems) {
+            if (!rtdb || !orderItems || orderItems.length === 0) return;
+
+            loadPizzappRecipes(function() {
+                if (!pizzappRecipes || pizzappRecipes.length === 0) return;
+
+                var today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                var consumed = []; // [{ingredientId, consumed_kg, ingredientName}]
+
+                orderItems.forEach(function(item) {
+                    var pizzaName = (item.name || '').trim().toLowerCase();
+                    var qty = item.qty || 1;
+
+                    // Cherche la recette par nom (correspondance souple)
+                    var recipe = pizzappRecipes.find(function(r) {
+                        return r.name.trim().toLowerCase() === pizzaName;
+                    });
+                    // Fallback : contenance partielle
+                    if (!recipe) {
+                        recipe = pizzappRecipes.find(function(r) {
+                            return pizzaName.includes(r.name.trim().toLowerCase()) ||
+                                   r.name.trim().toLowerCase().includes(pizzaName);
+                        });
+                    }
+
+                    if (recipe && recipe.items) {
+                        recipe.items.forEach(function(ri) {
+                            var kgParPiece = toKg(ri.qty, ri.unit);
+                            var kgTotal    = kgParPiece * qty;
+                            // Chercher si l'ingrédient est déjà dans la liste
+                            var existing = consumed.find(function(c) { return c.ingredientId === ri.ingredientId; });
+                            if (existing) {
+                                existing.consumed_kg += kgTotal;
+                            } else {
+                                var ing = pizzappIngredients
+                                    ? pizzappIngredients.find(function(i) { return i.id === ri.ingredientId; })
+                                    : null;
+                                consumed.push({
+                                    ingredientId:   ri.ingredientId,
+                                    ingredientName: ing ? ing.name : ri.ingredientId,
+                                    consumed_kg:    kgTotal
+                                });
+                            }
+                        });
+                    }
+                });
+
+                if (consumed.length === 0) return;
+
+                // Écriture dans RTDB : stocks/consumptions/YYYY-MM-DD/{orderId}
+                var path = 'stocks/consumptions/' + today + '/' + orderId.replace(/[.#$[\]]/g, '_');
+                rtdb.ref(path).set({
+                    orderId:    orderId,
+                    recordedAt: Date.now(),
+                    shop:       MY_SHOP,
+                    items:      consumed
+                }).catch(function(e) { console.warn('Stocks RTDB write error:', e.message); });
+
+                // Vérifier les alertes de stock bas (lecture cumul du jour)
+                rtdb.ref('stocks/consumptions/' + today).once('value').then(function(snap) {
+                    var allData  = snap.val() || {};
+                    var totals   = {};
+                    Object.values(allData).forEach(function(order) {
+                        if (!order || !order.items) return;
+                        order.items.forEach(function(it) {
+                            totals[it.ingredientId] = (totals[it.ingredientId] || 0) + (it.consumed_kg || 0);
+                        });
+                    });
+                    // Chercher les alertes via RTDB inventaire (dernier inventaire PizzApp)
+                    rtdb.ref('stocks/alerts').set({
+                        updatedAt: Date.now(),
+                        shop: MY_SHOP,
+                        totals: totals
+                    });
+                }).catch(function() {});
+            });
+        }
+
+        function upd(id, s, setOven) {
+            if (!db) return;
+            var d = { status: s };
+            if (setOven) d.ovenAt = firebase.firestore.FieldValue.serverTimestamp();
+            db.collection("commandes").doc(id).update(d);
+
+            // ── DÉDUCTION STOCKS si commande terminée ──────────────
+            if (s === 'termine') {
+                var order = allOrders.find(function(o) { return o.id === id; });
+                if (order && order.items && order.items.length > 0) {
+                    deduireStocks(id, order.items);
+                }
+            }
+        }
+
+        function render() {
+            try {
+                const container = document.getElementById('ordersContainer'); container.innerHTML = "";
+                let list = searchQuery ? allOrders.filter(o => (o.clientName||"").toLowerCase().includes(searchQuery) || (o.phone||"").includes(searchQuery) || (o.address||"").toLowerCase().includes(searchQuery) || (o.items||[]).some(p => p.name.toLowerCase().includes(searchQuery))) : allOrders.filter(o => (o.status || "").toLowerCase() === currentTab.toLowerCase());
+                const mapping = { en_attente: 'tab-afaire', production: 'tab-encours', cuisson: 'tab-aufour', termine: 'tab-termine' };
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                if (!searchQuery && mapping[currentTab]) document.getElementById(mapping[currentTab]).classList.add('active');
+
+                // TRI selon onglet
+                if (currentTab === 'cuisson') {
+                    list.sort((a,b) => (a.ovenAt?.seconds||a.createdAt?.seconds||0)-(b.ovenAt?.seconds||b.createdAt?.seconds||0));
+                } else if (currentTab === 'en_attente') {
+                    list.sort((a,b) => (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)); // Nouveaux en haut
+                } else {
+                    list.sort((a,b) => (a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+                }
+
+                // Mode recherche, À FAIRE ou TERMINE → liste compacte uniquement
+                if (searchQuery || currentTab === 'en_attente' || currentTab === 'termine') {
+                    const sec = document.createElement('div'); sec.className = "list-section";
+                    list.forEach(o => { if (o) sec.innerHTML += createDetailedRow(o); });
+                    container.appendChild(sec);
+                } else {
+                    // À FAIRE, EN COURS, AU FOUR → top 3 cartes + matching + liste overflow
+                    const top3 = list.slice(0, 3); const others = list.slice(3); const counts = {};
+                    // Matching: compter les pizzas identiques dans les top 3
+                    top3.forEach(o => { if (o && o.items) o.items.forEach(p => { const n = (p.name || "").toUpperCase(); counts[n] = (counts[n] || 0) + 1; }); });
+                    [...top3].reverse().forEach(o => { if (o) container.innerHTML += createCard(o, counts); });
+                    if (others.length > 0) {
+                        const sec = document.createElement('div'); sec.className = "list-section";
+                        const label = currentTab === 'en_attente' ? 'EN ATTENTE' : 'SUIVANTS';
+                        sec.innerHTML = `<h2 style="font-size:12px; color:#666; margin-left:15px; margin-top:20px;">${label} (${others.length})</h2>`;
+                        others.forEach(o => { if (o) sec.innerHTML += createDetailedRow(o); });
+                        container.appendChild(sec);
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+</html>

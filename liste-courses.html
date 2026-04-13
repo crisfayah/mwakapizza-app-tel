@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mwaka — Liste de courses</title>
+<link rel="manifest" href="manifest-courses.json">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="https://offres.mwakapizza.fr/logo-mwaka-pizza.png">
+<link rel="icon" type="image/png" href="https://offres.mwakapizza.fr/logo-mwaka-pizza.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --bg:#0a0a0a;--card:#151515;--card2:#1c1c1c;--border:#2a2a2a;
+  --tx:#f0ece6;--tx2:#9c8e80;--tx3:#5a5048;
+  --accent:#e76f51;--accent-lt:rgba(231,111,81,.15);
+  --green:#16a34a;--green-lt:rgba(22,163,74,.15);
+  --yellow:#f59e0b;--yellow-lt:rgba(245,158,11,.15);
+  --blue:#3b82f6;--blue-lt:rgba(59,130,246,.15);
+  --red:#ef4444;--red-lt:rgba(239,68,68,.1);
+  --purple:#8b5cf6;
+  --congel:#38bdf8;--congel-lt:rgba(56,189,248,.12);
+  --frigo:#34d399;--frigo-lt:rgba(52,211,153,.12);
+  --sec:#fbbf24;--sec-lt:rgba(251,191,36,.12);
+  --boisson:#a78bfa;--boisson-lt:rgba(167,139,250,.12);
+  --hygiene:#f472b6;--hygiene-lt:rgba(244,114,182,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+
+/* ── Splash ── */
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .5s}
+#splash.hide{opacity:0;pointer-events:none}
+#splash img{width:120px;margin-bottom:20px;filter:drop-shadow(0 0 30px rgba(231,111,81,.3))}
+#splash h1{font-size:22px;font-weight:800;letter-spacing:-.5px}
+#splash h1 span{color:var(--accent)}
+#splash p{color:var(--tx2);font-size:13px;margin-top:6px}
+
+/* ── Header ── */
+#header{position:sticky;top:0;z-index:50;background:var(--bg);padding:12px 16px 0;border-bottom:1px solid var(--border)}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.header-top h2{font-size:17px;font-weight:700}
+.header-badges{display:flex;gap:6px;align-items:center}
+.badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px}
+.badge-fire{background:rgba(239,68,68,.15);color:#ef4444}
+.badge-ok{background:var(--green-lt);color:var(--green)}
+.badge-warn{background:var(--yellow-lt);color:var(--yellow)}
+.header-sub{font-size:11px;color:var(--tx3);margin-bottom:8px}
+
+/* ── Search ── */
+#searchWrap{padding:0 16px;margin:8px 0 4px;position:relative}
+#searchInput{width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--tx);font-size:14px;font-family:inherit;outline:none;transition:border .2s}
+#searchInput:focus{border-color:var(--accent)}
+#searchWrap::before{content:"🔍";position:absolute;left:30px;top:50%;transform:translateY(-50%);font-size:14px}
+
+/* ── Zone filter tabs ── */
+.zone-tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.zone-tabs::-webkit-scrollbar{display:none}
+.zone-tab{flex-shrink:0;padding:7px 12px;border-radius:10px;font-size:11px;font-weight:600;border:none;background:var(--card);color:var(--tx2);transition:all .2s;white-space:nowrap;cursor:pointer;position:relative}
+.zone-tab.active{color:#fff}
+.zone-tab[data-zone="ALL"].active{background:var(--accent)}
+.zone-tab[data-zone="CONGEL"].active{background:var(--congel);color:#000}
+.zone-tab[data-zone="FRIGO"].active{background:var(--frigo);color:#000}
+.zone-tab[data-zone="SEC"].active{background:var(--sec);color:#000}
+.zone-tab[data-zone="BOISSONS"].active{background:var(--boisson);color:#000}
+.zone-tab[data-zone="HYGIENE"].active{background:var(--hygiene);color:#000}
+.ztab-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;background:var(--red);color:#fff}
+
+/* ── Summary cards ── */
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px 16px}
+.sum-card{background:var(--card);border-radius:12px;padding:10px;text-align:center}
+.sum-val{font-size:20px;font-weight:800;color:var(--accent)}
+.sum-lbl{font-size:9px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Supplier filter tabs ── */
+.sup-tabs{display:flex;gap:4px;overflow-x:auto;padding:4px 16px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sup-tabs::-webkit-scrollbar{display:none}
+.sup-tab{flex-shrink:0;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:600;border:none;background:var(--card);color:var(--tx2);transition:all .2s;white-space:nowrap;cursor:pointer;position:relative}
+.sup-tab.active{background:var(--accent);color:#fff}
+.sup-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;background:var(--red);color:#fff}
+
+/* ── Product list ── */
+#productList{padding:4px 16px 140px}
+.supplier-header{display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;border-bottom:2px solid var(--accent);margin-bottom:6px;margin-top:10px}
+.supplier-header:first-child{margin-top:0}
+.supplier-name{font-size:14px;font-weight:700;color:var(--accent)}
+.supplier-channel{font-size:10px;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.supplier-channel .wa{color:#25d366}
+.supplier-channel .mail{color:var(--blue)}
+
+/* ── Product card ── */
+.product-card{background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border:2px solid transparent;transition:all .3s;position:relative;overflow:hidden;touch-action:pan-y}
+.product-card.rupture{border-color:var(--red);background:var(--red-lt)}
+.product-card.rupture .product-name{color:var(--red)}
+.product-card.rupture::before{content:"RUPTURE";position:absolute;top:6px;right:-24px;background:var(--red);color:#fff;font-size:7px;font-weight:800;padding:2px 28px;transform:rotate(45deg);letter-spacing:1px}
+.product-card.done{opacity:.35;border-color:var(--green);background:var(--green-lt)}
+.product-card.done .product-name{text-decoration:line-through}
+.product-card.partial{border-color:var(--yellow);background:var(--yellow-lt)}
+.product-card.partial .product-name{color:var(--yellow)}
+
+/* ── Swipe layer ── */
+.swipe-bg{position:absolute;inset:0;display:flex;align-items:center;border-radius:12px;opacity:0;transition:opacity .2s}
+.swipe-bg-right{justify-content:flex-start;padding-left:18px;background:var(--green);color:#fff;font-weight:700;font-size:13px}
+.swipe-bg-left{justify-content:flex-end;padding-right:18px;background:var(--yellow);color:#000;font-weight:700;font-size:13px}
+.swipe-content{position:relative;z-index:2;display:flex;align-items:center;gap:10px;width:100%;transition:transform .25s ease;background:inherit;border-radius:10px}
+
+/* ── Select checkbox ── */
+.select-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;cursor:pointer;transition:all .2s}
+.select-box.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.product-info{flex:1;min-width:0}
+.product-name{font-size:13px;font-weight:600;margin-bottom:2px;transition:color .2s}
+.product-detail{font-size:10px;color:var(--tx3)}
+.product-qty{text-align:right;flex-shrink:0}
+.product-qty .qty-val{font-size:18px;font-weight:800;color:var(--accent)}
+.product-qty .qty-unit{font-size:10px;color:var(--tx2)}
+.product-qty .qty-taken{font-size:9px;color:var(--green);margin-top:1px}
+
+/* ── Status indicator ── */
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-pending{background:var(--red)}
+.dot-partial{background:var(--yellow)}
+.dot-done{background:var(--green)}
+
+/* ── Zone tag ── */
+.zone-tag{font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px;display:inline-block;margin-left:4px}
+.zt-CONGEL{background:var(--congel-lt);color:var(--congel)}
+.zt-FRIGO{background:var(--frigo-lt);color:var(--frigo)}
+.zt-SEC{background:var(--sec-lt);color:var(--sec)}
+.zt-BOISSONS{background:var(--boisson-lt);color:var(--boisson)}
+.zt-HYGIENE{background:var(--hygiene-lt);color:var(--hygiene)}
+
+/* ── Bottom bar ── */
+#bottomBar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:linear-gradient(to top,var(--bg) 85%,transparent);z-index:40;display:flex;gap:8px}
+#bottomBar button{flex:1;padding:14px;border-radius:14px;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-refresh{background:var(--card);color:var(--tx);border:2px solid var(--border) !important;flex:0 0 auto !important;width:54px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.btn-send{background:var(--accent);color:#fff;flex:1}
+.btn-send:disabled{opacity:.4;pointer-events:none}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
+.modal-overlay.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:20px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--tx3);font-size:20px;cursor:pointer}
+
+/* ── Qty modal ── */
+.qty-modal-product{font-size:15px;font-weight:700;margin-bottom:4px}
+.qty-modal-sub{font-size:12px;color:var(--tx3);margin-bottom:16px}
+.qty-row{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:16px}
+.qty-row button{width:50px;height:50px;border-radius:14px;border:2px solid var(--border);background:var(--card2);color:var(--tx);font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.qty-row button:active{transform:scale(.92);background:var(--accent);border-color:var(--accent);color:#fff}
+.qty-row input{width:80px;height:50px;border-radius:14px;border:2px solid var(--border);background:var(--card2);color:var(--tx);font-size:22px;font-weight:700;text-align:center;font-family:inherit;outline:none}
+.qty-row input:focus{border-color:var(--accent)}
+.qty-label{font-size:11px;color:var(--tx3);text-align:center;margin-bottom:16px}
+.qty-actions{display:flex;gap:8px}
+.qty-actions button{flex:1;padding:14px;border-radius:14px;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+.btn-cancel{background:var(--card2);color:var(--tx2)}
+.btn-confirm{background:var(--green);color:#fff}
+.btn-rupture{background:var(--red);color:#fff;font-size:12px;margin-bottom:10px;padding:12px;border-radius:12px;border:none;width:100%;font-weight:700;font-family:inherit;cursor:pointer}
+
+/* ── Send modal ── */
+.send-option{background:var(--card2);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.send-option:active{border-color:var(--accent)}
+.send-icon{font-size:24px;width:40px;text-align:center}
+.send-info{flex:1}
+.send-info .name{font-weight:700;font-size:14px}
+.send-info .sub{font-size:11px;color:var(--tx3)}
+.send-count{font-size:12px;font-weight:700;color:var(--accent)}
+
+/* ── Empty ── */
+.empty-state{text-align:center;padding:50px 20px;color:var(--tx3)}
+
+/* ── Settings modal ── */
+.settings-card{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.settings-card h4{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.settings-card h4 .ch-tag{font-size:9px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:auto}
+.ch-wa{background:rgba(37,211,102,.15);color:#25d366}
+.ch-mail{background:var(--blue-lt);color:var(--blue)}
+.sfield{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sfield:last-child{margin-bottom:0}
+.sfield label{font-size:10px;color:var(--tx3);min-width:65px;flex-shrink:0}
+.sfield input,.sfield select{flex:1;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--tx);font-size:12px;font-family:inherit;outline:none}
+.sfield input:focus,.sfield select:focus{border-color:var(--accent)}
+.sfield input::placeholder{color:var(--tx3)}
+.empty-state .icon{font-size:50px;margin-bottom:12px;opacity:.3}
+.empty-state .title{font-size:16px;font-weight:600;color:var(--tx2);margin-bottom:6px}
+
+/* ── Loading ── */
+.loading{text-align:center;padding:40px;color:var(--tx3)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img src="https://offres.mwakapizza.fr/logo-mwaka-pizza-blanc.png" alt="Mwaka" onerror="this.style.display='none'">
+  <h1>MWAKA <span>COURSES</span></h1>
+  <p>Liste de courses connectée à PizzApp</p>
+</div>
+
+<!-- MAIN -->
+<div id="mainApp" style="display:none">
+  <div id="header">
+    <div class="header-top">
+      <h2>🛒 Liste de courses</h2>
+      <div class="header-badges">
+        <span class="badge badge-fire" id="firebaseBadge">⏳ Connexion...</span>
+        <div style="width:34px;height:34px;border-radius:10px;border:2px solid var(--border);background:var(--card);color:var(--tx2);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0" onclick="openSettings()">⚙️</div>
+      </div>
+    </div>
+    <div class="header-sub" id="lastUpdate">—</div>
+
+    <!-- Zone filter -->
+    <div class="zone-tabs" id="zoneTabs"></div>
+  </div>
+
+  <!-- Search -->
+  <div id="searchWrap">
+    <input type="text" id="searchInput" placeholder="Rechercher un produit..." oninput="applyFilters()">
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="sum-card"><div class="sum-val" id="sumProducts">—</div><div class="sum-lbl">À commander</div></div>
+    <div class="sum-card"><div class="sum-val" id="sumSuppliers">—</div><div class="sum-lbl">Fournisseurs</div></div>
+    <div class="sum-card"><div class="sum-val" id="sumDone" style="color:var(--green)">0</div><div class="sum-lbl">Pris ✓</div></div>
+  </div>
+
+  <!-- Supplier tabs -->
+  <div class="sup-tabs" id="supTabs"></div>
+
+  <!-- Product list -->
+  <div id="productList">
+    <div class="loading"><div class="spinner"></div>Chargement PizzApp...</div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div id="bottomBar">
+    <button class="btn-refresh" onclick="loadData()">🔄</button>
+    <button class="btn-send" id="btnSend" disabled onclick="openSendModal()">📤 Envoyer la commande</button>
+  </div>
+</div>
+
+<!-- QTY MODAL -->
+<div class="modal-overlay" id="qtyModal">
+  <div class="modal-box" style="position:relative">
+    <div class="modal-handle"></div>
+    <div class="qty-modal-product" id="qtyProductName"></div>
+    <div class="qty-modal-sub" id="qtyProductSub"></div>
+
+    <button class="btn-rupture" onclick="markRupture()">⛔ Rupture de stock chez le fournisseur</button>
+
+    <div class="qty-label">Quantité prise :</div>
+    <div class="qty-row">
+      <button onclick="qtyAdjust(-1)">−</button>
+      <input type="number" id="qtyTakenInput" value="0" min="0" inputmode="numeric">
+      <button onclick="qtyAdjust(1)">+</button>
+    </div>
+    <div class="qty-label" id="qtyRemainLabel" style="color:var(--yellow)"></div>
+
+    <div class="qty-actions">
+      <button class="btn-cancel" onclick="closeQtyModal()">Annuler</button>
+      <button class="btn-confirm" onclick="confirmQty()">✅ Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND MODAL -->
+<div class="modal-overlay" id="sendModal">
+  <div class="modal-box" style="position:relative">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📤 Envoyer la commande</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:14px" id="sendSubtitle"></div>
+    <div id="sendOptions"></div>
+    <div style="margin-top:12px">
+      <button class="btn-cancel" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer" onclick="closeSendModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box" style="position:relative">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ Réglages fournisseurs</div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:14px">Renseigne les coordonnées de chaque fournisseur. Ces infos sont sauvegardées sur ton téléphone.</p>
+    <div id="settingsContent"></div>
+    <button onclick="saveSettings()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;font-family:inherit;margin-top:12px;cursor:pointer">💾 Enregistrer</button>
+    <button class="btn-cancel" style="width:100%;padding:12px;border-radius:14px;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px" onclick="closeSettings()">Fermer</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0",
+  authDomain: "mwakaphone-e8c5b.firebaseapp.com",
+  databaseURL: "https://mwakaphone-e8c5b-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mwakaphone-e8c5b",
+  storageBucket: "mwakaphone-e8c5b.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
+firebase.auth().signInAnonymously().catch(function(e){console.warn("Auth:",e.message)});
+
+// ══════════════════════════════════════════
+// CONFIG FOURNISSEURS — canal de commande
+// Stocké dans localStorage, modifiable via ⚙️
+// ══════════════════════════════════════════
+let SUPPLIER_CHANNELS = {
+  "NATHANAEL":   { channel:"whatsapp", phone:"", contact:"", email:"", label:"WhatsApp" },
+  "PRO A PRO":   { channel:"whatsapp", phone:"", contact:"", email:"", label:"WhatsApp" },
+  "PROMO":       { channel:"mail", phone:"", contact:"", email:"", label:"Email" },
+  "MEGA STOCK":  { channel:"mail", phone:"", contact:"", email:"", label:"Email" },
+  "CAP CREOLE":  { channel:"whatsapp", phone:"", contact:"", email:"", label:"WhatsApp" },
+  "SOCOPRIM":    { channel:"mail", phone:"", contact:"", email:"", label:"Email" },
+  "CHAMPIMAR":   { channel:"whatsapp", phone:"", contact:"", email:"", label:"WhatsApp" },
+  "CBD SHOP":    { channel:"whatsapp", phone:"", contact:"", email:"", label:"WhatsApp" },
+  "F CARE":      { channel:"mail", phone:"", contact:"", email:"", label:"Email" },
+};
+// Charger les réglages sauvegardés
+try {
+  var saved = JSON.parse(localStorage.getItem("mwaka-supplier-channels")||"{}");
+  Object.keys(saved).forEach(function(k){ SUPPLIER_CHANNELS[k] = saved[k]; });
+} catch(e){}
+
+// ══════════════════════════════════════════
+// CATALOGUE PRODUITS (identique à inventaire)
+// ══════════════════════════════════════════
+const ALL_PRODUCTS = [
+  {id:"p02",name:"Mozzarella",zone:"CONGEL",unit:"unité",stockMini:28,fournisseur:"PROMO",code:"4254824",pizzappId:"ing05"},
+  {id:"p03",name:"Merguez",zone:"CONGEL",unit:"unité",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing32"},
+  {id:"p04",name:"Lardons",zone:"CONGEL",unit:"unité",stockMini:5,fournisseur:"PROMO",code:"4430757",pizzappId:"ing33"},
+  {id:"p05",name:"Steak",zone:"CONGEL",unit:"unité",stockMini:13,fournisseur:"PROMO",code:"",pizzappId:"ing34"},
+  {id:"p06",name:"Bacon",zone:"CONGEL",unit:"unité",stockMini:5,fournisseur:"PROMO",code:"4225980",pizzappId:"ing35"},
+  {id:"p07",name:"Pepperoni",zone:"CONGEL",unit:"unité",stockMini:4,fournisseur:"PROMO",code:"4420396",pizzappId:"ing36"},
+  {id:"p08",name:"Poulet",zone:"CONGEL",unit:"unité",stockMini:10,fournisseur:"PROMO",code:"4619874",pizzappId:"ing37"},
+  {id:"p09",name:"Marlin fumé (congel)",zone:"CONGEL",unit:"unité",stockMini:10,fournisseur:"CAP CREOLE",code:"",pizzappId:"ing41"},
+  {id:"p10",name:"Crevettes",zone:"CONGEL",unit:"unité",stockMini:15,fournisseur:"SOCOPRIM",code:"",pizzappId:"ing43"},
+  {id:"p11",name:"Saumon",zone:"CONGEL",unit:"unité",stockMini:7,fournisseur:"PROMO",code:"4830149",pizzappId:"ing42"},
+  {id:"p12",name:"Saucisse fumée",zone:"CONGEL",unit:"unité",stockMini:5,fournisseur:"PROMO",code:"4420981",pizzappId:"ing38"},
+  {id:"p13",name:"Basilic",zone:"FRIGO",unit:"botte",stockMini:2,fournisseur:"PROMO",code:"",pizzappId:"ing17"},
+  {id:"p14",name:"Jambon",zone:"FRIGO",unit:"unité",stockMini:3,fournisseur:"PROMO",code:"4426351",pizzappId:"ing31"},
+  {id:"p15",name:"Champignons frais",zone:"FRIGO",unit:"barq.",stockMini:2,fournisseur:"CHAMPIMAR",code:"",pizzappId:"ing18"},
+  {id:"p16",name:"Fromage bleu",zone:"FRIGO",unit:"unité",stockMini:2,fournisseur:"PROMO",code:"4292410",pizzappId:"ing06"},
+  {id:"p17",name:"Fromage de chèvre",zone:"FRIGO",unit:"unité",stockMini:24,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing07"},
+  {id:"p18",name:"Poivrons",zone:"FRIGO",unit:"unité",stockMini:5,fournisseur:"PROMO",code:"4312070",pizzappId:"ing20"},
+  {id:"p19",name:"Oeufs",zone:"FRIGO",unit:"plaq.",stockMini:6,fournisseur:"PRO A PRO",code:"4250262",pizzappId:"ing29"},
+  {id:"p20",name:"Oignons rouges",zone:"FRIGO",unit:"unité",stockMini:2,fournisseur:"PROMO",code:"4342489",pizzappId:"ing22"},
+  {id:"p21",name:"Pomme de terre",zone:"FRIGO",unit:"kg",stockMini:2,fournisseur:"PROMO",code:"2501162",pizzappId:"ing21"},
+  {id:"p22",name:"Aubergines",zone:"FRIGO",unit:"unité",stockMini:2,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing23"},
+  {id:"p23",name:"Cives",zone:"FRIGO",unit:"botte",stockMini:3,fournisseur:"PROMO",code:"4341095",pizzappId:"ing25"},
+  {id:"p24",name:"Crème liquide",zone:"FRIGO",unit:"L",stockMini:6,fournisseur:"PRO A PRO",code:"",pizzappId:"ing10"},
+  {id:"p25",name:"Feta",zone:"FRIGO",unit:"unité",stockMini:2,fournisseur:"PROMO",code:"4225417",pizzappId:""},
+  {id:"p26",name:"Levure fraîche",zone:"FRIGO",unit:"bloc",stockMini:9,fournisseur:"PROMO",code:"4300161",pizzappId:"ing54"},
+  {id:"p27",name:"Piment végétarien",zone:"FRIGO",unit:"unité",stockMini:1,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p28",name:"Piment fort",zone:"FRIGO",unit:"unité",stockMini:1,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p29",name:"Tiramisu",zone:"FRIGO",unit:"pièce",stockMini:1,fournisseur:"PROMO",code:"",pizzappId:""},
+  {id:"p30",name:"Poudre spéculoos",zone:"FRIGO",unit:"sachet",stockMini:1,fournisseur:"PROMO",code:"",pizzappId:""},
+  {id:"p31",name:"Citron vert",zone:"FRIGO",unit:"unité",stockMini:8,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p32",name:"Roquette",zone:"FRIGO",unit:"sachet",stockMini:8,fournisseur:"PROMO",code:"4347220",pizzappId:"ing24"},
+  {id:"p33",name:"Marlin fumé (frigo)",zone:"FRIGO",unit:"unité",stockMini:12,fournisseur:"CAP CREOLE",code:"",pizzappId:"ing41"},
+  {id:"p34",name:"Oignon frit",zone:"FRIGO",unit:"sachet",stockMini:2,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing26"},
+  {id:"p35",name:"Sauce tomate",zone:"SEC",unit:"boîte",stockMini:9,fournisseur:"PRO A PRO",code:"",pizzappId:"ing02"},
+  {id:"p36",name:"Olives",zone:"SEC",unit:"boîte",stockMini:5,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing16"},
+  {id:"p37",name:"Ananas",zone:"SEC",unit:"boîte",stockMini:8,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing19"},
+  {id:"p38",name:"Poivre",zone:"SEC",unit:"pot",stockMini:2,fournisseur:"PRO A PRO",code:"",pizzappId:""},
+  {id:"p39",name:"Sauce BBQ",zone:"SEC",unit:"bout.",stockMini:6,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing11"},
+  {id:"p40",name:"Vodka",zone:"SEC",unit:"bout.",stockMini:2,fournisseur:"PROMO",code:"3771278",pizzappId:"ing12"},
+  {id:"p41",name:"Sauce sriracha",zone:"SEC",unit:"bout.",stockMini:4,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing13"},
+  {id:"p42",name:"Miel",zone:"SEC",unit:"pot",stockMini:3,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing30"},
+  {id:"p43",name:"Pesto",zone:"SEC",unit:"pot",stockMini:3,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing14"},
+  {id:"p44",name:"Farine (sachet 25kg)",zone:"SEC",unit:"sac",stockMini:52,fournisseur:"PROMO",code:"3030",pizzappId:"ing50"},
+  {id:"p45",name:"Sel",zone:"SEC",unit:"kg",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing51"},
+  {id:"p46",name:"Sucre",zone:"SEC",unit:"kg",stockMini:10,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing52"},
+  {id:"p47",name:"Lait",zone:"SEC",unit:"L",stockMini:49,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing53"},
+  {id:"p48",name:"Épice Caraïbes",zone:"SEC",unit:"pot",stockMini:7,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p49",name:"Moutarde",zone:"SEC",unit:"pot",stockMini:3,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p50",name:"Huile d'olive",zone:"SEC",unit:"L",stockMini:18,fournisseur:"MEGA STOCK",code:"170780",pizzappId:"ing56"},
+  {id:"p51",name:"Huile neutre",zone:"SEC",unit:"L",stockMini:15,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p52",name:"CBD",zone:"SEC",unit:"flacon",stockMini:3,fournisseur:"CBD SHOP",code:"",pizzappId:""},
+  {id:"p53",name:"Vinaigre",zone:"SEC",unit:"L",stockMini:8,fournisseur:"MEGA STOCK",code:"",pizzappId:"ing55"},
+  {id:"p54",name:"Épice Ras el hanout",zone:"SEC",unit:"pot",stockMini:2,fournisseur:"PROMO",code:"1520945",pizzappId:""},
+  {id:"p55",name:"Sauce créoline",zone:"SEC",unit:"bout.",stockMini:2,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p60",name:"Film étirable",zone:"HYGIENE",unit:"roul.",stockMini:2,fournisseur:"PRO A PRO",code:"",pizzappId:""},
+  {id:"p61",name:"Papier essuie-tout",zone:"HYGIENE",unit:"paq.",stockMini:5,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p62",name:"Sopalin client",zone:"HYGIENE",unit:"paq.",stockMini:10,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p63",name:"Pot à sauce",zone:"HYGIENE",unit:"paq.",stockMini:3,fournisseur:"PROMO",code:"",pizzappId:""},
+  {id:"p64",name:"Boîte à pizza",zone:"HYGIENE",unit:"paq.",stockMini:5,fournisseur:"NATHANAEL",code:"",pizzappId:""},
+  {id:"p65",name:"Gants L",zone:"HYGIENE",unit:"boîte",stockMini:3,fournisseur:"F CARE",code:"",pizzappId:""},
+  {id:"p66",name:"Gants XL",zone:"HYGIENE",unit:"boîte",stockMini:3,fournisseur:"F CARE",code:"",pizzappId:""},
+  {id:"p67",name:"Sanitol",zone:"HYGIENE",unit:"bout.",stockMini:3,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p68",name:"Liquide vaisselle",zone:"HYGIENE",unit:"bout.",stockMini:3,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p69",name:"Produit sol",zone:"HYGIENE",unit:"bout.",stockMini:3,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p70",name:"Sac poubelle 130L",zone:"HYGIENE",unit:"roul.",stockMini:2,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"p71",name:"Papier toilettes",zone:"HYGIENE",unit:"paq.",stockMini:6,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b01",name:"Coca 33cl",zone:"BOISSONS",unit:"unit.",stockMini:24,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b02",name:"Coca 50cl",zone:"BOISSONS",unit:"unit.",stockMini:72,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b03",name:"Coca 2L",zone:"BOISSONS",unit:"unit.",stockMini:20,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b04",name:"Coca Zéro 50cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b05",name:"Fanta Orange 50cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b06",name:"Fanta Orange 2L",zone:"BOISSONS",unit:"unit.",stockMini:6,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b07",name:"Chanflor 50cl",zone:"BOISSONS",unit:"unit.",stockMini:48,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b08",name:"Chanflor 1L",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b09",name:"Chanflor Fruit Rouge 50cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b10",name:"Didier Nature 50cl",zone:"BOISSONS",unit:"unit.",stockMini:24,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b11",name:"Didier Citron 50cl",zone:"BOISSONS",unit:"unit.",stockMini:24,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b12",name:"Orangina 2L",zone:"BOISSONS",unit:"unit.",stockMini:6,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b13",name:"Royal Soda Grenadine 50cl",zone:"BOISSONS",unit:"unit.",stockMini:24,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b14",name:"Royal Soda Kampagne 50cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b15",name:"Montpelé Thé Glacé 50cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b16",name:"Montpelé Fruit Rouge 50cl",zone:"BOISSONS",unit:"unit.",stockMini:30,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b17",name:"Montpelé Pomme Poire 50cl",zone:"BOISSONS",unit:"unit.",stockMini:48,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b18",name:"Amigo Orange 50cl",zone:"BOISSONS",unit:"unit.",stockMini:6,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b19",name:"Minute Maid Orange 25cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b20",name:"Joker ACE 25cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b21",name:"Red Bull 25cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b22",name:"Heineken 25cl",zone:"BOISSONS",unit:"unit.",stockMini:48,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b23",name:"Despé Classic 33cl",zone:"BOISSONS",unit:"unit.",stockMini:48,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b24",name:"Despé Mojito 33cl",zone:"BOISSONS",unit:"unit.",stockMini:24,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b25",name:"Despé RED 33cl",zone:"BOISSONS",unit:"unit.",stockMini:48,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b26",name:"JP Chenet Cabernet 25cl",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b27",name:"Champagne 75cl",zone:"BOISSONS",unit:"unit.",stockMini:2,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+  {id:"b28",name:"Eau de Source 1,5L",zone:"BOISSONS",unit:"unit.",stockMini:12,fournisseur:"MEGA STOCK",code:"",pizzappId:""},
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let shoppingList = [];
+let itemState = {};    // {id: {status:'pending'|'done'|'partial'|'rupture', taken:0}}
+let selectedItems = {}; // {id: true} pour sélection envoi
+let activeZone = "ALL";
+let activeSupplier = "ALL";
+let inventoryDate = null;
+let currentQtyItem = null;
+
+// Restaurer state
+try { itemState = JSON.parse(localStorage.getItem("mwaka-courses-state")||"{}"); } catch(e){}
+try { selectedItems = JSON.parse(localStorage.getItem("mwaka-courses-selected")||"{}"); } catch(e){}
+
+function saveState(){
+  localStorage.setItem("mwaka-courses-state",JSON.stringify(itemState));
+  localStorage.setItem("mwaka-courses-selected",JSON.stringify(selectedItems));
+}
+
+// ══════════════════════════════════════════
+// SPLASH
+// ══════════════════════════════════════════
+setTimeout(function(){
+  document.getElementById("splash").classList.add("hide");
+  document.getElementById("mainApp").style.display="block";
+},1500);
+
+firebase.auth().onAuthStateChanged(function(user){if(user)loadData()});
+
+// ══════════════════════════════════════════
+// LOAD DATA
+// ══════════════════════════════════════════
+function loadData(){
+  var badge=document.getElementById("firebaseBadge");
+  badge.className="badge badge-fire"; badge.textContent="⏳ Chargement...";
+
+  rtdb.ref("shop_config/pizzapp_recipes/ingredients").once("value",function(snapIng){
+    var pizzappIngs=snapIng.val()||[];
+    if(Array.isArray(pizzappIngs)){
+      pizzappIngs.forEach(function(ing){
+        if(!ing||!ing.id)return;
+        var local=ALL_PRODUCTS.find(function(p){return p.pizzappId===ing.id});
+        if(local){
+          if(ing.condUnit)local.unit=ing.condUnit;
+          if(ing.condMini>0)local.stockMini=ing.condMini;
+          if(ing.condFournisseur)local.fournisseur=ing.condFournisseur;
+          if(ing.condZone)local.zone=ing.condZone;
+        }
+      });
+    }
+
+    rtdb.ref("inventaires_pizzapp").orderByKey().limitToLast(1).once("value",function(snapInv){
+      var invData=snapInv.val(); var latestInv={};
+      if(invData){var dates=Object.keys(invData).sort().reverse();inventoryDate=dates[0];latestInv=invData[inventoryDate]||{}}
+
+      rtdb.ref("inventaires").orderByKey().limitToLast(5).once("value",function(snapFull){
+        var fullInvData=snapFull.val()||{}; var latestFullInv={};
+        var fullDates=Object.keys(fullInvData).sort().reverse();
+        for(var i=0;i<fullDates.length;i++){
+          var dayEntries=fullInvData[fullDates[i]];
+          Object.values(dayEntries).forEach(function(entry){
+            if(entry&&entry.items){Object.entries(entry.items).forEach(function(kv){
+              if(!latestFullInv[kv[0]])latestFullInv[kv[0]]=kv[1];
+            })}
+          });
+          if(!inventoryDate)inventoryDate=fullDates[i];
+          break;
+        }
+
+        buildShoppingList(latestInv,latestFullInv);
+        badge.className="badge badge-ok";badge.textContent="🔥 Connecté";
+        document.getElementById("lastUpdate").textContent=inventoryDate?"Inventaire du "+fmtDate(inventoryDate):"⚠️ Sans inventaire — stock mini complet";
+        renderAll();
+      });
+    });
+  },function(){
+    document.getElementById("firebaseBadge").className="badge badge-warn";
+    document.getElementById("firebaseBadge").textContent="⚠️ Hors ligne";
+    buildShoppingList({},{});renderAll();
+  });
+}
+
+function buildShoppingList(pizzappInv,fullInv){
+  shoppingList=[];
+  ALL_PRODUCTS.forEach(function(p){
+    var realQty=null;
+    if(p.pizzappId&&pizzappInv[p.pizzappId]){
+      var inv=pizzappInv[p.pizzappId];
+      realQty=inv.realQtyCond!==undefined?inv.realQtyCond:(inv.realQty!==undefined?inv.realQty:null);
+    }
+    if(realQty===null&&fullInv[p.id]){realQty=fullInv[p.id].qty!==undefined?fullInv[p.id].qty:null}
+    var needed=realQty!==null?Math.max(0,p.stockMini-realQty):p.stockMini;
+    if(needed<=0&&realQty!==null)return;
+    shoppingList.push({id:p.id,name:p.name,zone:p.zone,unit:p.unit,fournisseur:p.fournisseur||"SANS FOURNISSEUR",stockMini:p.stockMini,realQty:realQty,needed:needed,code:p.code||""});
+  });
+  shoppingList.sort(function(a,b){
+    if(a.fournisseur!==b.fournisseur)return a.fournisseur.localeCompare(b.fournisseur);
+    if(a.zone!==b.zone)return a.zone.localeCompare(b.zone);
+    return a.name.localeCompare(b.name);
+  });
+}
+
+// ══════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════
+function renderAll(){renderZoneTabs();renderSupTabs();renderList();updateSendBtn()}
+
+function renderZoneTabs(){
+  var zones=["ALL","CONGEL","FRIGO","SEC","BOISSONS","HYGIENE"];
+  var emoji={ALL:"📋",CONGEL:"❄️",FRIGO:"🧊",SEC:"📦",BOISSONS:"🥤",HYGIENE:"🧹"};
+  var el=document.getElementById("zoneTabs");
+  el.innerHTML=zones.map(function(z){
+    var count=z==="ALL"?shoppingList.length:shoppingList.filter(function(p){return p.zone===z}).length;
+    if(z!=="ALL"&&count===0)return"";
+    return '<div class="zone-tab'+(activeZone===z?" active":"")+'" data-zone="'+z+'" onclick="setZone(\''+z+'\')">'+emoji[z]+" "+(z==="ALL"?"Tous":z)+(count>0?'<span class="ztab-badge">'+count+"</span>":"")+"</div>";
+  }).join("");
+}
+
+function renderSupTabs(){
+  var suppliers=[...new Set(shoppingList.map(function(p){return p.fournisseur}))].sort();
+  var el=document.getElementById("supTabs");
+  el.innerHTML='<div class="sup-tab'+(activeSupplier==="ALL"?" active":"")+'" onclick="setSupplier(\'ALL\')">Tous</div>'+
+    suppliers.map(function(s){
+      var count=shoppingList.filter(function(p){return p.fournisseur===s}).length;
+      var ch=SUPPLIER_CHANNELS[s];
+      var icon=ch&&ch.channel==="whatsapp"?"💬":"📧";
+      return '<div class="sup-tab'+(activeSupplier===s?" active":"")+'" onclick="setSupplier(\''+s.replace(/'/g,"\\'")+"')\">"+icon+" "+s+'<span class="sup-badge">'+count+"</span></div>";
+    }).join("");
+}
+
+function getFiltered(){
+  var search=(document.getElementById("searchInput").value||"").toLowerCase().trim();
+  return shoppingList.filter(function(p){
+    if(activeZone!=="ALL"&&p.zone!==activeZone)return false;
+    if(activeSupplier!=="ALL"&&p.fournisseur!==activeSupplier)return false;
+    if(search&&p.name.toLowerCase().indexOf(search)===-1)return false;
+    return true;
+  });
+}
+
+function renderList(){
+  var filtered=getFiltered();
+  var el=document.getElementById("productList");
+
+  // Update summary
+  var doneCount=shoppingList.filter(function(p){var s=itemState[p.id];return s&&(s.status==="done"||s.status==="partial")}).length;
+  document.getElementById("sumProducts").textContent=shoppingList.length;
+  document.getElementById("sumSuppliers").textContent=[...new Set(shoppingList.map(function(p){return p.fournisseur}))].length;
+  document.getElementById("sumDone").textContent=doneCount;
+
+  if(filtered.length===0){
+    el.innerHTML='<div class="empty-state"><div class="icon">✅</div><div class="title">Rien à commander ici</div></div>';
+    return;
+  }
+
+  var html=""; var currentSup="";
+  filtered.forEach(function(p){
+    if(p.fournisseur!==currentSup){
+      currentSup=p.fournisseur;
+      var ch=SUPPLIER_CHANNELS[currentSup];
+      var channelHTML=ch?(ch.channel==="whatsapp"?'<span class="wa">💬 WhatsApp</span>':'<span class="mail">📧 Email</span>'):"";
+      var supCount=filtered.filter(function(x){return x.fournisseur===currentSup}).length;
+      html+='<div class="supplier-header"><span class="supplier-name">🏪 '+currentSup+'</span><div><span class="supplier-count">'+supCount+' article(s)</span> <span class="supplier-channel">'+channelHTML+'</span></div></div>';
+    }
+
+    var st=itemState[p.id]||{status:"pending",taken:0};
+    var isSelected=selectedItems[p.id]===true;
+    var isRupture=st.status==="rupture";
+    var isDone=st.status==="done";
+    var isPartial=st.status==="partial";
+    var isTaken=isDone||isPartial||isRupture; // produit déjà traité par swipe/modal
+    var cardClass="product-card";
+    if(isRupture)cardClass+=" rupture";
+    else if(isDone)cardClass+=" done";
+    else if(isPartial)cardClass+=" partial";
+
+    var dotClass=isDone?"dot-done":isPartial?"dot-partial":"dot-pending";
+    var takenHTML="";
+    if(isPartial)takenHTML='<div class="qty-taken">Pris: '+st.taken+'/'+p.needed+'</div>';
+    else if(isDone)takenHTML='<div class="qty-taken">✓ Pris</div>';
+    else if(isRupture)takenHTML='<div class="qty-taken" style="color:var(--red)">⛔ Rupture</div>';
+
+    // Swipe: droite = pris, gauche = partiel/modal
+    // Select: seulement si PAS encore pris (mutuellement exclusif)
+    html+='<div class="'+cardClass+'" id="card-'+p.id+'" data-id="'+p.id+'">';
+
+    // Swipe backgrounds (seulement si pas sélectionné pour envoi)
+    if(!isSelected){
+      html+='<div class="swipe-bg swipe-bg-right">✅ Pris !</div>';
+      html+='<div class="swipe-bg swipe-bg-left">📝 Détail</div>';
+    }
+
+    html+='<div class="swipe-content">';
+
+    // Checkbox select : visible seulement si PAS déjà pris
+    if(!isTaken){
+      html+='<div class="select-box'+(isSelected?" selected":"")+'" onclick="event.stopPropagation();toggleSelect(\''+p.id+'\')">'+(isSelected?"✓":"")+'</div>';
+    } else {
+      html+='<div class="status-dot '+dotClass+'"></div>';
+    }
+
+    html+='<div class="product-info" onclick="openQtyModal(\''+p.id+'\')">';
+    html+='<div class="product-name">'+p.name+' <span class="zone-tag zt-'+p.zone+'">'+p.zone+'</span></div>';
+    html+='<div class="product-detail">'+(p.code?"Réf: "+p.code+" · ":"")+(p.realQty!==null?"Stock: "+p.realQty+" "+p.unit:"Pas d\'inventaire")+" · Mini: "+p.stockMini+" "+p.unit+'</div>';
+    html+='</div>';
+    html+='<div class="product-qty"><div class="qty-val">'+p.needed+'</div><div class="qty-unit">'+p.unit+"</div>"+takenHTML+"</div>";
+    html+='</div>'; // swipe-content
+    html+='</div>'; // product-card
+  });
+
+  el.innerHTML=html;
+  initSwipe();
+}
+
+// ══════════════════════════════════════════
+// SWIPE — glisser droite = pris / gauche = détail
+// ══════════════════════════════════════════
+function initSwipe(){
+  var cards=document.querySelectorAll(".product-card");
+  cards.forEach(function(card){
+    var content=card.querySelector(".swipe-content");
+    if(!content)return;
+    var id=card.getAttribute("data-id");
+    // Ne pas activer le swipe si le produit est sélectionné pour envoi
+    if(selectedItems[id])return;
+
+    var startX=0,startY=0,currentX=0,swiping=false,dirLocked=false,isHorizontal=false;
+    var threshold=80;
+
+    content.addEventListener("touchstart",function(e){
+      startX=e.touches[0].clientX;
+      startY=e.touches[0].clientY;
+      currentX=0;swiping=true;dirLocked=false;isHorizontal=false;
+      content.style.transition="none";
+    },{passive:true});
+
+    content.addEventListener("touchmove",function(e){
+      if(!swiping)return;
+      var dx=e.touches[0].clientX-startX;
+      var dy=e.touches[0].clientY-startY;
+
+      if(!dirLocked){
+        dirLocked=true;
+        isHorizontal=Math.abs(dx)>Math.abs(dy);
+      }
+      if(!isHorizontal)return;
+
+      e.preventDefault();
+      currentX=dx;
+      content.style.transform="translateX("+currentX+"px)";
+
+      // Montrer le fond
+      var bgRight=card.querySelector(".swipe-bg-right");
+      var bgLeft=card.querySelector(".swipe-bg-left");
+      if(bgRight)bgRight.style.opacity=currentX>30?"1":"0";
+      if(bgLeft)bgLeft.style.opacity=currentX<-30?"1":"0";
+    },{passive:false});
+
+    content.addEventListener("touchend",function(){
+      if(!swiping||!isHorizontal){swiping=false;return}
+      swiping=false;
+      content.style.transition="transform .25s ease";
+
+      if(currentX>threshold){
+        // Swipe droite → marquer comme PRIS
+        itemState[id]={status:"done",taken:shoppingList.find(function(p){return p.id===id})?.needed||0};
+        delete selectedItems[id]; // retirer de la sélection envoi
+        saveState();
+        content.style.transform="translateX(100%)";
+        setTimeout(function(){renderAll()},250);
+      } else if(currentX<-threshold){
+        // Swipe gauche → ouvrir le modal détail
+        content.style.transform="translateX(0)";
+        var bgLeft=card.querySelector(".swipe-bg-left");
+        if(bgLeft)bgLeft.style.opacity="0";
+        openQtyModal(id);
+      } else {
+        // Pas assez loin → revenir
+        content.style.transform="translateX(0)";
+        var bgRight=card.querySelector(".swipe-bg-right");
+        var bgLeft=card.querySelector(".swipe-bg-left");
+        if(bgRight)bgRight.style.opacity="0";
+        if(bgLeft)bgLeft.style.opacity="0";
+      }
+    });
+  });
+}
+
+function setZone(z){activeZone=z;renderZoneTabs();renderList()}
+function setSupplier(s){activeSupplier=s;renderSupTabs();renderList()}
+function applyFilters(){renderList()}
+
+// ══════════════════════════════════════════
+// SELECT (pour envoi)
+// ══════════════════════════════════════════
+function toggleSelect(id){
+  // Bloquer si le produit est déjà pris/partiel/rupture
+  var st=itemState[id]||{status:"pending"};
+  if(st.status==="done"||st.status==="partial"||st.status==="rupture")return;
+  if(selectedItems[id])delete selectedItems[id]; else selectedItems[id]=true;
+  saveState();renderList();updateSendBtn();
+}
+
+function updateSendBtn(){
+  var btn=document.getElementById("btnSend");
+  var count=Object.keys(selectedItems).length;
+  if(count>0){btn.disabled=false;btn.textContent="📤 Envoyer "+count+" produit"+(count>1?"s":"");}
+  else{btn.disabled=false;btn.textContent="📤 Envoyer la commande";}
+}
+
+// ══════════════════════════════════════════
+// QTY MODAL — prise partielle / rupture
+// ══════════════════════════════════════════
+function openQtyModal(id){
+  currentQtyItem=shoppingList.find(function(p){return p.id===id});
+  if(!currentQtyItem)return;
+  var st=itemState[id]||{status:"pending",taken:0};
+  document.getElementById("qtyProductName").textContent=currentQtyItem.name;
+  document.getElementById("qtyProductSub").textContent=currentQtyItem.fournisseur+" · "+currentQtyItem.needed+" "+currentQtyItem.unit+" à prendre";
+  document.getElementById("qtyTakenInput").value=st.taken||0;
+  document.getElementById("qtyTakenInput").max=currentQtyItem.needed;
+  updateQtyRemainLabel();
+  document.getElementById("qtyModal").classList.add("show");
+}
+
+function closeQtyModal(){document.getElementById("qtyModal").classList.remove("show");currentQtyItem=null}
+
+function qtyAdjust(delta){
+  var inp=document.getElementById("qtyTakenInput");
+  var v=parseInt(inp.value)||0;
+  v=Math.max(0,Math.min(currentQtyItem.needed,v+delta));
+  inp.value=v;
+  updateQtyRemainLabel();
+}
+
+function updateQtyRemainLabel(){
+  var v=parseInt(document.getElementById("qtyTakenInput").value)||0;
+  var remain=currentQtyItem.needed-v;
+  var el=document.getElementById("qtyRemainLabel");
+  if(v===0)el.textContent="";
+  else if(remain>0)el.textContent="⚠️ Il manquera encore "+remain+" "+currentQtyItem.unit;
+  else el.textContent="✅ Quantité complète !";
+}
+
+document.getElementById("qtyTakenInput").addEventListener("input",updateQtyRemainLabel);
+
+function confirmQty(){
+  var taken=parseInt(document.getElementById("qtyTakenInput").value)||0;
+  var id=currentQtyItem.id;
+  if(taken>=currentQtyItem.needed){
+    itemState[id]={status:"done",taken:currentQtyItem.needed};
+    delete selectedItems[id]; // Retirer de la sélection envoi
+  } else if(taken>0){
+    itemState[id]={status:"partial",taken:taken};
+    delete selectedItems[id]; // Retirer de la sélection envoi
+  } else {
+    itemState[id]={status:"pending",taken:0};
+  }
+  saveState();closeQtyModal();renderAll();
+}
+
+function markRupture(){
+  if(!currentQtyItem)return;
+  itemState[currentQtyItem.id]={status:"rupture",taken:0};
+  delete selectedItems[currentQtyItem.id]; // Retirer de la sélection envoi
+  saveState();closeQtyModal();renderAll();
+}
+
+// ══════════════════════════════════════════
+// SEND MODAL
+// ══════════════════════════════════════════
+function openSendModal(){
+  // Ne pas inclure les produits déjà pris/rupture
+  var selIds=Object.keys(selectedItems);
+  var toSend=selIds.length>0
+    ? shoppingList.filter(function(p){
+        if(!selectedItems[p.id])return false;
+        var st=itemState[p.id]||{status:"pending"};
+        return st.status!=="done"&&st.status!=="rupture";
+      })
+    : shoppingList.filter(function(p){
+        var st=itemState[p.id]||{status:"pending"};
+        return st.status!=="done"&&st.status!=="rupture";
+      });
+
+  // Grouper par fournisseur
+  var bySupplier={};
+  toSend.forEach(function(p){
+    if(!bySupplier[p.fournisseur])bySupplier[p.fournisseur]=[];
+    bySupplier[p.fournisseur].push(p);
+  });
+
+  var suppliers=Object.keys(bySupplier).sort();
+  document.getElementById("sendSubtitle").textContent=
+    selIds.length>0? selIds.length+" produit(s) sélectionné(s)":"Toute la commande ("+toSend.length+" produits)";
+
+  var html=suppliers.map(function(sup){
+    var items=bySupplier[sup];
+    var ch=SUPPLIER_CHANNELS[sup]||{channel:"mail",label:"Email"};
+    var icon=ch.channel==="whatsapp"?"💬":"📧";
+    return '<div class="send-option" onclick="sendToSupplier(\''+sup.replace(/'/g,"\\'")+"')\">"+
+      '<div class="send-icon">'+icon+'</div>'+
+      '<div class="send-info"><div class="name">'+sup+'</div><div class="sub">'+ch.label+' · '+items.length+' article(s)</div></div>'+
+      '<div class="send-count">→</div></div>';
+  }).join("");
+
+  // Bouton "Tout envoyer"
+  if(suppliers.length>1){
+    html+='<div style="margin-top:12px"><button onclick="sendAll()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">📤 Tout envoyer ('+suppliers.length+' fournisseurs)</button></div>';
+  }
+
+  document.getElementById("sendOptions").innerHTML=html;
+  document.getElementById("sendModal").classList.add("show");
+}
+
+function closeSendModal(){document.getElementById("sendModal").classList.remove("show")}
+
+function sendToSupplier(sup){
+  var selIds=Object.keys(selectedItems);
+  var items=shoppingList.filter(function(p){
+    if(p.fournisseur!==sup)return false;
+    if(selIds.length>0&&!selectedItems[p.id])return false;
+    return true;
+  });
+
+  var msg=buildOrderMessage(sup,items);
+  var ch=SUPPLIER_CHANNELS[sup]||{channel:"mail"};
+
+  if(ch.channel==="whatsapp"){
+    var phone=ch.phone||"";
+    var url="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
+    window.open(url,"_blank");
+  } else {
+    var email=ch.email||"";
+    var subject="Commande Mwaka Pizza — "+new Date().toLocaleDateString("fr-FR");
+    var url="mailto:"+email+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(msg);
+    window.location.href=url;
+  }
+}
+
+function sendAll(){
+  var selIds=Object.keys(selectedItems);
+  var suppliers=[...new Set(shoppingList.filter(function(p){
+    return selIds.length===0||selectedItems[p.id];
+  }).map(function(p){return p.fournisseur}))].sort();
+
+  suppliers.forEach(function(sup,i){
+    setTimeout(function(){sendToSupplier(sup)},i*800);
+  });
+}
+
+function buildOrderMessage(supplier,items){
+  var today=new Date().toLocaleDateString("fr-FR");
+  var lines=["🍕 COMMANDE MWAKA PIZZA","📅 "+today,"🏪 Fournisseur : "+supplier,"","━━━━━━━━━━━━━━━━"];
+  items.forEach(function(p){
+    var st=itemState[p.id]||{status:"pending",taken:0};
+    var qty=p.needed;
+    if(st.status==="partial")qty=p.needed-st.taken;
+    if(st.status==="done"||st.status==="rupture")return;
+    lines.push("• "+p.name+" — "+qty+" "+p.unit+(p.code?" (Réf: "+p.code+")":""));
+  });
+  lines.push("","━━━━━━━━━━━━━━━━","Total : "+items.length+" article(s)","","Merci ! 🙏");
+  return lines.join("\n");
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function fmtDate(d){if(!d)return"—";var p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0]}
+
+// Close modals on overlay click
+document.getElementById("qtyModal").addEventListener("click",function(e){if(e.target===this)closeQtyModal()});
+document.getElementById("sendModal").addEventListener("click",function(e){if(e.target===this)closeSendModal()});
+document.getElementById("settingsModal").addEventListener("click",function(e){if(e.target===this)closeSettings()});
+
+// ══════════════════════════════════════════
+// SETTINGS — édition des coordonnées fournisseurs
+// ══════════════════════════════════════════
+function openSettings(){
+  // Récupérer tous les fournisseurs
+  var allSups=[...new Set(ALL_PRODUCTS.map(function(p){return p.fournisseur}).filter(Boolean))].sort();
+  var el=document.getElementById("settingsContent");
+
+  el.innerHTML=allSups.map(function(sup){
+    var c=SUPPLIER_CHANNELS[sup]||{channel:"mail",phone:"",contact:"",email:"",label:"Email"};
+    var sid=sup.replace(/[^a-zA-Z0-9]/g,"_");
+    var isWa=c.channel==="whatsapp";
+    return '<div class="settings-card">'+
+      '<h4>🏪 '+sup+'<span class="ch-tag '+(isWa?"ch-wa":"ch-mail")+'">'+(isWa?"💬 WhatsApp":"📧 Email")+'</span></h4>'+
+      '<div class="sfield"><label>Canal</label><select id="s_ch_'+sid+'"><option value="whatsapp"'+(isWa?" selected":"")+'>💬 WhatsApp</option><option value="mail"'+(!isWa?" selected":"")+'>📧 Email</option></select></div>'+
+      '<div class="sfield"><label>👤 Contact</label><input type="text" id="s_name_'+sid+'" value="'+(c.contact||"").replace(/"/g,"&quot;")+'" placeholder="Nom du contact"></div>'+
+      '<div class="sfield"><label>📞 Tél</label><input type="tel" id="s_phone_'+sid+'" value="'+(c.phone||"")+'" placeholder="596696..."></div>'+
+      '<div class="sfield"><label>✉️ Email</label><input type="email" id="s_email_'+sid+'" value="'+(c.email||"")+'" placeholder="commande@fournisseur.fr"></div>'+
+    '</div>';
+  }).join("");
+
+  document.getElementById("settingsModal").classList.add("show");
+}
+
+function closeSettings(){document.getElementById("settingsModal").classList.remove("show")}
+
+function saveSettings(){
+  var allSups=[...new Set(ALL_PRODUCTS.map(function(p){return p.fournisseur}).filter(Boolean))].sort();
+  allSups.forEach(function(sup){
+    var sid=sup.replace(/[^a-zA-Z0-9]/g,"_");
+    var ch=(document.getElementById("s_ch_"+sid)||{}).value||"mail";
+    SUPPLIER_CHANNELS[sup]={
+      channel: ch,
+      contact: (document.getElementById("s_name_"+sid)||{}).value||"",
+      phone:   (document.getElementById("s_phone_"+sid)||{}).value||"",
+      email:   (document.getElementById("s_email_"+sid)||{}).value||"",
+      label:   ch==="whatsapp"?"WhatsApp":"Email"
+    };
+  });
+  localStorage.setItem("mwaka-supplier-channels",JSON.stringify(SUPPLIER_CHANNELS));
+  closeSettings();
+  renderAll(); // Mettre à jour les icônes
+}
+
+// ══════════════════════════════════════════
+// PWA — Service Worker
+// ══════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw-courses.js').catch(function(e){
+    console.log('SW:',e.message);
+  });
+}
+</script>
+</body>
+</html>
