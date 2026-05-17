@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwaka Pizza - Agent Réactivation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0b0b; color: #fff; padding-bottom: 60px; }
+
+        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top: 0; z-index: 50; }
+        .nav-btn { flex: 1; padding: 12px 6px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+        .nav-btn.active { color: #fff; background: #2d5f3f; }
+
+        .header { background: linear-gradient(135deg, #1a1a1a 0%, #6c3483 100%); padding: 22px 20px; text-align: center; }
+        .header h1 { font-size: 1.4em; }
+        .header .subtitle { color: #d6c0e6; font-size: 0.85em; margin-top: 4px; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 15px; }
+
+        .status-card { background: #1a1a1a; border-radius: 14px; padding: 16px; margin-bottom: 14px; border: 1px solid #222; display: flex; align-items: center; gap: 14px; }
+        .status-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+        .status-dot.on  { background: #2ecc71; box-shadow: 0 0 12px #2ecc71; animation: pulse 2s infinite; }
+        .status-dot.off { background: #e74c3c; }
+        .status-dot.idle { background: #f39c12; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .status-text { flex: 1; }
+        .status-text strong { font-size: 1.05em; }
+        .status-text .meta { color: #888; font-size: 0.82em; margin-top: 2px; }
+        .toggle { padding: 9px 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 0.85em; }
+        .toggle.pause { background: #e74c3c; color: #fff; }
+        .toggle.resume { background: #2ecc71; color: #000; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+        .kpi { background: #1a1a1a; border-radius: 12px; padding: 12px 8px; text-align: center; border: 1px solid #222; }
+        .kpi .v { font-size: 1.4em; font-weight: 800; color: #2ecc71; line-height: 1.1; }
+        .kpi .l { font-size: 0.65em; color: #888; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
+        .kpi.info .v { color: #3498db; }
+        .kpi.warn .v { color: #f39c12; }
+
+        .block { background: #1a1a1a; border-radius: 14px; padding: 16px; margin-bottom: 14px; border: 1px solid #222; }
+        .block h2 { font-size: 0.95em; color: #2ecc71; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .block .empty { color: #555; font-size: 0.85em; text-align: center; padding: 20px; }
+
+        .row { padding: 10px; background: #0e0e0e; border-radius: 8px; margin-bottom: 6px; font-size: 0.85em; border-left: 3px solid #2d5f3f; }
+        .row.error { border-left-color: #e74c3c; }
+        .row.dry { border-left-color: #f39c12; }
+        .row .when { color: #777; font-size: 0.8em; }
+        .row .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pill { background: #222; padding: 2px 7px; border-radius: 5px; font-size: 0.72em; color: #aaa; }
+        .pill.sent { background: rgba(46,204,113,0.2); color: #2ecc71; }
+        .pill.dry  { background: rgba(243,156,18,0.2); color: #f39c12; }
+        .pill.err  { background: rgba(231,76,60,0.2); color: #e74c3c; }
+        .pill.seg-vip { background: rgba(46,204,113,0.2); color: #2ecc71; }
+        .pill.seg-prospect { background: rgba(243,156,18,0.2); color: #f39c12; }
+        .pill.seg-regulier { background: rgba(52,152,219,0.2); color: #3498db; }
+        .msg-preview { color: #b8d8c4; font-style: italic; font-size: 0.78em; margin-top: 5px; }
+
+        .cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cfg-row { background: #0e0e0e; padding: 8px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; }
+        .cfg-row label { color: #888; font-size: 0.8em; }
+        .cfg-row input { width: 70px; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 5px; border-radius: 5px; text-align: right; }
+        .save-cfg { margin-top: 10px; padding: 10px; background: #2d5f3f; border: none; color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+
+        .loader { text-align: center; padding: 30px; color: #666; }
+        .loader i { font-size: 2em; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="nav-tabs">
+        <button class="nav-btn" onclick="location.href='index.html'"><i class="fas fa-pizza-slice"></i> Commander</button>
+        <button class="nav-btn" onclick="location.href='reactivation.html'"><i class="fas fa-snowflake"></i> Manuel</button>
+        <button class="nav-btn active"><i class="fas fa-robot"></i> Agent</button>
+    </div>
+
+    <div class="header">
+        <h1><i class="fas fa-robot"></i> Agent Autonome</h1>
+        <div class="subtitle">Relance clients 24/7 — pilote automatique</div>
+    </div>
+
+    <div class="container">
+
+        <div class="status-card">
+            <div class="status-dot off" id="dot"></div>
+            <div class="status-text">
+                <strong id="statusLabel">Chargement...</strong>
+                <div class="meta" id="statusMeta">—</div>
+            </div>
+            <button class="toggle resume" id="toggleBtn" onclick="toggleAgent()">Démarrer</button>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi"><div class="v" id="kSent">—</div><div class="l">Envoyés (auj.)</div></div>
+            <div class="kpi info"><div class="v" id="kOrders">—</div><div class="l">Cmd attribuées</div></div>
+            <div class="kpi warn"><div class="v" id="kRate">—</div><div class="l">Conversion</div></div>
+            <div class="kpi"><div class="v" id="kCA">—</div><div class="l">CA généré</div></div>
+        </div>
+
+        <div class="block">
+            <h2><i class="fas fa-cog"></i> Réglages de l'agent</h2>
+            <div class="cfg-grid">
+                <div class="cfg-row"><label>Min jours inactif</label><input type="number" id="cfgMin" min="7"></div>
+                <div class="cfg-row"><label>Max jours inactif</label><input type="number" id="cfgMax" min="60"></div>
+                <div class="cfg-row"><label>Cooldown (jours)</label><input type="number" id="cfgCool" min="7"></div>
+                <div class="cfg-row"><label>Plafond / jour</label><input type="number" id="cfgDaily" min="1"></div>
+                <div class="cfg-row"><label>Plafond / passage</label><input type="number" id="cfgRun" min="1"></div>
+            </div>
+            <button class="save-cfg" onclick="saveConfig()"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+
+        <div class="block">
+            <h2><i class="fas fa-history"></i> Derniers envois (24h)</h2>
+            <div id="recentList"><div class="loader"><i class="fas fa-spinner"></i></div></div>
+        </div>
+
+        <div class="block">
+            <h2><i class="fas fa-list-check"></i> Activité de l'agent (cron)</h2>
+            <div id="runsList"><div class="loader"><i class="fas fa-spinner"></i></div></div>
+        </div>
+
+        <div class="block">
+            <h2><i class="fas fa-file-invoice"></i> Rapport quotidien</h2>
+            <div id="reportBox"><div class="loader"><i class="fas fa-spinner"></i></div></div>
+        </div>
+
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0",
+            authDomain: "mwakaphone-e8c5b.firebaseapp.com",
+            projectId: "mwakaphone-e8c5b",
+            storageBucket: "mwakaphone-e8c5b.firebasestorage.app",
+            messagingSenderId: "258049374795",
+            appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentCfg = null;
+
+        function fmtDate(ts) {
+            if (!ts) return '—';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        }
+        function fmtMoney(v) { return (Number(v)||0).toFixed(2).replace('.', ',') + ' €'; }
+        function escapeHtml(s) {
+            return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        }
+        function mask(p) { return (p||'').replace(/.(?=.{2})/g, '*'); }
+
+        async function loadStatus() {
+            const snap = await db.doc('config/agent').get();
+            const cfg = snap.exists ? snap.data() : {
+                enabled: true, minDays: 30, maxDays: 540,
+                cooldownDays: 21, dailyMax: 25, perRunMax: 8
+            };
+            currentCfg = cfg;
+            const on = cfg.enabled !== false;
+            document.getElementById('dot').className = 'status-dot ' + (on ? 'on' : 'off');
+            document.getElementById('statusLabel').innerText = on ? 'AGENT ACTIF' : 'AGENT EN PAUSE';
+            const btn = document.getElementById('toggleBtn');
+            btn.innerText = on ? 'Mettre en pause' : 'Démarrer';
+            btn.className = 'toggle ' + (on ? 'pause' : 'resume');
+            document.getElementById('statusMeta').innerText =
+                on ? `Tourne toutes les heures · ${cfg.dailyMax} envois/jour max · cooldown ${cfg.cooldownDays}j`
+                   : 'Pause — aucun envoi automatique';
+            // hydrate form
+            document.getElementById('cfgMin').value   = cfg.minDays;
+            document.getElementById('cfgMax').value   = cfg.maxDays;
+            document.getElementById('cfgCool').value  = cfg.cooldownDays;
+            document.getElementById('cfgDaily').value = cfg.dailyMax;
+            document.getElementById('cfgRun').value   = cfg.perRunMax;
+        }
+
+        async function toggleAgent() {
+            const newState = !(currentCfg && currentCfg.enabled !== false);
+            await db.doc('config/agent').set({ enabled: newState }, { merge: true });
+            await loadStatus();
+        }
+
+        async function saveConfig() {
+            const v = id => Number(document.getElementById(id).value);
+            await db.doc('config/agent').set({
+                minDays:      v('cfgMin'),
+                maxDays:      v('cfgMax'),
+                cooldownDays: v('cfgCool'),
+                dailyMax:     v('cfgDaily'),
+                perRunMax:    v('cfgRun')
+            }, { merge: true });
+            await loadStatus();
+            alert('Réglages enregistrés ✅');
+        }
+
+        async function loadRecent() {
+            const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 86400000);
+            const snap = await db.collection('reactivations')
+                .where('source', '==', 'agent')
+                .where('createdAt', '>=', since)
+                .get().catch(() => null);
+            const c = document.getElementById('recentList');
+            if (!snap || snap.empty) {
+                c.innerHTML = '<div class="empty">Aucun envoi sur les dernières 24h.</div>';
+                return;
+            }
+            const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                .sort((a, b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+
+            let sent = 0, attributed = 0, ca = 0;
+            rows.forEach(r => { if (r.status === 'sent') sent++; });
+            // attribution from today's orders
+            const startDay = new Date(); startDay.setHours(0,0,0,0);
+            const ordSnap = await db.collection('commandes')
+                .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(startDay))
+                .get();
+            const phones = new Set(rows.map(r => (r.phone||'').replace(/\D/g,'')));
+            ordSnap.docs.forEach(d => {
+                const o = d.data();
+                const p = (o.phone||'').replace(/\D/g,'');
+                if (phones.has(p)) { attributed++; ca += Number(o.total)||0; }
+            });
+
+            document.getElementById('kSent').innerText   = sent;
+            document.getElementById('kOrders').innerText = attributed;
+            document.getElementById('kRate').innerText   = sent ? Math.round((attributed/sent)*100) + '%' : '—';
+            document.getElementById('kCA').innerText     = fmtMoney(ca);
+
+            c.innerHTML = rows.slice(0, 25).map(r => {
+                const cls = r.status === 'sent' ? '' : (r.status === 'error' ? 'error' : 'dry');
+                const pill = r.status === 'sent' ? 'sent' : (r.status === 'error' ? 'err' : 'dry');
+                return `
+                <div class="row ${cls}">
+                    <div class="head">
+                        <strong>${escapeHtml(r.clientName||'Client')}</strong>
+                        <span style="flex:1;color:#666;font-size:0.8em;">${mask(r.phone||'')}</span>
+                        <span class="pill seg-${r.segment}">${r.segment||''}</span>
+                        <span class="pill ${pill}">${r.status}</span>
+                        <span class="pill">${r.channel||''}</span>
+                    </div>
+                    <div class="msg-preview">"${escapeHtml((r.body||'').substring(0, 140))}${(r.body||'').length>140?'…':''}"</div>
+                    <div class="when">${fmtDate(r.createdAt)} · score ${r.score||'?'} · ${r.daysCold||'?'} j inactif</div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadRuns() {
+            const since = firebase.firestore.Timestamp.fromMillis(Date.now() - 7*86400000);
+            const snap = await db.collection('agent_runs').where('at', '>=', since).get().catch(() => null);
+            const c = document.getElementById('runsList');
+            if (!snap || snap.empty) { c.innerHTML = '<div class="empty">Pas de passage récent.</div>'; return; }
+            const rows = snap.docs.map(d => d.data())
+                .sort((a, b) => (b.at?.seconds||0) - (a.at?.seconds||0))
+                .slice(0, 12);
+            c.innerHTML = rows.map(r => `
+                <div class="row">
+                    <div class="head">
+                        <strong>${fmtDate(r.at)}</strong>
+                        ${r.skipped ? `<span class="pill dry">${r.skipped}</span>` :
+                          `<span class="pill sent">${r.sent||0} env</span>
+                           ${r.dryRun ? `<span class="pill dry">${r.dryRun} dry</span>`:''}
+                           ${r.errors ? `<span class="pill err">${r.errors} err</span>`:''}`}
+                        ${r.window ? `<span class="pill">${r.window.slot}</span>` : ''}
+                    </div>
+                    ${r.eligibleCount !== undefined ? `<div class="when">${r.eligibleCount} clients éligibles</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function loadReport() {
+            const snap = await db.collection('reports')
+                .orderBy('generatedAt', 'desc').limit(1).get().catch(() => null);
+            const c = document.getElementById('reportBox');
+            if (!snap || snap.empty) {
+                c.innerHTML = '<div class="empty">Aucun rapport encore généré. Le premier arrive à 20h00 (heure Martinique).</div>';
+                return;
+            }
+            const r = snap.docs[0].data();
+            c.innerHTML = `
+                <div style="font-size:0.95em;line-height:1.6;">
+                    <div style="color:#888;font-size:0.85em;margin-bottom:8px;">Rapport du ${r.date}</div>
+                    <div>📤 <strong>${r.sent}</strong> messages envoyés (${r.sentSMS||0} SMS / ${r.sentWA||0} WhatsApp)</div>
+                    <div>👥 <strong>${r.contacted}</strong> clients contactés</div>
+                    <div>🛎️ <strong style="color:#3498db;">${r.attributedOrders}</strong> commandes attribuées (${fmtMoney(r.attributedCA)})</div>
+                    <div>📈 Taux de conversion : <strong style="color:#f39c12;">${r.conversionRate}%</strong></div>
+                    <div style="margin-top:6px;color:#888;font-size:0.85em;">Total commandes du jour : ${r.ordersToday}</div>
+                </div>`;
+        }
+
+        async function refresh() {
+            await loadStatus();
+            await Promise.all([loadRecent(), loadRuns(), loadReport()]);
+        }
+        refresh();
+        setInterval(refresh, 60000);
+    </script>
+</body>
+</html>

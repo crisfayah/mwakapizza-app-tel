@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwaka Pizza - Réactivation Clients</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0b0b; color: #fff; padding-bottom: 60px; }
+
+        .nav-tabs { display: flex; background: #1a1a1a; border-bottom: 3px solid #2d5f3f; position: sticky; top: 0; z-index: 50; }
+        .nav-btn { flex: 1; padding: 12px 6px; border: none; background: none; color: #888; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+        .nav-btn.active { color: #fff; background: #2d5f3f; }
+
+        .header { background: linear-gradient(135deg, #1a1a1a 0%, #2d5f3f 100%); padding: 20px; text-align: center; border-bottom: 1px solid #2d5f3f; }
+        .header h1 { font-size: 1.4em; }
+        .header .subtitle { color: #b8d8c4; font-size: 0.85em; margin-top: 4px; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 15px; }
+
+        /* KPI */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .kpi { background: #1a1a1a; border-radius: 12px; padding: 12px 8px; text-align: center; border: 1px solid #222; }
+        .kpi .v { font-size: 1.4em; font-weight: 800; color: #2ecc71; line-height: 1.1; }
+        .kpi .l { font-size: 0.65em; color: #888; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.5px; }
+        .kpi.warn .v { color: #f39c12; }
+        .kpi.danger .v { color: #e74c3c; }
+        .kpi.info .v { color: #3498db; }
+
+        /* Filtres */
+        .filter-box { background: #1a1a1a; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #222; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .filter-row:last-child { margin-bottom: 0; }
+        .filter-label { display: block; font-size: 0.7em; color: #888; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; font-weight: bold; }
+        .chip { padding: 7px 12px; border-radius: 20px; background: #222; color: #888; border: 1px solid #333; cursor: pointer; font-size: 12px; font-weight: bold; user-select: none; }
+        .chip.active { background: #2d5f3f; color: #fff; border-color: #2d5f3f; }
+        .chip.cold-30.active { background: #f39c12; border-color: #f39c12; color: #000; }
+        .chip.cold-60.active { background: #e67e22; border-color: #e67e22; }
+        .chip.cold-90.active { background: #e74c3c; border-color: #e74c3c; }
+        .chip.cold-180.active, .chip.cold-365.active { background: #8e44ad; border-color: #8e44ad; }
+        .search-input { width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid #333; background: #0e0e0e; color: #fff; font-size: 14px; }
+
+        /* Bulk bar */
+        .bulk-bar { background: #2d5f3f; padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; display: none; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .bulk-bar.visible { display: flex; }
+        .bulk-bar .count { font-weight: bold; flex-shrink: 0; }
+        .bulk-btn { background: #fff; color: #2d5f3f; border: none; border-radius: 8px; padding: 8px 12px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .bulk-btn.danger { background: #e74c3c; color: #fff; }
+
+        /* Liste clients */
+        .empty-state { text-align: center; color: #555; padding: 40px 20px; font-size: 14px; }
+        .empty-state i { font-size: 2.5em; margin-bottom: 10px; display: block; opacity: 0.4; }
+
+        .client-card { background: #1a1a1a; border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid #222; border-left: 5px solid #2d5f3f; transition: 0.2s; }
+        .client-card.cold-30 { border-left-color: #f39c12; }
+        .client-card.cold-60 { border-left-color: #e67e22; }
+        .client-card.cold-90 { border-left-color: #e74c3c; }
+        .client-card.cold-180 { border-left-color: #8e44ad; }
+        .client-card.cold-365 { border-left-color: #6c3483; }
+        .client-card.selected { background: #1c2e22; border-color: #2d5f3f; }
+        .client-card.recently-contacted { opacity: 0.55; }
+
+        .client-head { display: flex; gap: 10px; align-items: flex-start; }
+        .client-check { margin-top: 4px; transform: scale(1.3); accent-color: #2d5f3f; }
+        .client-name { flex: 1; }
+        .client-name strong { font-size: 1.05em; }
+        .client-name .phone { color: #888; font-size: 0.85em; margin-top: 2px; display: block; }
+        .client-segment { padding: 3px 8px; border-radius: 6px; font-size: 0.65em; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .seg-prospect { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid #f39c12; }
+        .seg-regulier { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid #3498db; }
+        .seg-vip { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+
+        .stats-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; font-size: 0.8em; }
+        .stat-pill { background: #222; padding: 5px 9px; border-radius: 8px; color: #ccc; }
+        .stat-pill .lab { color: #777; font-size: 0.85em; }
+        .stat-pill.cold { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
+
+        .fav-line { color: #b8d8c4; font-size: 0.78em; margin-top: 8px; font-style: italic; }
+        .fav-line .heart { color: #e74c3c; }
+
+        .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+        .act-btn { padding: 9px 4px; border-radius: 8px; border: none; cursor: pointer; font-size: 11px; font-weight: bold; color: #fff; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .act-btn i { font-size: 1.1em; }
+        .act-call { background: #3498db; }
+        .act-sms { background: #f39c12; color: #000; }
+        .act-wa { background: #25D366; color: #000; }
+        .act-note { background: #34495e; }
+
+        .last-contact { font-size: 0.72em; color: #777; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+        .last-contact .badge-c { background: #34495e; color: #fff; padding: 2px 6px; border-radius: 5px; font-weight: bold; }
+
+        /* Templates */
+        .tpl-box { background: #1a1a1a; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #222; }
+        .tpl-box h3 { font-size: 0.9em; color: #2ecc71; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .tpl-item { background: #0e0e0e; border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #2d5f3f; }
+        .tpl-item .tpl-name { font-weight: bold; color: #fff; font-size: 0.85em; margin-bottom: 4px; }
+        .tpl-item textarea { width: 100%; background: transparent; border: none; color: #ccc; font-size: 0.85em; resize: vertical; min-height: 50px; font-family: inherit; }
+        .tpl-help { font-size: 0.7em; color: #555; margin-top: 6px; font-style: italic; }
+
+        /* Modal */
+        .modal-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: flex-end; justify-content: center; z-index: 100; padding: 0; }
+        .modal-bg.visible { display: flex; }
+        .modal { background: #1a1a1a; border-radius: 18px 18px 0 0; padding: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; border-top: 3px solid #2d5f3f; }
+        .modal h3 { color: #2ecc71; margin-bottom: 12px; font-size: 1.1em; }
+        .modal .form-group { margin-bottom: 12px; }
+        .modal label { display: block; font-size: 0.75em; color: #888; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+        .modal textarea, .modal select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0e0e0e; color: #fff; font-size: 14px; font-family: inherit; }
+        .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .modal-actions button { flex: 1; padding: 13px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-primary { background: #2d5f3f; color: #fff; }
+        .btn-secondary { background: #333; color: #fff; }
+        .btn-close-x { float: right; background: transparent; border: none; color: #777; font-size: 1.3em; cursor: pointer; }
+
+        .history-item { background: #0e0e0e; padding: 8px 10px; border-radius: 6px; margin-bottom: 5px; font-size: 0.8em; border-left: 3px solid #34495e; }
+        .history-item .h-date { color: #888; font-size: 0.85em; }
+        .history-item.ch-call { border-left-color: #3498db; }
+        .history-item.ch-sms { border-left-color: #f39c12; }
+        .history-item.ch-wa { border-left-color: #25D366; }
+
+        .loader { text-align: center; padding: 40px; color: #666; }
+        .loader i { font-size: 2em; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="nav-tabs">
+        <button class="nav-btn" onclick="location.href='index.html'"><i class="fas fa-pizza-slice"></i> Commander</button>
+        <button class="nav-btn active"><i class="fas fa-redo"></i> Manuel</button>
+        <button class="nav-btn" onclick="location.href='agent.html'"><i class="fas fa-robot"></i> Agent auto</button>
+    </div>
+
+    <div class="header">
+        <h1><i class="fas fa-snowflake"></i> Réactivation Clients Froids</h1>
+        <div class="subtitle">Réveillez vos prospects et anciens clients</div>
+    </div>
+
+    <div class="container">
+
+        <div id="kpiZone" class="kpi-grid">
+            <div class="kpi"><div class="v" id="kpiTotal">—</div><div class="l">Clients total</div></div>
+            <div class="kpi warn"><div class="v" id="kpiCold">—</div><div class="l">À relancer</div></div>
+            <div class="kpi info"><div class="v" id="kpiAvg">—</div><div class="l">Ticket moyen</div></div>
+            <div class="kpi danger"><div class="v" id="kpiPotentiel">—</div><div class="l">CA potentiel</div></div>
+        </div>
+
+        <div class="filter-box">
+            <span class="filter-label">Période d'inactivité</span>
+            <div class="filter-row">
+                <span class="chip cold-30 active" data-days="30" onclick="setCold(this, 30)">+30 j</span>
+                <span class="chip cold-60" data-days="60" onclick="setCold(this, 60)">+60 j</span>
+                <span class="chip cold-90" data-days="90" onclick="setCold(this, 90)">+90 j</span>
+                <span class="chip cold-180" data-days="180" onclick="setCold(this, 180)">+6 mois</span>
+                <span class="chip cold-365" data-days="365" onclick="setCold(this, 365)">+1 an</span>
+                <span class="chip" data-days="0" onclick="setCold(this, 0)">Tous</span>
+            </div>
+            <span class="filter-label">Segment</span>
+            <div class="filter-row">
+                <span class="chip active" data-seg="all" onclick="setSeg(this, 'all')">Tous</span>
+                <span class="chip" data-seg="prospect" onclick="setSeg(this, 'prospect')">Prospects (1 cmd)</span>
+                <span class="chip" data-seg="regulier" onclick="setSeg(this, 'regulier')">Réguliers (2-4)</span>
+                <span class="chip" data-seg="vip" onclick="setSeg(this, 'vip')">VIP (5+)</span>
+            </div>
+            <span class="filter-label">Recherche</span>
+            <input type="text" class="search-input" id="searchInput" placeholder="Nom ou téléphone..." oninput="render()">
+        </div>
+
+        <div class="bulk-bar" id="bulkBar">
+            <span class="count" id="bulkCount">0 sélectionné(s)</span>
+            <button class="bulk-btn" onclick="bulkAction('wa')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+            <button class="bulk-btn" onclick="bulkAction('sms')"><i class="fas fa-sms"></i> SMS</button>
+            <button class="bulk-btn" onclick="bulkAction('csv')"><i class="fas fa-file-export"></i> CSV</button>
+            <button class="bulk-btn danger" onclick="clearSelection()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="tpl-box">
+            <h3><i class="fas fa-comment-dots"></i> Modèles de message (modifiables)</h3>
+            <div id="templates"></div>
+            <div class="tpl-help">Utilisez <code>{prenom}</code> pour insérer le prénom du client. Les modèles sont enregistrés sur cet appareil.</div>
+        </div>
+
+        <div id="loader" class="loader"><i class="fas fa-spinner"></i><div style="margin-top:8px;">Chargement de la base clients...</div></div>
+        <div id="clientList"></div>
+
+    </div>
+
+    <!-- Modal personnalisation message -->
+    <div class="modal-bg" id="msgModal">
+        <div class="modal">
+            <button class="btn-close-x" onclick="closeModal('msgModal')">&times;</button>
+            <h3 id="msgModalTitle">Envoyer un message</h3>
+            <div class="form-group">
+                <label>Modèle</label>
+                <select id="msgTplSelect" onchange="onTplChange()"></select>
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="msgText" rows="5"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('msgModal')">Annuler</button>
+                <button class="btn-primary" id="msgSendBtn">Envoyer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal note de relance -->
+    <div class="modal-bg" id="noteModal">
+        <div class="modal">
+            <button class="btn-close-x" onclick="closeModal('noteModal')">&times;</button>
+            <h3 id="noteModalTitle">Note de relance</h3>
+            <div id="noteHistory" style="margin-bottom: 12px;"></div>
+            <div class="form-group">
+                <label>Canal</label>
+                <select id="noteChannel">
+                    <option value="appel">Appel</option>
+                    <option value="sms">SMS</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Résultat</label>
+                <select id="noteResult">
+                    <option value="injoignable">Injoignable</option>
+                    <option value="contacte">Contacté</option>
+                    <option value="commande">Commande passée</option>
+                    <option value="refus">Refus / Ne plus contacter</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Note</label>
+                <textarea id="noteText" rows="3" placeholder="Détails de l'échange..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('noteModal')">Annuler</button>
+                <button class="btn-primary" onclick="saveNote()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxyNbWyEAVot0sDzBzUdbqp4tQ2jBWMS0",
+            authDomain: "mwakaphone-e8c5b.firebaseapp.com",
+            projectId: "mwakaphone-e8c5b",
+            storageBucket: "mwakaphone-e8c5b.firebasestorage.app",
+            messagingSenderId: "258049374795",
+            appId: "1:258049374795:web:bc7863ce2f86d8a6c8abce"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ---------- STATE ----------
+        let allClients = [];
+        let reactivations = {};
+        let selected = new Set();
+        let coldThreshold = 30;
+        let segment = 'all';
+        let activeClientPhone = null;
+        let activeModalMode = null; // 'sms' | 'wa'
+
+        // ---------- TEMPLATES (localStorage) ----------
+        const DEFAULT_TEMPLATES = [
+            { name: "Relance douce", body: "Bonjour {prenom} ! 🍕 Ça fait longtemps qu'on ne vous a pas vu(e) chez Mwaka Pizza. Pour vous faire revenir, on vous offre -15% sur votre prochaine commande (code MWAKA15). À très vite !" },
+            { name: "Nouvelle pizza", body: "Salut {prenom} ! 🔥 On vient de sortir une nouvelle pizza qui cartonne. On a pensé à vous ! Venez la goûter, on vous offre une boisson 🥤 - Mwaka Pizza" },
+            { name: "Anciens clients VIP", body: "Bonjour {prenom}, vous nous manquez ! Vous étiez un(e) de nos meilleurs clients. -20% pour votre retour (code REVIENS20). Mwaka Pizza 🍕❤️" },
+            { name: "Prospect (1 commande)", body: "Bonjour {prenom}, merci d'avoir testé Mwaka Pizza ! On espère que vous avez aimé. Pour votre 2ème commande, on vous offre une part de dessert 🍰 Code: MWAKA2" }
+        ];
+
+        function loadTemplates() {
+            try { return JSON.parse(localStorage.getItem('mwaka_tpl') || 'null') || DEFAULT_TEMPLATES; }
+            catch(e) { return DEFAULT_TEMPLATES; }
+        }
+        function saveTemplates(tpls) { localStorage.setItem('mwaka_tpl', JSON.stringify(tpls)); }
+        let templates = loadTemplates();
+
+        function renderTemplates() {
+            const c = document.getElementById('templates');
+            c.innerHTML = templates.map((t, i) => `
+                <div class="tpl-item">
+                    <div class="tpl-name">${t.name}</div>
+                    <textarea data-idx="${i}" oninput="onTplEdit(this)">${t.body}</textarea>
+                </div>
+            `).join('');
+        }
+        function onTplEdit(el) {
+            templates[parseInt(el.dataset.idx)].body = el.value;
+            saveTemplates(templates);
+        }
+
+        // ---------- HELPERS ----------
+        function normalizePhone(p) {
+            if (!p) return '';
+            return p.replace(/\D/g, '');
+        }
+        function cleanFirstName(name) {
+            if (!name) return 'Client';
+            return name.trim().split(/\s+/)[0];
+        }
+        function daysSince(date) {
+            if (!date) return 99999;
+            const ms = Date.now() - date.getTime();
+            return Math.floor(ms / 86400000);
+        }
+        function fmtDate(d) {
+            if (!d) return '—';
+            return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+        function fmtMoney(v) {
+            return (v || 0).toFixed(2).replace('.', ',') + ' €';
+        }
+        function segmentOf(count) {
+            if (count <= 1) return 'prospect';
+            if (count <= 4) return 'regulier';
+            return 'vip';
+        }
+        function segmentLabel(s) {
+            return { prospect: 'Prospect', regulier: 'Régulier', vip: 'VIP' }[s] || s;
+        }
+        function coldLevel(days) {
+            if (days >= 365) return 365;
+            if (days >= 180) return 180;
+            if (days >= 90) return 90;
+            if (days >= 60) return 60;
+            if (days >= 30) return 30;
+            return 0;
+        }
+
+        // ---------- DATA LOAD ----------
+        async function loadData() {
+            const [snapOrders, snapReact] = await Promise.all([
+                db.collection('commandes').get(),
+                db.collection('reactivations').get().catch(() => ({ docs: [] }))
+            ]);
+
+            // Build reactivations map by phone
+            reactivations = {};
+            snapReact.docs.forEach(d => {
+                const r = d.data();
+                const k = normalizePhone(r.phone) || r.clientName;
+                if (!reactivations[k]) reactivations[k] = [];
+                reactivations[k].push({
+                    id: d.id,
+                    channel: r.channel,
+                    result: r.result,
+                    note: r.note || '',
+                    createdAt: r.createdAt && r.createdAt.toDate ? r.createdAt.toDate() : null
+                });
+            });
+            Object.values(reactivations).forEach(arr => arr.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+
+            // Aggregate orders by client (phone preferred, fallback to name)
+            const byKey = {};
+            snapOrders.docs.forEach(d => {
+                const o = d.data();
+                const phone = normalizePhone(o.phone);
+                const key = phone || ('name:' + (o.clientName || '').toLowerCase().trim());
+                if (!key || key === 'name:') return;
+                const date = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : null;
+                if (!byKey[key]) {
+                    byKey[key] = {
+                        key,
+                        phone,
+                        names: {},
+                        addresses: {},
+                        totalCA: 0,
+                        orders: 0,
+                        firstOrder: date,
+                        lastOrder: date,
+                        favPizzas: {},
+                        restaurants: {}
+                    };
+                }
+                const c = byKey[key];
+                c.totalCA += Number(o.total) || 0;
+                c.orders += 1;
+                if (date) {
+                    if (!c.firstOrder || date < c.firstOrder) c.firstOrder = date;
+                    if (!c.lastOrder || date > c.lastOrder) c.lastOrder = date;
+                }
+                if (o.clientName) c.names[o.clientName] = (c.names[o.clientName] || 0) + 1;
+                if (o.address) c.addresses[o.address] = (c.addresses[o.address] || 0) + 1;
+                if (o.restaurant) c.restaurants[o.restaurant] = (c.restaurants[o.restaurant] || 0) + 1;
+                (o.items || []).forEach(p => {
+                    if (p && p.name) c.favPizzas[p.name] = (c.favPizzas[p.name] || 0) + (Number(p.qty) || 1);
+                });
+            });
+
+            allClients = Object.values(byKey).map(c => {
+                const topName = Object.entries(c.names).sort((a, b) => b[1] - a[1])[0];
+                const topAddr = Object.entries(c.addresses).sort((a, b) => b[1] - a[1])[0];
+                const topPizza = Object.entries(c.favPizzas).sort((a, b) => b[1] - a[1])[0];
+                const topRes = Object.entries(c.restaurants).sort((a, b) => b[1] - a[1])[0];
+                return {
+                    ...c,
+                    name: topName ? topName[0] : 'Client',
+                    address: topAddr ? topAddr[0] : '',
+                    favPizza: topPizza ? topPizza[0] : '',
+                    favRes: topRes ? topRes[0] : '',
+                    avgTicket: c.totalCA / Math.max(c.orders, 1),
+                    daysCold: daysSince(c.lastOrder),
+                    seg: segmentOf(c.orders)
+                };
+            });
+
+            allClients.sort((a, b) => b.daysCold - a.daysCold);
+            document.getElementById('loader').style.display = 'none';
+            render();
+        }
+
+        // ---------- FILTERS ----------
+        function setCold(el, days) {
+            document.querySelectorAll('.filter-row .chip[data-days]').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            coldThreshold = days;
+            render();
+        }
+        function setSeg(el, s) {
+            document.querySelectorAll('.filter-row .chip[data-seg]').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            segment = s;
+            render();
+        }
+
+        function filterClients() {
+            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            return allClients.filter(c => {
+                if (coldThreshold > 0 && c.daysCold < coldThreshold) return false;
+                if (segment !== 'all' && c.seg !== segment) return false;
+                if (q) {
+                    const hay = (c.name + ' ' + c.phone).toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            });
+        }
+
+        // ---------- RENDER ----------
+        function render() {
+            const list = filterClients();
+            renderKPI(list);
+            renderList(list);
+            renderBulk();
+        }
+
+        function renderKPI(list) {
+            const cold = list.length;
+            const totalAvg = allClients.reduce((s, c) => s + c.avgTicket, 0) / Math.max(allClients.length, 1);
+            const potentiel = list.reduce((s, c) => s + c.avgTicket, 0);
+            document.getElementById('kpiTotal').innerText = allClients.length;
+            document.getElementById('kpiCold').innerText = cold;
+            document.getElementById('kpiAvg').innerText = fmtMoney(totalAvg);
+            document.getElementById('kpiPotentiel').innerText = fmtMoney(potentiel);
+        }
+
+        function renderList(list) {
+            const c = document.getElementById('clientList');
+            if (!list.length) {
+                c.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i>Aucun client correspond à ces filtres.<br><span style="font-size:0.85em;">Tout le monde est chaud 🔥 ou élargissez les critères.</span></div>`;
+                return;
+            }
+            c.innerHTML = list.map(cl => renderCard(cl)).join('');
+        }
+
+        function renderCard(cl) {
+            const lvl = coldLevel(cl.daysCold);
+            const phone = cl.phone || '';
+            const history = reactivations[cl.key] || reactivations[phone] || [];
+            const lastContact = history[0];
+            const lastContactStr = lastContact && lastContact.createdAt
+                ? `<div class="last-contact"><span class="badge-c">Relance</span> ${fmtDate(lastContact.createdAt)} — ${lastContact.channel} (${lastContact.result})</div>`
+                : '';
+            const checked = selected.has(cl.key) ? 'checked' : '';
+            const selectedCls = selected.has(cl.key) ? 'selected' : '';
+            const noPhone = !phone;
+            return `
+                <div class="client-card cold-${lvl} ${selectedCls}" data-key="${cl.key}">
+                    <div class="client-head">
+                        <input type="checkbox" class="client-check" ${checked} onchange="toggleSelect('${cl.key}', this.checked)">
+                        <div class="client-name">
+                            <strong>${escapeHtml(cl.name)}</strong>
+                            <span class="phone">${phone ? '📞 ' + formatPhone(phone) : '<em style="color:#666;">(pas de téléphone)</em>'}</span>
+                        </div>
+                        <span class="client-segment seg-${cl.seg}">${segmentLabel(cl.seg)}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stat-pill cold"><span class="lab">Inactif</span> ${cl.daysCold} j</span>
+                        <span class="stat-pill"><span class="lab">Commandes</span> ${cl.orders}</span>
+                        <span class="stat-pill"><span class="lab">CA total</span> ${fmtMoney(cl.totalCA)}</span>
+                        <span class="stat-pill"><span class="lab">Ticket moy.</span> ${fmtMoney(cl.avgTicket)}</span>
+                        <span class="stat-pill"><span class="lab">Dernière</span> ${fmtDate(cl.lastOrder)}</span>
+                    </div>
+                    ${cl.favPizza ? `<div class="fav-line"><span class="heart">♥</span> Pizza préférée : <strong>${escapeHtml(cl.favPizza)}</strong>${cl.favRes ? ' — ' + escapeHtml(cl.favRes) : ''}</div>` : ''}
+                    ${lastContactStr}
+                    <div class="actions">
+                        <button class="act-btn act-call" ${noPhone ? 'disabled style="opacity:0.4"' : ''} onclick="callClient('${cl.key}')"><i class="fas fa-phone"></i>Appeler</button>
+                        <button class="act-btn act-sms" ${noPhone ? 'disabled style="opacity:0.4"' : ''} onclick="openMsg('${cl.key}','sms')"><i class="fas fa-sms"></i>SMS</button>
+                        <button class="act-btn act-wa" ${noPhone ? 'disabled style="opacity:0.4"' : ''} onclick="openMsg('${cl.key}','wa')"><i class="fab fa-whatsapp"></i>WhatsApp</button>
+                        <button class="act-btn act-note" onclick="openNote('${cl.key}')"><i class="fas fa-sticky-note"></i>Note</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBulk() {
+            const bar = document.getElementById('bulkBar');
+            const c = selected.size;
+            if (c > 0) {
+                bar.classList.add('visible');
+                document.getElementById('bulkCount').innerText = `${c} sélectionné(s)`;
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+        function formatPhone(p) {
+            if (!p) return '';
+            return p.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+        }
+
+        // ---------- SELECTION ----------
+        function toggleSelect(key, on) {
+            if (on) selected.add(key); else selected.delete(key);
+            render();
+        }
+        function clearSelection() {
+            selected.clear();
+            render();
+        }
+
+        // ---------- ACTIONS ----------
+        function findClient(key) { return allClients.find(c => c.key === key); }
+
+        function callClient(key) {
+            const cl = findClient(key);
+            if (!cl || !cl.phone) return;
+            window.location.href = 'tel:' + cl.phone;
+            logReactivation(cl, 'appel', 'contacte', 'Appel lancé depuis l\'app');
+        }
+
+        function openMsg(key, mode) {
+            activeClientPhone = key;
+            activeModalMode = mode;
+            const cl = findClient(key);
+            document.getElementById('msgModalTitle').innerText = (mode === 'wa' ? 'WhatsApp' : 'SMS') + ' — ' + cl.name;
+            const sel = document.getElementById('msgTplSelect');
+            sel.innerHTML = templates.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+            // suggest most relevant template
+            let suggested = 0;
+            if (cl.seg === 'prospect') suggested = 3;
+            else if (cl.seg === 'vip') suggested = 2;
+            else if (cl.daysCold > 90) suggested = 0;
+            else suggested = 1;
+            sel.value = Math.min(suggested, templates.length - 1);
+            onTplChange();
+            document.getElementById('msgSendBtn').onclick = sendMsg;
+            document.getElementById('msgModal').classList.add('visible');
+        }
+
+        function onTplChange() {
+            const cl = findClient(activeClientPhone);
+            if (!cl) return;
+            const tpl = templates[parseInt(document.getElementById('msgTplSelect').value)];
+            const body = tpl.body.replace(/\{prenom\}/g, cleanFirstName(cl.name));
+            document.getElementById('msgText').value = body;
+        }
+
+        function sendMsg() {
+            const cl = findClient(activeClientPhone);
+            if (!cl || !cl.phone) return;
+            const text = document.getElementById('msgText').value;
+            const phone = cl.phone;
+            if (activeModalMode === 'wa') {
+                // WhatsApp expects international format; Martinique = +596
+                let intl = phone;
+                if (intl.startsWith('0')) intl = '596' + intl.substring(1);
+                else if (!intl.startsWith('596') && intl.length === 9) intl = '596' + intl;
+                window.open(`https://wa.me/${intl}?text=${encodeURIComponent(text)}`, '_blank');
+                logReactivation(cl, 'whatsapp', 'contacte', text);
+            } else {
+                window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
+                logReactivation(cl, 'sms', 'contacte', text);
+            }
+            closeModal('msgModal');
+        }
+
+        // ---------- NOTES / HISTORIQUE ----------
+        function openNote(key) {
+            activeClientPhone = key;
+            const cl = findClient(key);
+            document.getElementById('noteModalTitle').innerText = 'Note — ' + cl.name;
+            const hist = reactivations[cl.key] || reactivations[cl.phone] || [];
+            const histDiv = document.getElementById('noteHistory');
+            if (hist.length) {
+                histDiv.innerHTML = '<label style="display:block;font-size:0.75em;color:#888;text-transform:uppercase;margin-bottom:6px;font-weight:bold;">Historique</label>' +
+                    hist.slice(0, 5).map(h => `
+                        <div class="history-item ch-${h.channel === 'whatsapp' ? 'wa' : (h.channel || '').substring(0,3)}">
+                            <div class="h-date">${fmtDate(h.createdAt)} — <strong>${h.channel}</strong> · ${h.result}</div>
+                            ${h.note ? '<div style="margin-top:3px;color:#aaa;">' + escapeHtml(h.note) + '</div>' : ''}
+                        </div>
+                    `).join('');
+            } else {
+                histDiv.innerHTML = '<div style="color:#666;font-size:0.85em;margin-bottom:8px;">Aucune relance enregistrée.</div>';
+            }
+            document.getElementById('noteText').value = '';
+            document.getElementById('noteModal').classList.add('visible');
+        }
+
+        async function saveNote() {
+            const cl = findClient(activeClientPhone);
+            if (!cl) return;
+            const channel = document.getElementById('noteChannel').value;
+            const result = document.getElementById('noteResult').value;
+            const note = document.getElementById('noteText').value;
+            await logReactivation(cl, channel, result, note);
+            closeModal('noteModal');
+            render();
+        }
+
+        async function logReactivation(cl, channel, result, note) {
+            const entry = {
+                phone: cl.phone || '',
+                clientName: cl.name || '',
+                channel,
+                result,
+                note: note || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            try {
+                const ref = await db.collection('reactivations').add(entry);
+                if (!reactivations[cl.key]) reactivations[cl.key] = [];
+                reactivations[cl.key].unshift({ id: ref.id, ...entry, createdAt: new Date() });
+            } catch (e) {
+                console.warn('log fail', e);
+            }
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+
+        // ---------- BULK ----------
+        function bulkAction(action) {
+            const list = allClients.filter(c => selected.has(c.key));
+            if (!list.length) return;
+            if (action === 'csv') return exportCSV(list);
+            const tpl = templates[0];
+            const text = tpl.body;
+            if (action === 'wa') {
+                if (list.length > 1) {
+                    if (!confirm(`Ouvrir ${list.length} fenêtres WhatsApp ? (le navigateur peut bloquer les pop-ups)`)) return;
+                }
+                list.forEach(cl => {
+                    if (!cl.phone) return;
+                    let intl = cl.phone;
+                    if (intl.startsWith('0')) intl = '596' + intl.substring(1);
+                    else if (!intl.startsWith('596') && intl.length === 9) intl = '596' + intl;
+                    const msg = text.replace(/\{prenom\}/g, cleanFirstName(cl.name));
+                    window.open(`https://wa.me/${intl}?text=${encodeURIComponent(msg)}`, '_blank');
+                    logReactivation(cl, 'whatsapp', 'contacte', msg);
+                });
+            } else if (action === 'sms') {
+                const phones = list.filter(c => c.phone).map(c => c.phone).join(',');
+                const msg = text.replace(/\{prenom\}/g, '');
+                window.location.href = `sms:${phones}?body=${encodeURIComponent(msg)}`;
+                list.forEach(cl => logReactivation(cl, 'sms', 'contacte', msg));
+            }
+        }
+
+        function exportCSV(list) {
+            const headers = ['Prénom', 'Téléphone', 'Adresse', 'Commandes', 'CA total', 'Ticket moyen', 'Dernière commande', 'Jours d\'inactivité', 'Segment', 'Pizza préférée'];
+            const rows = list.map(c => [
+                c.name, c.phone, c.address || '', c.orders, c.totalCA.toFixed(2),
+                c.avgTicket.toFixed(2), fmtDate(c.lastOrder), c.daysCold, segmentLabel(c.seg), c.favPizza || ''
+            ]);
+            const csv = [headers, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `mwaka-relance-${new Date().toISOString().substring(0, 10)}.csv`;
+            a.click();
+        }
+
+        // ---------- INIT ----------
+        renderTemplates();
+        loadData().catch(e => {
+            document.getElementById('loader').innerHTML = '<div style="color:#e74c3c;">Erreur de chargement : ' + (e.message || e) + '</div>';
+        });
+    </script>
+</body>
+</html>
